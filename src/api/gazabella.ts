@@ -25,6 +25,8 @@ import type {
 } from '../types/api'
 
 export interface ProductFilters {
+  category_slugs?: string[]
+  stores?: string[]
   category_slug?: string
   search?: string
   min_price?: number

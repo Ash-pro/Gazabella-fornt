@@ -7,7 +7,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { isMockMode } from './api/gazabella'
 import { useAuthStore } from './stores/authStore'
 
-const ProductsPage = lazy(() => import('./pages/ProductsPage').then((module) => ({ default: module.ProductsPage })))
+import { ProductsPage } from './pages/ProductsPage'
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
 const CartPage = lazy(() => import('./pages/CartPage').then((module) => ({ default: module.CartPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
@@ -35,7 +35,6 @@ export default function App() {
       <div className="flex min-h-screen flex-col font-sans">
         <DemoRoleBar />
         <div className="flex-1">
-          <Suspense fallback={<div className="container-page py-12"><PageLoader label="جاري تحميل الواجهة..." /></div>}>
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<ProductsPage />} />
@@ -48,14 +47,13 @@ export default function App() {
             </Route>
 
             {/* لوحة تحكم التاجر */}
-            <Route path="merchant" element={<OperationalPreview><MerchantDashboard /></OperationalPreview>} />
+            <Route path="merchant" element={<OperationalPreview><Suspense fallback={<PageLoader />}><MerchantDashboard /></Suspense></OperationalPreview>} />
 
             {/* لوحة طلبات التوصيل */}
-            <Route path="delivery" element={<OperationalPreview><DeliveryDashboard /></OperationalPreview>} />
+            <Route path="delivery" element={<OperationalPreview><Suspense fallback={<PageLoader />}><DeliveryDashboard /></Suspense></OperationalPreview>} />
 
-            <Route path="*" element={<NotFoundPage />} />
+            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
           </Routes>
-        </Suspense>
         </div>
       </div>
     </ErrorBoundary>

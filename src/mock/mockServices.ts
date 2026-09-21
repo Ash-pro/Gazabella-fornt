@@ -95,6 +95,9 @@ export const mockServices = {
   getProducts: async (filters: ProductFilters): Promise<ApiList<ProductBrief>> => {
     let list = INITIAL_PRODUCTS.map(demoProduct)
 
+    if (filters.category_slugs?.length) list = list.filter((p) => filters.category_slugs!.includes(p.category.slug))
+    if (filters.stores?.length) list = list.filter((p) => p.store && filters.stores!.includes(p.store.name))
+
     // تصفية حسب الفئة أو الفئة الفرعية الذكية
     if (filters.category_slug) {
       const slug = filters.category_slug
@@ -164,6 +167,7 @@ export const mockServices = {
         id: p.id,
         name: p.name,
         slug: p.slug,
+        store: p.store,
         thumbnail_url: p.images[0]?.url || null,
         min_price: min.toFixed(2),
         max_price: max.toFixed(2),
@@ -343,7 +347,7 @@ export const mockServices = {
     const newOrder: Order = {
       id: Date.now(),
       order_number: orderNum,
-      status: 'pending',
+      status: 'confirmed',
       items: cart.items.map((i,index) => ({
         id: Math.max(0,...orders.flatMap((o) => o.items.map((item) => item.id))) + index + 1,
         product_name: i.product_name,
@@ -361,8 +365,9 @@ export const mockServices = {
       delivery_option: { name: deliveryOpt.name, estimated_days: deliveryOpt.estimated_days },
       address: payload.address,
       payment_status: 'unpaid',
+      payment_method: 'cash_on_delivery',
       tracking: [
-        { status: 'pending', note: 'تم إنشاء الطلب بنجاح وهو بانتظار إتمام الدفع أو التجهيز', created_at: new Date().toISOString() },
+        { status: 'confirmed', note: 'تم تأكيد الطلب التجريبي — الدفع عند الاستلام', created_at: new Date().toISOString() },
       ],
       coupon_code: payload.coupon_code || null,
       notes: payload.notes || null,
@@ -390,7 +395,7 @@ export const mockServices = {
       total_amount: newOrder.total,
       delivery_fee: newOrder.delivery_fee,
       payment_status: 'unpaid',
-      payment_method: 'jawwal_pay',
+      payment_method: 'cash_on_delivery',
       delivery_status: 'pending_pickup',
       pickup_stores: [...new Set(cart.items.map((i) => { const p = INITIAL_PRODUCTS.find((p) => p.variants.some((v) => v.id === i.product_variant_id)); return INITIAL_MERCHANT_STORES.find((s) => s.id === ((p!.id - 1) % 3) + 1)!.name }))],
       driver_name: 'محمود أبو العوف',
@@ -403,7 +408,7 @@ export const mockServices = {
 
     return delay({
       data: newOrder,
-      next_step: 'payment',
+      next_step: 'confirmation',
     })
   },
 
@@ -429,6 +434,7 @@ export const mockServices = {
     const orders = getStoredOrders()
     const order = orders.find((o) => o.id === orderId)
     if (!order) throw new Error('لم نعثر على الطلب.')
+    if (order.payment_method === 'cash_on_delivery') throw new Error('الدفع لهذا الطلب عند الاستلام فقط.')
     if (order.status === 'cancelled' || order.status === 'refunded') throw new Error('هذا الطلب غير قابل للدفع.')
     if (order.payment_status !== 'paid') {
       order.payment_status = 'paid'
@@ -472,7 +478,7 @@ export const mockServices = {
   },
 
   getMerchantOrders: async (storeId = 1): Promise<MerchantOrderItem[]> => {
-    const orders = getStoredOrders().filter((o) => o.payment_status === 'paid' && !['cancelled','refunded'].includes(o.status))
+    const orders = getStoredOrders().filter((o) => (o.payment_status === 'paid' || o.payment_method === 'cash_on_delivery') && !['cancelled','refunded'].includes(o.status))
     const items: MerchantOrderItem[] = []
 
     orders.forEach((o) => {
@@ -501,7 +507,7 @@ export const mockServices = {
   updateOrderPrepStatus: async (orderItemId: number, status: MerchantPrepStatus) => {
     const orders = getStoredOrders()
     const order = orders.find((o) => o.items.some((i) => i.id === orderItemId))
-    if (!order || order.payment_status !== 'paid' || !['confirmed','processing'].includes(order.status)) throw new Error('هذا الطلب غير متاح للتجهيز.')
+    if (!order || (order.payment_status !== 'paid' && order.payment_method !== 'cash_on_delivery') || !['confirmed','processing'].includes(order.status)) throw new Error('هذا الطلب غير متاح للتجهيز.')
     demoSetPrep(orderItemId, status)
     if (order.status === 'confirmed') { order.status = 'processing'; order.tracking.push({status:'processing',note:'بدأ تجهيز الطلب لدى المتاجر',created_at:new Date().toISOString()}); saveStoredOrders(orders) }
     return delay({ success: true, order_item_id: orderItemId, status })

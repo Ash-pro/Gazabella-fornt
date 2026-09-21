@@ -13,7 +13,7 @@ const statusLabel: Record<OrderStatus, string> = {
   confirmed: 'تم التأكيد',
   processing: 'قيد التجهيز',
   shipped: 'في الطريق إليكِ',
-  delivered: 'تم التسليم بنجاح',
+  delivered: 'مكتمل',
   cancelled: 'ملغي',
   refunded: 'مسترد',
 }
@@ -44,6 +44,8 @@ export function OrdersPage() {
               <p className="text-xs text-[var(--text-2)]">
                 {new Intl.DateTimeFormat('ar-PS', { dateStyle: 'medium' }).format(new Date(order.created_at))} · {order.items.length} منتجات · 📍 {order.address?.city || 'خانيونس'}
               </p>
+              <p className="mt-3 text-sm">{order.items.slice(0,2).map((item) => `${item.product_name} × ${item.quantity}`).join('، ')}{order.items.length > 2 && ` و${order.items.length - 2} منتجات أخرى`}</p>
+              <span className="text-link mt-3">تفاصيل الطلب</span>
             </div>
             <div className="mr-auto text-left flex flex-col items-end">
               <span className={`status-badge status-${order.status}`}>{statusLabel[order.status]}</span>

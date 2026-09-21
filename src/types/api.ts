@@ -15,6 +15,7 @@ export interface Category {
 }
 
 export interface ProductBrief {
+  store?: { name: string }
   id: number
   name: string
   slug: string
@@ -36,6 +37,7 @@ export interface ProductVariant {
 }
 
 export interface ProductDetail {
+  store?: { name: string }
   id: number
   name: string
   slug: string
@@ -158,6 +160,7 @@ export interface Order {
   total: string
   delivery_option: { name: string; estimated_days: number }
   address: Address | null
+  payment_method?: 'cash_on_delivery' | 'jawwal_pay'
   payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded'
   tracking: Array<{ status: string; note: string | null; created_at: string }>
   coupon_code: string | null

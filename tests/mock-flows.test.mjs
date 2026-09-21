@@ -73,6 +73,8 @@ test('payment retries refer to the same order, clear the cart, and sync the miss
   const before = (await api.getOrders()).data.length
   await api.beginCheckout()
   const created = await api.createOrder({address,delivery_option_id:1})
+  // Legacy electronic payment remains retryable for existing orders only.
+  const legacy = db.getStoredOrders(); const target = legacy.find((o) => o.id === created.data.id); target.payment_method = 'jawwal_pay'; target.status = 'pending'; target.tracking = []; db.saveStoredOrders(legacy)
   const one = await api.initPayment(created.data.id)
   const two = await api.initPayment(created.data.id)
   assert.equal(one.payment_id,two.payment_id)
@@ -92,7 +94,6 @@ test('inventory and prep changes persist and stores have distinct products', asy
   assert.equal((await api.getProduct(db.INITIAL_PRODUCTS[0].slug)).variants.find((v) => v.id === 101).available_quantity,7)
   await api.beginCheckout()
   const created=await api.createOrder({address,delivery_option_id:1})
-  await api.initPayment(created.data.id)
   await api.updateOrderPrepStatus(created.data.items[0].id,'ready_for_pickup')
   assert.equal((await api.getMerchantOrders(1)).find((i) => i.order_number === created.data.order_number).prep_status,'ready_for_pickup')
 })
@@ -119,4 +120,39 @@ test('a dispute cannot be opened before delivery or after expiry', async () => {
   orders.find((o) => o.id === 14).escrow_expires_at=new Date(Date.now()-1000).toISOString()
   db.saveStoredOrders(orders)
   assert.throws(() => operations.demoOpenDispute('GAZ-2026-0014','مشكلة تجريبية في المنتج'))
+})
+
+
+test('COD orders remain unpaid through preparation and collect cash only after valid delivery PIN', async () => {
+  await api.beginCheckout()
+  const created = await api.createOrder({address,delivery_option_id:1})
+  assert.match(created.data.order_number,/^GAZ-\d{4}-\d{4}$/)
+  assert.equal(created.data.status,'confirmed')
+  assert.equal(created.data.payment_method,'cash_on_delivery')
+  assert.equal(created.data.payment_status,'unpaid')
+  assert.equal(created.next_step,'confirmation')
+  await assert.rejects(api.initPayment(created.data.id),/عند الاستلام/)
+  await api.updateOrderPrepStatus(created.data.items[0].id,'ready_for_pickup')
+  assert((await api.getMerchantOrders(1)).some((o) => o.order_number === created.data.order_number))
+  const mission = (await api.getDeliveryMissions()).find((m) => m.order_number === created.data.order_number)
+  assert.equal(mission.payment_method,'cash_on_delivery')
+  await api.updateDeliveryStatus(mission.id,'picked_up')
+  await api.updateDeliveryStatus(mission.id,'in_transit')
+  assert.equal((await api.getOrder(created.data.order_number)).payment_status,'unpaid')
+  operations.demoConfirmDelivery(mission.id,created.data.delivery_pin)
+  assert.equal((await api.getOrder(created.data.order_number)).payment_status,'paid')
+  assert.equal((await api.getCart()).total_items,0)
+})
+
+test('public catalog exposes store names and supports combined category, store and price filters', async () => {
+  const all = (await api.getProducts({per_page:100})).data
+  assert(all.every((p) => p.store?.name && !('store_id' in p) && !('id' in p.store)))
+  const name = all[0].store.name
+  const result = await api.getProducts({category_slugs:['skincare','perfumes'],stores:[name],min_price:0,max_price:1000})
+  assert(result.data.length > 0)
+  for(const p of result.data) {
+    assert.equal(p.store.name,name)
+    assert(['skincare','perfumes'].includes((await api.getProduct(p.slug)).category.slug))
+  }
+  assert((await api.getProducts({search:'سيروم',per_page:6})).data.length <= 6)
 })

@@ -102,6 +102,7 @@ export const INITIAL_CATEGORIES: Category[] = [
 export const INITIAL_PRODUCTS: ProductDetail[] = [
   {
     id: 1,
+    store: { name: "متجر روز غزة للجمال (Gaza Rose)" },
     name: 'سيروم أوريليا للترطيب اليومي',
     slug: 'nivea-face-cream-001',
     description: 'سيروم للعناية اليومية ضمن مجموعة العرض التجريبية. اختاري الحجم المناسب لروتينكِ.',
@@ -117,6 +118,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 2,
+    store: { name: "بوتيك سحر الشرق للعطور" },
     name: 'عطر الورد الجبلي المركز 50 مل',
     slug: 'rose-perfume-50ml-002',
     description: 'تحفة عطرية تجمع بين عبير الورد الدمشقي العريق ونفحات العود الأبيض الهادئ، مصمم للمناسبات الراقية مع ثبات يتجاوز 24 ساعة.',
@@ -131,6 +133,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 3,
+    store: { name: "لافندر كوزمتكس وباقات العروس" },
     name: 'بوكس العروس الملكي المتكامل - Gazabella Bride',
     slug: 'bridal-royal-box-003',
     description: 'الباقة الأكثر طلباً لعرائس غزة! باقة متكاملة من 7 مستحضرات: سيروم نضارة الذهب، مسك الطهارة الأبيض، عطر شعر، لوشن حريري، ومجموعة أحمر شفاه كلاسيكية.',
@@ -145,6 +148,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 4,
+    store: { name: "متجر روز غزة للجمال (Gaza Rose)" },
     name: 'أحمر شفاه مات مخملي - Ruby Velvet #04',
     slug: 'matte-lipstick-ruby-004',
     description: 'لون غني ومكثف بمسحة واحدة، ملمس مخملي يدوم حتى 16 ساعة دون جفاف للشفاه بفضل زبدة الشيا وفيتامين E.',
@@ -160,6 +164,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 5,
+    store: { name: "بوتيك سحر الشرق للعطور" },
     name: 'سيروم الهيالورونيك أسيد المركز 2% + B5',
     slug: 'hyaluronic-acid-serum-005',
     description: 'تركيبة فائقة الترطيب تدعم حاجز البشرة وتعيد ملء الخطوط التعبيرية لتمنحك إشراقة شبابية ونضارة فورية.',
@@ -174,6 +179,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 6,
+    store: { name: "لافندر كوزمتكس وباقات العروس" },
     name: 'لوحة ظلال العيون والإضاءة - Gaza Glow Palette',
     slug: 'gaza-glow-palette-006',
     description: '18 لوناً مصممة بعناية بين الألوان الترابية الدافئة واللمعات البرّاقة لتناسب الإطلالات اليومية ومناسبات السهرات الراقية.',
@@ -187,6 +193,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 7,
+    store: { name: "متجر روز غزة للجمال (Gaza Rose)" },
     name: 'معطر الجسم باللافندر الفرنسي وزيت الأرغان',
     slug: 'french-lavender-mist-007',
     description: 'رذاذ منعش ومرطب للجسم يمنحك هالة من الهدوء والاسترخاء مع لمسة حريرية غير دهنية تدوم لساعات.',
@@ -200,6 +207,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 8,
+    store: { name: "بوتيك سحر الشرق للعطور" },
     name: 'طقم روب العروس الحريري المطرز بالخيوط الذهبية',
     slug: 'bridal-silk-robe-set-008',
     description: 'روب صباحية العروس الفاخر من الحرير الإيطالي الناعم مع تطريز Gazabella الذهبي الأنيق، مرفق مع ربطة شعر وسليبر حريري متطابق.',
@@ -214,6 +222,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 9,
+    store: { name: "لافندر كوزمتكس وباقات العروس" },
     name: 'طين البحر الميت الطبيعي المنقي للبشرة والشعر',
     slug: 'dead-sea-mud-mask-009',
     description: 'مستخلص أصيل من أملاح وطين البحر الميت الغني بالمعادن النادرة؛ ينقي المسام، يغذي فروة الرأس، ويمنح إشراقة ونعومة مخملية لا تضاهى.',
@@ -228,6 +237,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 10,
+    store: { name: "متجر روز غزة للجمال (Gaza Rose)" },
     name: 'طقم فرش المكياج الاحترافية 14 قطعة مع حقيبة مخملية',
     slug: 'pro-makeup-brushes-set-010',
     description: 'شعيرات نباتية فائقة النعومة مع مقابض روز جولد فاخرة تضمن دمجاً مثالياً لكريم الأساس والبودرة وظلال العيون، مع حقيبة سفر أنيقة.',
@@ -241,6 +251,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
   },
   {
     id: 11,
+    store: { name: "بوتيك سحر الشرق للعطور" },
     name: 'صندوق إهداء Gazabella الفاخر - باقة الورد والمسك',
     slug: 'luxury-gift-box-rose-011',
     description: 'هدية راقية تعبر عن أصدق المشاعر؛ يحتوي على عطر ميني مركز، لوشن للجسم، شمعة معطرة، وكرت إهداء مكتوب باليد داخل صندوق مخملي فاخر.',

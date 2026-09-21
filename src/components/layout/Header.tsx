@@ -1,30 +1,21 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { useAuthStore } from '../../stores/authStore'
 import { useCartStore } from '../../stores/cartStore'
 import { Icon } from '../ui/Icon'
+import { SearchBox } from './SearchBox'
 import { Dialog } from '../ui/Dialog'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchParams] = useSearchParams()
-  const location = useLocation()
-  const querySearch = searchParams.get('search') || ''
-  const [draftSearch, setDraftSearch] = useState({key:location.key,value:querySearch})
-  const search = draftSearch.key === location.key ? draftSearch.value : querySearch
-  const navigate = useNavigate()
   const token = useAuthStore((s) => s.token)
   const openDrawer = useCartStore((s) => s.openDrawer)
   const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
-  function submit(event: React.FormEvent) {
-    event.preventDefault()
-    navigate(search.trim() ? `/?search=${encodeURIComponent(search.trim())}#products` : '/#products')
-    setMenuOpen(false)
-  }
-  const searchField = <form onSubmit={submit} role="search" className="header-search"><Icon name="search" className="size-5" /><input aria-label="ابحثي في Gazabella" placeholder="عن ماذا تبحثين اليوم؟" value={search} onChange={(e) => setDraftSearch({key:location.key,value:e.target.value})} /><button type="submit">بحث</button></form>
+  const searchField = <SearchBox />
   return <>
     <div className="announcement"><Icon name="truck" className="size-4" /> اختيارات من متاجر متعددة. سلة واحدة وتوصيل موحّد في خانيونس.</div>
     <header className="store-header">
