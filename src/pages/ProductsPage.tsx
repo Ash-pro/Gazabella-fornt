@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { gazabellaApi, type ProductFilters } from '../api/gazabella'
@@ -12,6 +12,12 @@ export function ProductsPage() {
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [, setWishlistVersion] = useState(0)
+  const [showTop, setShowTop] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   useEffect(() => { const changed = () => setWishlistVersion((v) => v + 1); window.addEventListener('gazabella-wishlist', changed); return () => window.removeEventListener('gazabella-wishlist', changed) }, [])
   useEffect(() => { if (!params.has('store')) return; const next = new URLSearchParams(params); next.delete('store'); setParams(next, {replace:true,state:{preserveScroll:true}}) }, [params, setParams])
   const category = params.get('category') || ''
@@ -61,5 +67,15 @@ export function ProductsPage() {
     </section>
     {!active && <section className="container-page collection-editorial"><img src="/images/products/bridal-robe.webp" alt="تشكيلة العروس" loading="lazy" /><div><span className="eyebrow">للحظات التي تبقى</span><h2>ليومكِ الأجمل،<br />تفاصيل على ذوقكِ.</h2><p>اكتشفي تشكيلة العروس والعطور والهدايا، واجمعي اختياراتكِ المفضلة في طلب واحد.</p><Link to="/?category=bridal#products" className="btn-primary">اكتشفي تشكيلة العروس <Icon name="arrow" className="size-4 rotate-180" /></Link></div></section>}
     <section className="container-page closing-note"><Icon name="sparkle" className="size-6" /><h2>الجمال أقرب مما تتخيّلين.</h2><p>متاجر متعددة. تجربة واحدة. Gazabella.</p></section>
+    {showTop && (
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        aria-label="العودة إلى الأعلى"
+        className="back-to-top"
+      >
+        <Icon name="arrow" className="size-5" />
+      </button>
+    )}
   </>
 }

@@ -67,6 +67,8 @@ export interface CartItem {
   compare_at_price?: string | null
   quantity: number
   subtotal: string
+  product_slug?: string
+  available_quantity?: number
   thumbnail_url: string | null
   reservation: Reservation | null
 }

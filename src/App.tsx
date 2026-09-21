@@ -38,12 +38,12 @@ export default function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<ProductsPage />} />
-              <Route path="products/:slug" element={<ProductDetailPage />} />
-              <Route path="cart" element={<CartPage />} />
-              <Route path="auth" element={<AuthPage />} />
-              <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-              <Route path="orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-              <Route path="orders/:orderNumber" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+              <Route path="products/:slug" element={<Suspense fallback={<PageLoader />}><ProductDetailPage /></Suspense>} />
+              <Route path="cart" element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
+              <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
+              <Route path="checkout" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><CheckoutPage /></ProtectedRoute></Suspense>} />
+              <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
+              <Route path="orders/:orderNumber" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
             </Route>
 
             {/* لوحة تحكم التاجر */}

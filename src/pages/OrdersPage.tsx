@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { getApiErrorMessage as logoutError } from '../lib/apiClient'
 import { gazabellaApi } from '../api/gazabella'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
+const logoutError = getApiErrorMessage
 import { formatPrice } from '../lib/format'
 import type { OrderStatus } from '../types/api'
 

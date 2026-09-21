@@ -5,7 +5,7 @@ import { gazabellaApi } from '../api/gazabella'
 import { useCartStore } from '../stores/cartStore'
 import { syncCart } from '../hooks/useCartActions'
 import { ProductVisual } from '../components/product/ProductVisual'
-import { ErrorState, PageLoader } from '../components/ui/AsyncState'
+import { ErrorState } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -24,7 +24,19 @@ function ProductContent({slug}: {slug: string}) {
   const variant = product?.variants.find((v)=>v.id===variantId) || product?.variants.find((v)=>v.available_quantity>0) || product?.variants[0]
   const limit = Math.min(10, variant?.available_quantity || 0)
   const add = useMutation({mutationFn:()=>gazabellaApi.addToCart(variant!.id,quantity),onSuccess:(cart)=>{syncCart(cart);useCartStore.getState().showCartToast({productName:product!.name,variantName:variant!.name,thumbnailUrl:product!.images[0]?.url,price:variant!.price})}})
-  if(query.isLoading) return <div className="container-page"><PageLoader label="نحمّل تفاصيل المنتج…" /></div>
+  if(query.isLoading) return (
+    <div className="container-page product-detail-skeleton">
+      <div className="skel-image" />
+      <div>
+        <div className="skel-line skel-line--title" />
+        <div className="skel-line skel-line--price" />
+        <div className="skel-line skel-line--short" />
+        <div className="skel-line" />
+        <div className="skel-line" style={{width:'65%'}} />
+        <div className="skel-btn" />
+      </div>
+    </div>
+  )
   if(query.isError || !product) return <div className="container-page"><ErrorState message={getApiErrorMessage(query.error)} onRetry={()=>void query.refetch()} /></div>
   const image = product.images[imageIndex] || product.images[0]
   const disabled = add.isPending || !variant || !limit || quantity > limit

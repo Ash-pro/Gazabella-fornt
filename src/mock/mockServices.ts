@@ -229,6 +229,8 @@ export const mockServices = {
       cart.items.push({
         id: Date.now(),
         product_variant_id: productVariantId,
+        product_slug: foundProduct.slug,
+        available_quantity: foundVariant.available_quantity,
         product_name: foundProduct.name,
         variant_name: foundVariant.name,
         unit_price: foundVariant.price,

@@ -6,6 +6,8 @@ import type { Category } from '../../types/api'
 export function CatalogFilters({categories, onClose}: {categories: Category[]; onClose: () => void}) {
   const [params, setParams] = useSearchParams()
   const [draft, setDraft] = useState(() => new URLSearchParams(params))
+  // Re-sync draft if URL params change from an external source (e.g. category chip)
+  useEffect(() => { setDraft(new URLSearchParams(params)) }, [params.toString()])
   const ceiling = Math.max(1000, Number(draft.get('max_price')) || 0, Number(draft.get('min_price')) || 0)
   const min = Number(draft.get('min_price')) || 0
   const max = draft.has('max_price') ? Number(draft.get('max_price')) : ceiling
