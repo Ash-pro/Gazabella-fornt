@@ -64,6 +64,7 @@ export interface CartItem {
   product_name: string
   variant_name: string
   unit_price: string
+  compare_at_price?: string | null
   quantity: number
   subtotal: string
   thumbnail_url: string | null
@@ -289,4 +290,3 @@ export interface DeliveryStats {
   delivered_today_count: number
   cash_to_collect_total: string
 }
-

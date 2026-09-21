@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useCartStore, type CartToastInfo } from '../../stores/cartStore'
 import { Icon } from '../ui/Icon'
 import { ProductVisual } from '../product/ProductVisual'
+import { formatPrice } from '../../lib/format'
 
 const AUTO_DISMISS_MS = 3800
 
@@ -67,7 +68,7 @@ function CartToastBanner({ cartToast }: { cartToast: CartToastInfo }) {
               )}
               {cartToast.price && (
                 <span className="font-mono font-bold text-amber-300">
-                  {Number(cartToast.price).toFixed(2)} ₪
+                  <span className="num">{formatPrice(cartToast.price)}</span>
                 </span>
               )}
             </div>

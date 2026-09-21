@@ -9,16 +9,23 @@ globalThis.localStorage = {
   removeItem: (key) => memory.delete(key),
   clear: () => memory.clear(),
 }
-let server, api, db, operations
+let server, api, db, operations, formatPrice
 before(async () => {
   server = await createServer({ configFile:false, cacheDir:'node_modules/.vite-tests', server:{middlewareMode:true}, appType:'custom', define:{'import.meta.env.VITE_MOCK_DELAY_MS':'"0"'} })
   api = (await server.ssrLoadModule('/src/mock/mockServices.ts')).mockServices
   db = await server.ssrLoadModule('/src/mock/mockDatabase.ts')
   operations = await server.ssrLoadModule('/src/mock/demoOperations.ts')
+  formatPrice = (await server.ssrLoadModule('/src/lib/format.ts')).formatPrice
 })
 after(async () => { await server?.close() })
 beforeEach(() => memory.clear())
 const address = {full_name:'عميلة تجريبية',phone:'+970599000000',city:'خانيونس',area:'حي الأمل',details:'عنوان تجريبي للعرض فقط'}
+
+test('price formatting keeps English numerals and preserves fractional amounts', () => {
+  assert.equal(formatPrice('180.00'),'₪180')
+  assert.equal(formatPrice('19.50'),'₪19.50')
+  assert.equal(formatPrice('103.20'),'₪103.20')
+})
 
 test('OTP rejects an arbitrary six-digit code', async () => {
   await assert.rejects(api.verifyOtp(address.phone,'111111'))

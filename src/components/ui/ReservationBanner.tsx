@@ -15,7 +15,7 @@ export function ReservationBanner() {
     <div className={`reservation-banner ${seconds < 180 ? 'reservation-banner--urgent' : ''}`}>
       <Icon name="clock" className="size-5 shrink-0" />
       <p role="status">{seconds === 0 ? 'انتهت مهلة الحجز. راجعي السلة لتحديث التوافر.' : 'اختياراتكِ محجوزة مؤقتًا لإتمام الطلب'}</p>
-      <span role="timer" aria-live="off" className="mr-auto font-mono text-base font-bold" dir="ltr">{formatTime(seconds)}</span>
+      <span role="timer" aria-live="off" className="mr-auto font-mono text-base font-bold num" dir="ltr">{formatTime(seconds)}</span>
     </div>
   )
 }

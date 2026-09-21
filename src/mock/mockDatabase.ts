@@ -434,6 +434,11 @@ export function getStoredCart(): Cart {
             p.variants.some((v) => v.id === item.product_variant_id) || p.name === item.product_name
           )
           const targetUrl = matched?.images[0]?.url || '/images/products/serum.webp'
+          const matchedVariant = matched?.variants.find((v) => v.id === item.product_variant_id)
+          if (item.compare_at_price !== matchedVariant?.compare_at_price) {
+            item.compare_at_price = matchedVariant?.compare_at_price || null
+            modified = true
+          }
           if (!item.thumbnail_url || item.thumbnail_url.includes('unsplash') || item.thumbnail_url !== targetUrl) {
             item.thumbnail_url = targetUrl
             modified = true
@@ -457,6 +462,7 @@ export function getStoredCart(): Cart {
         product_name: 'سيروم أوريليا للترطيب اليومي',
         variant_name: 'حجم 100 مل',
         unit_price: '28.00',
+        compare_at_price: '35.00',
         quantity: 2,
         subtotal: '56.00',
         thumbnail_url: '/images/products/serum.webp',
@@ -472,6 +478,7 @@ export function getStoredCart(): Cart {
         product_name: 'عطر الورد الجبلي المركز 50 مل',
         variant_name: 'زجاجة فاخرة 50 مل',
         unit_price: '120.00',
+        compare_at_price: '150.00',
         quantity: 1,
         subtotal: '120.00',
         thumbnail_url: '/images/products/perfume.webp',

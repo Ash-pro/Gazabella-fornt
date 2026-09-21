@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { syncCart, useProceedToCheckout } from '../hooks/useCartActions'
+import { formatPrice } from '../lib/format'
 import type { Cart } from '../types/api'
 
 export function CartPage() {
@@ -40,7 +41,7 @@ export function CartPage() {
         {(updateMutation.isError || removeMutation.isError) && <p className="field-error" role="alert">{getApiErrorMessage(updateMutation.error || removeMutation.error)}</p>}
         <span className="eyebrow">اختياراتك</span>
         <h1 className="section-title mt-2">سلة التسوق</h1>
-        <p className="mt-2 text-sm text-[var(--text-2)]">{cart.total_items} قطع في سلتك</p>
+        <p className="mt-2 text-sm text-[var(--text-2)]"><span className="num">{cart.total_items}</span> قطع في سلتك</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
@@ -56,26 +57,26 @@ export function CartPage() {
                   <button type="button" className="text-[var(--text-3)] transition-colors hover:text-[var(--error)]" disabled={busy} onClick={() => removeMutation.mutate(item.id)} aria-label={`حذف ${item.product_name}`}><Icon name="trash" className="size-5" /></button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="quantity-control quantity-control--small">
-                    <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
-                    <span>{item.quantity}</span>
-                    <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= 10 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                    <div className="quantity-control quantity-control--small">
+                      <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
+                      <span className="num">{item.quantity}</span>
+                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= 10 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                    </div>
+                    <div className="cart-item-price">{item.compare_at_price && Number(item.compare_at_price) > Number(item.unit_price) && <del className="line-through text-gray-400 text-sm"><span className="num">{formatPrice(Number(item.compare_at_price) * item.quantity)}</span></del>}<p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p></div>
                   </div>
-                  <p className="font-mono font-bold">{Number(item.subtotal).toFixed(2)} ₪</p>
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <aside className="order-summary lg:sticky lg:top-40">
-          <h2 className="text-xl font-extrabold">ملخص الطلب</h2>
-          <div className="my-6 space-y-4 border-y border-[var(--border)] py-5 text-sm">
-            <div className="flex justify-between"><span className="text-[var(--text-2)]">المجموع الفرعي</span><span className="font-mono font-bold">{Number(cart.subtotal).toFixed(2)} ₪</span></div>
-            <div className="flex justify-between"><span className="text-[var(--text-2)]">التوصيل</span><span>يُحدد لاحقًا</span></div>
+              </article>
+            ))}
           </div>
-          <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">المجموع</span><span className="font-mono text-2xl font-bold text-[var(--primary)]">{Number(cart.subtotal).toFixed(2)} ₪</span></div>
-          <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>
+
+          <aside className="order-summary lg:sticky lg:top-40">
+            <h2 className="text-xl font-extrabold">ملخص الطلب</h2>
+            <div className="my-6 space-y-4 border-y border-[var(--border)] py-5 text-sm">
+              <div className="flex justify-between"><span className="text-[var(--text-2)]">المجموع الفرعي</span><span className="font-mono font-bold"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+              <div className="flex justify-between"><span className="text-[var(--text-2)]">التوصيل</span><span>يُحدد لاحقًا</span></div>
+            </div>
+            <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">المجموع</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+            <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>
             {reserveMutation.isPending ? 'نحجز اختياراتك…' : 'متابعة إلى التوصيل والدفع'}
           </button>
           <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[var(--text-2)]"><Icon name="clock" className="mt-1 size-4 shrink-0" />نتحقق من التوافر قبل المتابعة. يظهر وقت الحجز المتبقي أعلى الصفحة.</p>

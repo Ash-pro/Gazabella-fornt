@@ -232,6 +232,7 @@ export const mockServices = {
         product_name: foundProduct.name,
         variant_name: foundVariant.name,
         unit_price: foundVariant.price,
+        compare_at_price: foundVariant.compare_at_price,
         quantity,
         subtotal: (Number(foundVariant.price) * quantity).toFixed(2),
         thumbnail_url: foundProduct.images[0]?.url || '/images/products/serum.webp',

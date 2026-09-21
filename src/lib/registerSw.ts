@@ -1,18 +1,26 @@
 // مسجل Service Worker ومدير تثبيت PWA
 interface InstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{outcome:'accepted'|'dismissed'}> }
 let deferredPrompt: InstallPromptEvent | null = null
+let refreshingForServiceWorker = false
 
 export function registerServiceWorker() {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { updateViaCache: 'none' })
         .then((reg) => {
           console.log('ServiceWorker registered with scope: ', reg.scope)
+          void reg.update()
         })
         .catch((err) => {
           console.log('ServiceWorker registration failed: ', err)
         })
+    })
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshingForServiceWorker) return
+      refreshingForServiceWorker = true
+      window.location.reload()
     })
   }
 
