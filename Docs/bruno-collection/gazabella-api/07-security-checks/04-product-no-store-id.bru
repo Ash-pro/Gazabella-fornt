@@ -1,0 +1,30 @@
+meta {
+  name: Product Response — No store_id Leak
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/products/{{product_slug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("no store_id anywhere in response", function() {
+    var str = JSON.stringify(res.body);
+    expect(str).to.not.include('"store_id"');
+  });
+  test("no commission_amount anywhere", function() {
+    var str = JSON.stringify(res.body);
+    expect(str).to.not.include('"commission_amount"');
+  });
+  test("no sub_orders anywhere", function() {
+    var str = JSON.stringify(res.body);
+    expect(str).to.not.include('"sub_orders"');
+  });
+}

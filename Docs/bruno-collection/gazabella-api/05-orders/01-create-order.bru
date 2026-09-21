@@ -1,0 +1,60 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/orders
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "recipient_name": "أشرف الصليبي",
+    "recipient_phone": "0599000001",
+    "delivery_address": {
+      "city": "غزة",
+      "area": "الرمال",
+      "street": "شارع الجلاء"
+    },
+    "delivery_option_id": 1,
+    "notes": "الرجاء الاتصال قبل التوصيل"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setVar("order_number", res.body.data.order_number);
+    console.log("order_number saved:", res.body.data.order_number);
+  }
+}
+
+tests {
+  test("status 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("has order_number GAZ format", function() {
+    expect(res.body.data.order_number).to.match(/^GAZ-\d{4}-\d{4}$/);
+  });
+  test("status is pending_payment", function() {
+    expect(res.body.data.status).to.equal("pending_payment");
+  });
+  test("no sub_orders exposed", function() {
+    expect(res.body.data).to.not.have.property("sub_orders");
+  });
+  test("no commission_amount exposed", function() {
+    var str = JSON.stringify(res.body.data);
+    expect(str).to.not.include("commission_amount");
+  });
+}

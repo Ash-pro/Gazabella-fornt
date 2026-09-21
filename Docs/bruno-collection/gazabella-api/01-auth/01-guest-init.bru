@@ -1,0 +1,36 @@
+meta {
+  name: Guest Init
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/auth/guest/init
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {}
+}
+
+script:post-response {
+  if (res.status === 200 || res.status === 201) {
+    bru.setVar("guest_uuid", res.body.data.guest_uuid);
+    console.log("Guest UUID saved:", res.body.data.guest_uuid);
+  }
+}
+
+tests {
+  test("status 200 or 201", function() {
+    expect(res.status).to.be.oneOf([200, 201]);
+  });
+  test("returns guest_uuid", function() {
+    expect(res.body.data).to.have.property("guest_uuid");
+  });
+}

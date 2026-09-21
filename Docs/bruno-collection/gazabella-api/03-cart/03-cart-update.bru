@@ -1,0 +1,33 @@
+meta {
+  name: Cart — Update Quantity
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{base_url}}/cart/{{cart_item_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+body:json {
+  {
+    "quantity": 3
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("quantity updated", function() {
+    var item = res.body.data.items.find(function(i) { return i.id == bru.getVar("cart_item_id"); });
+    if (item) expect(item.quantity).to.equal(3);
+  });
+}

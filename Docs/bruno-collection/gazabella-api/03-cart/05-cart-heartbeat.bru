@@ -1,0 +1,28 @@
+meta {
+  name: Cart — Heartbeat (READ-ONLY)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/cart/heartbeat
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("returns seconds_remaining per item", function() {
+    res.body.data.forEach(function(item) {
+      expect(item).to.have.property("seconds_remaining");
+      expect(item).to.have.property("cart_item_id");
+    });
+  });
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Get Product Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/products/{{product_slug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has variants", function() {
+    expect(res.body.data.variants).to.be.an("array");
+    expect(res.body.data.variants.length).to.be.above(0);
+  });
+  test("no store_id", function() {
+    expect(res.body.data).to.not.have.property("store_id");
+  });
+  test("has available_quantity per variant", function() {
+    res.body.data.variants.forEach(function(v) {
+      expect(v).to.have.property("available_quantity");
+    });
+  });
+}

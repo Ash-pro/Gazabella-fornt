@@ -1,0 +1,29 @@
+meta {
+  name: Order History (Auth)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/orders
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("returns paginated data", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body).to.have.property("meta");
+  });
+}

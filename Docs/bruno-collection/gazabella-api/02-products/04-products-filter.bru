@@ -1,0 +1,21 @@
+meta {
+  name: Products — Filter by Category
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/products?category=makeup&sort=price_asc
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("status 200 or empty", function() {
+    expect(res.status).to.equal(200);
+  });
+}

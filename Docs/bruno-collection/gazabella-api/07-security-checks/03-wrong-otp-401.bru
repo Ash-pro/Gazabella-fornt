@@ -1,0 +1,30 @@
+meta {
+  name: Wrong OTP → 422
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+body:json {
+  {
+    "phone": "0599000001",
+    "otp": "000000"
+  }
+}
+
+tests {
+  test("returns 422 on wrong OTP", function() {
+    expect(res.status).to.be.oneOf([401, 422]);
+  });
+}

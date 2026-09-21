@@ -1,0 +1,1142 @@
+openapi: 3.1.0
+
+info:
+  title: Gazabella API
+  version: 1.0.0
+  description: |
+    العقد الرسمي بين Backend (Laravel 12) وFrontend (Codex).
+    
+    ## قواعد غير قابلة للتفاوض
+    - `store_id` لا يظهر أبداً في أي response للعميل
+    - `commission_amount` لا يظهر أبداً في أي response للعميل
+    - `sub_orders` داخلية فقط — لا تُعرض للعميل
+    - OTP: 6 أرقام، TTL=300s
+    - Heartbeat: READ-ONLY — لا يمدد الحجز
+    - تمديد الحجز: مرة واحدة فقط عبر POST /orders/checkout/begin
+    - order_number format: GAZ-YYYY-XXXX
+    
+    ## Authentication
+    - Guest: `X-Guest-UUID` header (UUID v4)
+    - Authenticated: Bearer token (Sanctum)
+    
+    ## Base URL
+    `http://127.0.0.1:8000/api/v1`
+
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Local Development
+  - url: https://api.gazabella.ps/v1
+    description: Production
+
+tags:
+  - name: Auth
+    description: المصادقة عبر OTP
+  - name: Products
+    description: المنتجات والتصنيفات
+  - name: Cart
+    description: سلة التسوق والحجوزات
+  - name: Orders
+    description: الطلبات
+  - name: Payments
+    description: الدفع عبر Jawwal Pay
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum Token
+      description: رمز Sanctum يُرسل بعد التحقق من OTP
+
+  headers:
+    X-Guest-UUID:
+      description: UUID v4 خاص بالجلسة المجهولة — يُولَّد من Frontend ويُخزَّن locally
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+  schemas:
+
+    # ── Pagination ──
+    PaginationMeta:
+      type: object
+      properties:
+        current_page: { type: integer, example: 1 }
+        last_page: { type: integer, example: 5 }
+        per_page: { type: integer, example: 20 }
+        total: { type: integer, example: 87 }
+
+    # ── Error ──
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, example: "غير مصرح بالوصول" }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    # ── Category ──
+    Category:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "مستحضرات العناية بالبشرة" }
+        slug: { type: string, example: "skincare" }
+        image_url: { type: string, nullable: true, example: "https://..." }
+        parent_id: { type: integer, nullable: true, example: null }
+        children:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+
+    # ── ProductVariant (in list) ──
+    ProductVariantBrief:
+      type: object
+      properties:
+        id: { type: integer, example: 3 }
+        name: { type: string, example: "50ml" }
+        price:
+          type: string
+          format: decimal
+          example: "25.00"
+        compare_at_price:
+          type: string
+          format: decimal
+          nullable: true
+          example: "30.00"
+        available_quantity:
+          type: integer
+          description: stock_quantity - reserved_quantity (يُحسب في الـ Model accessor)
+          example: 12
+        sku: { type: string, example: "PROD-001-50ML" }
+
+    # ── Product (list item) ──
+    ProductBrief:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "كريم مرطب للوجه" }
+        slug: { type: string, example: "face-moisturizer-001" }
+        thumbnail_url:
+          type: string
+          nullable: true
+          example: "https://..."
+        min_price:
+          type: string
+          format: decimal
+          example: "15.00"
+        max_price:
+          type: string
+          format: decimal
+          example: "45.00"
+        is_available: { type: boolean, example: true }
+        category:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+
+    # ── Product (detail) ──
+    ProductDetail:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "كريم مرطب للوجه" }
+        slug: { type: string, example: "face-moisturizer-001" }
+        description: { type: string, nullable: true }
+        category:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            slug: { type: string }
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              url: { type: string }
+              alt_text: { type: string, nullable: true }
+              is_primary: { type: boolean }
+              sort_order: { type: integer }
+        variants:
+          type: array
+          items: { $ref: '#/components/schemas/ProductVariantBrief' }
+        # NOTE: store_id لا يظهر هنا أبداً
+
+    # ── Cart Item ──
+    CartItem:
+      type: object
+      properties:
+        id: { type: integer, example: 7 }
+        product_variant_id: { type: integer, example: 3 }
+        product_name: { type: string, example: "كريم مرطب للوجه" }
+        variant_name: { type: string, example: "50ml" }
+        unit_price:
+          type: string
+          format: decimal
+          example: "25.00"
+        quantity: { type: integer, example: 2 }
+        subtotal:
+          type: string
+          format: decimal
+          example: "50.00"
+        thumbnail_url: { type: string, nullable: true }
+        reservation:
+          type: object
+          nullable: true
+          properties:
+            expires_at:
+              type: string
+              format: date-time
+              example: "2026-09-20T22:38:49Z"
+            seconds_remaining: { type: integer, example: 847 }
+            is_extended: { type: boolean, example: false }
+
+    # ── Cart ──
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CartItem' }
+        total_items: { type: integer, example: 3 }
+        subtotal:
+          type: string
+          format: decimal
+          example: "75.00"
+        has_active_reservation: { type: boolean, example: false }
+
+    # ── Order Item (snapshot) ──
+    OrderItem:
+      type: object
+      description: بيانات مجمّدة وقت الطلب (snapshot)
+      properties:
+        id: { type: integer }
+        product_name: { type: string, example: "كريم مرطب للوجه" }
+        variant_name: { type: string, example: "50ml" }
+        unit_price:
+          type: string
+          format: decimal
+          example: "25.00"
+        quantity: { type: integer, example: 2 }
+        subtotal:
+          type: string
+          format: decimal
+          example: "50.00"
+        thumbnail_url: { type: string, nullable: true }
+        # NOTE: product_id/variant_id لأغراض الربط فقط (لا يعرضان store_id)
+        product_variant_id: { type: integer, example: 3 }
+
+    # ── Order ──
+    Order:
+      type: object
+      properties:
+        id: { type: integer, example: 14 }
+        order_number: { type: string, example: "GAZ-2026-0014" }
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
+          example: "pending"
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+        subtotal:
+          type: string
+          format: decimal
+          example: "75.00"
+        delivery_fee:
+          type: string
+          format: decimal
+          example: "5.00"
+        discount_amount:
+          type: string
+          format: decimal
+          example: "0.00"
+        total:
+          type: string
+          format: decimal
+          example: "80.00"
+        delivery_option:
+          type: object
+          properties:
+            name: { type: string, example: "توصيل عادي" }
+            estimated_days: { type: integer, example: 3 }
+        address:
+          type: object
+          nullable: true
+          properties:
+            full_name: { type: string }
+            phone: { type: string }
+            city: { type: string }
+            area: { type: string }
+            details: { type: string }
+        payment_status:
+          type: string
+          enum: [unpaid, pending, paid, failed, refunded]
+          example: "unpaid"
+        tracking:
+          type: array
+          items:
+            type: object
+            properties:
+              status: { type: string }
+              note: { type: string, nullable: true }
+              created_at: { type: string, format: date-time }
+        coupon_code: { type: string, nullable: true, example: "SAVE10" }
+        notes: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        # NOTE: sub_orders لا تظهر هنا أبداً
+        # NOTE: store_id لا يظهر هنا أبداً
+
+    # ── User ──
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, nullable: true, example: "محمد أبو علي" }
+        phone: { type: string, example: "+970591234567" }
+        created_at: { type: string, format: date-time }
+
+    # ── DeliveryOption ──
+    DeliveryOption:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "توصيل عادي" }
+        description: { type: string, nullable: true }
+        fee:
+          type: string
+          format: decimal
+          example: "5.00"
+        estimated_days: { type: integer, example: 3 }
+        is_available: { type: boolean, example: true }
+
+  responses:
+    Unauthorized:
+      description: غير مصرح
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            message: "غير مصرح بالوصول"
+    
+    NotFound:
+      description: المورد غير موجود
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            message: "المنتج غير موجود"
+    
+    Unprocessable:
+      description: خطأ في بيانات الإدخال
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            message: "البيانات المدخلة غير صحيحة"
+            errors:
+              phone: ["رقم الهاتف مطلوب"]
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  # ════════════════════════════
+  # AUTH
+  # ════════════════════════════
+
+  /auth/guest/init:
+    post:
+      tags: [Auth]
+      summary: إنشاء جلسة مجهولة
+      description: |
+        يُرسَل عند فتح التطبيق لأول مرة (أو عند انتهاء صلاحية UUID المحفوظ).
+        Frontend يولّد UUID ويرسله — Backend يحفظه ويعيد التأكيد.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [guest_uuid]
+              properties:
+                guest_uuid:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '201':
+          description: جلسة مجهولة مُنشأة
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guest_uuid: { type: string, format: uuid }
+                  expires_at: { type: string, format: date-time }
+        '200':
+          description: جلسة مجهولة موجودة مسبقاً (تجديد)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  guest_uuid: { type: string, format: uuid }
+                  expires_at: { type: string, format: date-time }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /auth/otp/send:
+    post:
+      tags: [Auth]
+      summary: إرسال OTP
+      description: |
+        يُرسل رمز OTP مكوّن من 6 أرقام إلى رقم الهاتف.
+        يُخزَّن مشفّراً (bcrypt) في Redis بـ TTL=300s.
+        إذا كان رقم الهاتف موجوداً → تسجيل دخول. إذا لم يكن → تسجيل جديد.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+970[0-9]{9}$'
+                  example: "+970591234567"
+      responses:
+        '200':
+          description: OTP أُرسل بنجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "تم إرسال رمز التحقق" }
+                  expires_in_seconds: { type: integer, example: 300 }
+        '429':
+          description: محاولات كثيرة — انتظر قبل إعادة الإرسال
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "انتظر 45 ثانية قبل إعادة الإرسال"
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      summary: التحقق من OTP والحصول على Token
+      description: |
+        يتحقق من الرمز المدخل مقابل bcrypt hash في Redis.
+        عند النجاح: يُنشئ Sanctum token ويُدمج سلة الـ Guest مع حساب المستخدم.
+      security: []
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+          description: UUID الجلسة المجهولة لدمج السلة (اختياري — إذا كانت موجودة)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, otp]
+              properties:
+                phone:
+                  type: string
+                  example: "+970591234567"
+                otp:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "482917"
+      responses:
+        '200':
+          description: تم التحقق — Token صالح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string, example: "1|AbCdEfGhIjKlMnOp..." }
+                  token_type: { type: string, example: "Bearer" }
+                  user: { $ref: '#/components/schemas/User' }
+                  cart_merged: { type: boolean, example: true }
+        '401':
+          description: رمز OTP خاطئ أو منتهي
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "رمز التحقق غير صحيح أو انتهت صلاحيته"
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: تسجيل الخروج
+      description: يحذف Sanctum token الحالي
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: تم تسجيل الخروج
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "تم تسجيل الخروج بنجاح" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ════════════════════════════
+  # PRODUCTS
+  # ════════════════════════════
+
+  /categories:
+    get:
+      tags: [Products]
+      summary: قائمة التصنيفات
+      description: يعيد شجرة التصنيفات مع الفروع (children)
+      security: []
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+          required: false
+      responses:
+        '200':
+          description: قائمة التصنيفات
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Category' }
+
+  /products:
+    get:
+      tags: [Products]
+      summary: قائمة المنتجات
+      security: []
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+          required: false
+        - in: query
+          name: category_slug
+          schema: { type: string }
+          example: "skincare"
+        - in: query
+          name: search
+          schema: { type: string }
+          example: "كريم"
+        - in: query
+          name: min_price
+          schema: { type: number }
+        - in: query
+          name: max_price
+          schema: { type: number }
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [price_asc, price_desc, newest, popular]
+          example: "newest"
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 20, maximum: 50 }
+      responses:
+        '200':
+          description: قائمة المنتجات
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProductBrief' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /products/{slug}:
+    get:
+      tags: [Products]
+      summary: تفاصيل منتج
+      security: []
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+          required: false
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          example: "face-moisturizer-001"
+      responses:
+        '200':
+          description: تفاصيل المنتج (بدون store_id)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProductDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ════════════════════════════
+  # CART
+  # ════════════════════════════
+
+  /cart:
+    get:
+      tags: [Cart]
+      summary: عرض السلة
+      description: يعيد محتويات السلة للمستخدم المسجل أو الزائر
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+          description: مطلوب إذا كان الزائر غير مسجل
+      responses:
+        '200':
+          description: محتويات السلة
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Cart' }
+
+    post:
+      tags: [Cart]
+      summary: إضافة منتج إلى السلة
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_variant_id, quantity]
+              properties:
+                product_variant_id:
+                  type: integer
+                  example: 3
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  example: 2
+      responses:
+        '200':
+          description: المنتج أُضيف / تم تحديث الكمية
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Cart' }
+        '409':
+          description: الكمية المطلوبة تتجاوز المتاح
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "الكمية المطلوبة غير متوفرة"
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /cart/{item_id}:
+    patch:
+      tags: [Cart]
+      summary: تحديث كمية عنصر في السلة
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+        - in: path
+          name: item_id
+          required: true
+          schema: { type: integer }
+          example: 7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  example: 3
+      responses:
+        '200':
+          description: الكمية حُدِّثت
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Cart' }
+        '409':
+          description: الكمية تتجاوز المتاح
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    delete:
+      tags: [Cart]
+      summary: حذف عنصر من السلة
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+        - in: path
+          name: item_id
+          required: true
+          schema: { type: integer }
+          example: 7
+      responses:
+        '200':
+          description: العنصر حُذف
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /cart/reserve:
+    post:
+      tags: [Cart]
+      summary: حجز مؤقت لعناصر السلة
+      description: |
+        يحجز عناصر السلة لمدة 15 دقيقة.
+        إذا كانت الكمية غير كافية لأي عنصر → يُفشل الحجز كاملاً (atomic).
+        **لا يمكن تمديد هذا الحجز من هنا** — التمديد فقط عبر /orders/checkout/begin
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: تم الحجز بنجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Cart' }
+                  reserved_until:
+                    type: string
+                    format: date-time
+                    example: "2026-09-20T22:38:49Z"
+                  seconds_remaining: { type: integer, example: 900 }
+        '409':
+          description: بعض العناصر غير متوفرة بالكمية المطلوبة
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "بعض العناصر غير متوفرة" }
+                  unavailable_items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cart_item_id: { type: integer }
+                        product_name: { type: string }
+                        variant_name: { type: string }
+                        requested: { type: integer }
+                        available: { type: integer }
+
+  /cart/heartbeat:
+    post:
+      tags: [Cart]
+      summary: التحقق من حالة الحجز (READ-ONLY)
+      description: |
+        **READ-ONLY تماماً** — لا يمدد الحجز، لا يعدّل أي شيء.
+        يُستخدم فقط لإعلام Frontend بالوقت المتبقي.
+        الاستجابة: حالة الحجز الحالية بدون أي تعديل.
+      security:
+        - bearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: X-Guest-UUID
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: حالة الحجز الحالية
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  has_reservation: { type: boolean }
+                  seconds_remaining:
+                    type: integer
+                    nullable: true
+                    example: 423
+                  is_extended: { type: boolean, example: false }
+                  expires_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+        '200 (expired)':
+          description: الحجز انتهى (لا يزال 200 — Frontend يتعامل معه)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  has_reservation: { type: boolean, example: false }
+                  seconds_remaining: { type: integer, nullable: true, example: null }
+                  is_extended: { type: boolean, example: false }
+                  expires_at: { type: string, nullable: true, example: null }
+
+  # ════════════════════════════
+  # ORDERS
+  # ════════════════════════════
+
+  /orders/checkout/begin:
+    post:
+      tags: [Orders]
+      summary: بدء الدفع — تمديد الحجز (مرة واحدة فقط)
+      description: |
+        **أهم endpoint في النظام.**
+        - يمدد الحجز إلى 30 دقيقة كحد أقصى (مرة واحدة فقط — is_extended يصبح true)
+        - إذا كان is_extended = true مسبقاً → يرفض التمديد ويعيد الوقت المتبقي
+        - يعيد خيارات التوصيل للاختيار
+        - يتحقق من صحة الكوبون إذا أُرسل
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coupon_code:
+                  type: string
+                  nullable: true
+                  example: "SAVE10"
+      responses:
+        '200':
+          description: الحجز مُمتدّ — جاهز للدفع
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reservation_extended: { type: boolean, example: true }
+                  reserved_until:
+                    type: string
+                    format: date-time
+                    example: "2026-09-20T22:53:49Z"
+                  seconds_remaining: { type: integer, example: 1800 }
+                  cart: { $ref: '#/components/schemas/Cart' }
+                  delivery_options:
+                    type: array
+                    items: { $ref: '#/components/schemas/DeliveryOption' }
+                  coupon:
+                    type: object
+                    nullable: true
+                    properties:
+                      code: { type: string }
+                      discount_type: { type: string, enum: [fixed, percentage] }
+                      discount_value: { type: string, format: decimal }
+                      discount_amount: { type: string, format: decimal }
+        '409':
+          description: الحجز منتهٍ أو غير موجود — يجب العودة للسلة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "انتهت مدة الحجز — يرجى إعادة الحجز"
+        '422':
+          description: كوبون غير صالح أو خطأ في البيانات
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "رمز الكوبون غير صالح أو انتهت صلاحيته"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /orders:
+    post:
+      tags: [Orders]
+      summary: إنشاء الطلب
+      description: |
+        يُنشئ الطلب الفعلي بعد تأكيد بيانات التوصيل.
+        - يتحقق من الحجز (يجب أن يكون active)
+        - يُنشئ Order بـ order_number = GAZ-YYYY-XXXX
+        - يُنشئ sub_orders داخلياً (مخفية عن العميل)
+        - يُنشئ order_items كـ snapshot (product_name, variant_name, unit_price)
+        - يُطبّق الكوبون إن وجد
+        - الخطوة التالية: POST /payments/init
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delivery_option_id, address]
+              properties:
+                delivery_option_id:
+                  type: integer
+                  example: 1
+                coupon_code:
+                  type: string
+                  nullable: true
+                  example: "SAVE10"
+                notes:
+                  type: string
+                  nullable: true
+                  maxLength: 500
+                  example: "اتصلوا قبل التوصيل"
+                address:
+                  type: object
+                  required: [full_name, phone, city, area, details]
+                  properties:
+                    full_name: { type: string, example: "محمد أبو علي" }
+                    phone: { type: string, example: "+970591234567" }
+                    city: { type: string, example: "غزة" }
+                    area: { type: string, example: "الرمال" }
+                    details: { type: string, example: "شارع عمر المختار، بناية الياسمين، طابق 3" }
+                    save_address: { type: boolean, default: false }
+      responses:
+        '201':
+          description: الطلب أُنشئ بنجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Order' }
+                  next_step:
+                    type: string
+                    example: "POST /api/v1/payments/init"
+        '409':
+          description: الحجز منتهٍ — يجب العودة للسلة
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "انتهت مدة الحجز — يرجى إعادة العملية"
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+    get:
+      tags: [Orders]
+      summary: قائمة طلبات المستخدم
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
+      responses:
+        '200':
+          description: قائمة الطلبات
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Order' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /orders/{order_number}:
+    get:
+      tags: [Orders]
+      summary: تفاصيل طلب بعينه
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: order_number
+          required: true
+          schema: { type: string }
+          example: "GAZ-2026-0014"
+      responses:
+        '200':
+          description: تفاصيل الطلب (بدون sub_orders أو store_id)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ════════════════════════════
+  # PAYMENTS
+  # ════════════════════════════
+
+  /payments/init:
+    post:
+      tags: [Payments]
+      summary: بدء عملية الدفع عبر Jawwal Pay
+      description: |
+        يُنشئ جلسة دفع مع Jawwal Pay ويعيد payment_url.
+        Frontend يُحوّل المستخدم إلى هذا الـ URL.
+        بعد إتمام الدفع → Jawwal Pay يُرسل webhook إلى /payments/webhook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_id]
+              properties:
+                order_id:
+                  type: integer
+                  example: 14
+      responses:
+        '200':
+          description: رابط الدفع جاهز
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_url:
+                    type: string
+                    example: "https://pay.jawwalpay.ps/session/abc123"
+                  payment_id:
+                    type: integer
+                    example: 5
+                  expires_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: الطلب غير موجود أو لا ينتمي للمستخدم
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: الطلب مدفوع مسبقاً
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "هذا الطلب مدفوع مسبقاً"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /payments/webhook:
+    post:
+      tags: [Payments]
+      summary: Webhook من Jawwal Pay
+      description: |
+        **لا يُستدعى من Frontend مطلقاً.**
+        يُرسَل من Jawwal Pay فقط.
+        Backend يتحقق من التوقيع (HMAC) قبل معالجة أي شيء.
+        عند النجاح:
+          - يُحدّث payment status → paid
+          - يُحدّث order status → confirmed
+          - يُطلق PaymentConfirmed event (WebSocket)
+          - يُحرّر الحجز
+        عند الفشل:
+          - يُحدّث payment status → failed
+          - يُطلق PaymentFailed event (WebSocket)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: البنية تحددها Jawwal Pay — Backend يتعامل معها داخلياً
+              properties:
+                transaction_id: { type: string }
+                merchant_order_id: { type: string }
+                status: { type: string, enum: [success, failed, pending] }
+                amount: { type: string }
+                signature: { type: string, description: HMAC للتحقق }
+      responses:
+        '200':
+          description: Webhook استُقبل وعُولج
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received: { type: boolean, example: true }
+        '400':
+          description: توقيع غير صالح
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example:
+                message: "Invalid webhook signature"
+
+# ─────────────────────────────────────────────
+# WEBSOCKET EVENTS (Laravel Reverb)
+# ─────────────────────────────────────────────
+# هذه ليست HTTP endpoints — موثّقة هنا للمرجع
+#
+# cart.{userId}       → ReservationExpired    { cart_item_ids: [], message: string }
+# products            → StockDepleted         { product_variant_id: int, available: int }
+# private-orders.{userId} → OrderStatusChanged { order_number: string, status: string }
+# private-orders.{userId} → PaymentConfirmed   { order_number: string, payment_id: int }
+# private-orders.{userId} → PaymentFailed      { order_number: string, reason: string }

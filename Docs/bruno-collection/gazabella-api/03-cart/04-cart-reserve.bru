@@ -1,0 +1,26 @@
+meta {
+  name: Cart — Reserve Items
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/cart/reserve
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("items are now reserved", function() {
+    var reserved = res.body.data.items.filter(function(i) { return i.reservation !== null; });
+    expect(reserved.length).to.be.above(0);
+  });
+}

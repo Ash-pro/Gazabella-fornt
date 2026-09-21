@@ -1,0 +1,21 @@
+meta {
+  name: Cart without UUID → 401
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/cart
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("returns 401 without X-Guest-UUID", function() {
+    expect(res.status).to.equal(401);
+  });
+}

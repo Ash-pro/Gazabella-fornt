@@ -1,0 +1,41 @@
+meta {
+  name: Get Products List
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/products?per_page=10
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data.length > 0) {
+    bru.setVar("product_slug", res.body.data[0].slug);
+    // احفظ variant_id لاستخدامه في السلة
+    if (res.body.data[0].variants && res.body.data[0].variants.length > 0) {
+      bru.setVar("variant_id", res.body.data[0].variants[0].id);
+      console.log("variant_id saved:", res.body.data[0].variants[0].id);
+    }
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has data and meta", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body).to.have.property("meta");
+  });
+  test("no store_id in products", function() {
+    res.body.data.forEach(function(product) {
+      expect(product).to.not.have.property("store_id");
+    });
+  });
+}

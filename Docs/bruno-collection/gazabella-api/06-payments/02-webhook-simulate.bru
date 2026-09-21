@@ -1,0 +1,36 @@
+meta {
+  name: Webhook Simulate (Jawwal Pay SUCCESS)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/payments/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "transaction_id": "TXN-TEST-001",
+    "merchant_ref": "{{order_number}}",
+    "status": "SUCCESS",
+    "amount": 50.00,
+    "currency": "ILS",
+    "timestamp": "2026-09-20T10:00:00Z"
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("acknowledged", function() {
+    expect(res.body.received).to.equal(true);
+  });
+}

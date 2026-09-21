@@ -1,0 +1,33 @@
+meta {
+  name: Webhook Simulate (FAILED payment)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/payments/webhook
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "transaction_id": "TXN-TEST-FAIL",
+    "merchant_ref": "{{order_number}}",
+    "status": "FAILED",
+    "amount": 50.00,
+    "currency": "ILS",
+    "timestamp": "2026-09-20T10:01:00Z"
+  }
+}
+
+tests {
+  test("status 200 (always acknowledge)", function() {
+    expect(res.status).to.equal(200);
+  });
+}

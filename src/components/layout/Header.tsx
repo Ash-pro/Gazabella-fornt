@@ -1,0 +1,41 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { gazabellaApi } from '../../api/gazabella'
+import { useAuthStore } from '../../stores/authStore'
+import { useCartStore } from '../../stores/cartStore'
+import { Icon } from '../ui/Icon'
+import { Dialog } from '../ui/Dialog'
+
+export function Header() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [searchParams] = useSearchParams()
+  const querySearch = searchParams.get('search') || ''
+  const [draftSearch, setDraftSearch] = useState({query:querySearch,value:querySearch})
+  const search = draftSearch.query === querySearch ? draftSearch.value : querySearch
+  const navigate = useNavigate()
+  const token = useAuthStore((s) => s.token)
+  const openDrawer = useCartStore((s) => s.openDrawer)
+  const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
+  function submit(event: React.FormEvent) {
+    event.preventDefault()
+    navigate(search.trim() ? `/?search=${encodeURIComponent(search.trim())}#products` : '/#products')
+    setMenuOpen(false)
+  }
+  const searchField = <form onSubmit={submit} role="search" className="header-search"><Icon name="search" className="size-5" /><input aria-label="ابحثي في Gazabella" placeholder="عن ماذا تبحثين اليوم؟" value={search} onChange={(e) => setDraftSearch({query:querySearch,value:e.target.value})} /><button type="submit">بحث</button></form>
+  return <>
+    <div className="announcement"><Icon name="truck" className="size-4" /> اختيارات من متاجر متعددة. سلة واحدة وتوصيل موحّد في خانيونس.</div>
+    <header className="store-header">
+      <div className="container-page header-main">
+        <button className="icon-button menu-trigger" aria-label="فتح التصنيفات" onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
+        <Link to="/" aria-label="Gazabella — الرئيسية" className="brand-lockup"><img src="/brand/symbol/logo-128.webp" alt="" /><span><b>Gazabella</b><small>BEAUTY, CLOSER TO YOU</small></span></Link>
+        <div className="desktop-search">{searchField}</div>
+        <div className="header-actions"><Link className="icon-button" to={token ? '/orders' : '/auth'} aria-label={token ? 'حسابي وطلباتي' : 'تسجيل الدخول'}><Icon name="user" className="size-5" /></Link><button className="icon-button relative" onClick={openDrawer} aria-label={`السلة، ${cart?.total_items ?? 0} عناصر`}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
+      </div>
+      <div className="container-page mobile-search">{searchField}</div>
+      <nav className="container-page header-nav" aria-label="التصنيفات الرئيسية"><Link to="/#products" className={!searchParams.get('category') ? 'active' : ''}>جميع المنتجات</Link>{categories?.map((category) => <Link key={category.id} className={searchParams.get('category') === category.slug ? 'active' : ''} to={`/?category=${category.slug}#products`}>{category.name}</Link>)}</nav>
+    </header>
+    {menuOpen && <Dialog title="اكتشفي Gazabella" sheet onClose={() => setMenuOpen(false)}><div className="p-5 space-y-3"><Link className="menu-category" to="/#products" onClick={() => setMenuOpen(false)}>جميع المنتجات <Icon name="arrow" className="size-4 rotate-180" /></Link>{categories?.map((category) => <details key={category.id} className="category-disclosure"><summary>{category.name}</summary><Link to={`/?category=${category.slug}#products`} onClick={() => setMenuOpen(false)}>كل {category.name}</Link>{category.children.map((child) => <Link key={child.id} to={`/?category=${category.slug}&sub=${child.slug}#products`} onClick={() => setMenuOpen(false)}>{child.name}</Link>)}</details>)}<Link className="btn-primary w-full mt-6" to={token ? '/orders' : '/auth'} onClick={() => setMenuOpen(false)}>حسابي وطلباتي</Link></div></Dialog>}
+  </>
+}

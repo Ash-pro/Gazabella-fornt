@@ -1,0 +1,45 @@
+meta {
+  name: Cart — Add Item (Guest)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/cart
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+body:json {
+  {
+    "product_variant_id": {{variant_id}},
+    "quantity": 2
+  }
+}
+
+script:post-response {
+  if (res.status === 201 && res.body.data.items.length > 0) {
+    bru.setVar("cart_item_id", res.body.data.items[0].id);
+    console.log("cart_item_id saved:", res.body.data.items[0].id);
+  }
+}
+
+tests {
+  test("status 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("item added to cart", function() {
+    expect(res.body.data.items.length).to.be.above(0);
+  });
+  test("no store_id in cart items", function() {
+    res.body.data.items.forEach(function(item) {
+      expect(item).to.not.have.property("store_id");
+    });
+  });
+}

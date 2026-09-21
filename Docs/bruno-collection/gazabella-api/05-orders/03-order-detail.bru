@@ -1,0 +1,38 @@
+meta {
+  name: Order Detail (by order_number)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/orders/{{order_number}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has tracking history", function() {
+    expect(res.body.data.tracking).to.be.an("array");
+    expect(res.body.data.tracking.length).to.be.above(0);
+  });
+  test("has order items snapshot", function() {
+    expect(res.body.data.items).to.be.an("array");
+  });
+  test("no sub_orders or store_id", function() {
+    expect(res.body.data).to.not.have.property("sub_orders");
+    var str = JSON.stringify(res.body.data);
+    expect(str).to.not.include("store_id");
+    expect(str).to.not.include("commission_amount");
+  });
+}

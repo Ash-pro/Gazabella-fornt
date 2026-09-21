@@ -1,0 +1,32 @@
+meta {
+  name: OTP Send
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/auth/otp/send
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+body:json {
+  {
+    "phone": "0599000001"
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("otp sent", function() {
+    expect(res.body.message).to.include("OTP");
+  });
+}

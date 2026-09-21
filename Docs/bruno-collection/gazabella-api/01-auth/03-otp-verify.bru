@@ -1,0 +1,43 @@
+meta {
+  name: OTP Verify (Login)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/auth/otp/verify
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+  X-Guest-UUID: {{guest_uuid}}
+}
+
+body:json {
+  {
+    "phone": "0599000001",
+    "otp": "123456"
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    bru.setVar("bearer_token", res.body.data.token);
+    console.log("Bearer token saved:", res.body.data.token);
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("returns token", function() {
+    expect(res.body.data).to.have.property("token");
+  });
+  test("returns user", function() {
+    expect(res.body.data).to.have.property("user");
+  });
+}

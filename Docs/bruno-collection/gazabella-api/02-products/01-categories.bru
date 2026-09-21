@@ -1,0 +1,29 @@
+meta {
+  name: Get Categories
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/categories
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("returns data array", function() {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("no store_id exposed", function() {
+    if (res.body.data.length > 0) {
+      expect(res.body.data[0]).to.not.have.property("store_id");
+    }
+  });
+}

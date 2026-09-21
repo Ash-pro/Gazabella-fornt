@@ -1,0 +1,46 @@
+meta {
+  name: Payment Init
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/payments/init
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{bearer_token}}
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "order_number": "{{order_number}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.data) {
+    bru.setVar("payment_url", res.body.data.payment_url);
+    console.log("Payment URL:", res.body.data.payment_url);
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("returns payment_url", function() {
+    expect(res.body.data).to.have.property("payment_url");
+    expect(res.body.data.payment_url).to.include("jawwalpay");
+  });
+  test("returns expires_at", function() {
+    expect(res.body.data).to.have.property("expires_at");
+  });
+}
