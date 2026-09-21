@@ -8,7 +8,7 @@ import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { useCheckoutStore } from '../stores/checkoutStore'
-import { money, formatPrice } from '../lib/format'
+import { formatPrice } from '../lib/format'
 import { demoDispute, demoOpenDispute } from '../mock/demoOperations'
 
 const labels: Record<string, string> = { pending: 'استلام الطلب', confirmed: 'تم التأكيد', processing: 'قيد التجهيز', shipped: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغي', refunded: 'مسترد' }

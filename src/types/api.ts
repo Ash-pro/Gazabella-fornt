@@ -68,6 +68,8 @@ export interface CartItem {
   quantity: number
   subtotal: string
   thumbnail_url: string | null
+  product_slug: string | null
+  available_quantity: number
   reservation: Reservation | null
 }
 

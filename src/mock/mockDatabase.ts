@@ -466,6 +466,8 @@ export function getStoredCart(): Cart {
         quantity: 2,
         subtotal: '56.00',
         thumbnail_url: '/images/products/serum.webp',
+        product_slug: 'serum-aurelia-100ml',
+        available_quantity: 10,
         reservation: {
           expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
           seconds_remaining: 900,
@@ -482,6 +484,8 @@ export function getStoredCart(): Cart {
         quantity: 1,
         subtotal: '120.00',
         thumbnail_url: '/images/products/perfume.webp',
+        product_slug: 'oud-rose-50ml',
+        available_quantity: 5,
         reservation: {
           expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
           seconds_remaining: 900,
