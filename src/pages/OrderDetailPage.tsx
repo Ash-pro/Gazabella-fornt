@@ -60,7 +60,10 @@ export function OrderDetailPage() {
   const [searchParams] = useSearchParams()
   const client = useQueryClient()
   const [disputeOpen, setDisputeOpen] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(() => searchParams.get('created') === '1')
+  const [showConfirm, setShowConfirm] = useState(() => {
+    if (searchParams.get('created') === '1') return true
+    try { return sessionStorage.getItem('gz_order_confirmed') === orderNumber } catch { return false }
+  })
   const [reason, setReason] = useState('')
   const [now, setNow] = useState(Date.now)
   useEffect(() => { const timer=setInterval(() => setNow(Date.now()),30_000); return () => clearInterval(timer) }, [])
@@ -81,7 +84,7 @@ export function OrderDetailPage() {
   const savedDispute = isMockMode() ? demoDispute(orderNumber) : undefined
   const withinDisputeWindow = order.status === 'delivered' && order.escrow_expires_at && Date.parse(order.escrow_expires_at) > now
   return <div className="container-page py-8 sm:py-12">
-    {showConfirm && <OrderConfirmModal orderNumber={order.order_number} onClose={() => setShowConfirm(false)} />}
+    {showConfirm && <OrderConfirmModal orderNumber={order.order_number} onClose={() => { try { sessionStorage.removeItem('gz_order_confirmed') } catch {}; setShowConfirm(false) }} />}
     <Link to="/orders" className="text-link mb-7"><Icon name="arrow" className="size-4" /> كل الطلبات</Link>
     {searchParams.get('payment') === 'failed' && order.payment_status !== 'paid' && <p className="demo-note mb-5" role="alert">لم تكتمل عملية الدفع. حالة طلبكِ محفوظة ويمكنكِ مراجعتها هنا.</p>}
     <div className="flex flex-wrap items-center justify-between gap-4"><div><span className="eyebrow">كل التفاصيل في مكان واحد</span><h1 className="mt-2 text-2xl font-bold num" dir="ltr">{order.order_number}</h1><p className="mt-2 text-xs text-[var(--text-3)] num">{date(order.created_at)}</p></div><span className={'status-badge status-' + order.status}>{labels[order.status] || order.status}</span></div>

@@ -1,60 +1,46 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { queryClient } from '../lib/queryClient'
-import { getEcho, disconnectEcho } from '../lib/echo'
-import { useAuthStore } from '../stores/authStore'
-import { useCartStore } from '../stores/cartStore'
-import { isMockMode } from '../api/gazabella'
+/**
+ * useRealtimeEvents
+ *
+ * Subscribes to Laravel Echo / Pusher channels when the user is authenticated.
+ * Gracefully no-ops when the Echo back-end is not configured
+ * (VITE_PUSHER_APP_KEY / VITE_PUSHER_HOST not set).
+ */
 
-export function useRealtimeEvents() {
-  const user = useAuthStore((state) => state.user)
-  const clearReservation = useCartStore((state) => state.clearReservation)
-  const navigate = useNavigate()
+import { useEffect } from 'react'
+import { getEcho } from '../lib/echo'
+import { useAuthStore } from '../stores/authStore'
+import { queryClient } from '../lib/queryClient'
+
+export function useRealtimeEvents(): void {
+  const token = useAuthStore((s) => s.token)
+  const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
-    // في وضع الداتا الوهمية (Mock Mode) أو في حال عدم وجود مستخدم: لا نشغل Reverb
-    if (!user || isMockMode()) return
+    if (!token || !user) return
 
-    try {
-      const echo = getEcho()
-      if (!echo) return
+    let cancelled = false
 
-      const cartChannel = `cart.${user.id}`
-      const orderChannel = `orders.${user.id}`
+    void getEcho().then((echo) => {
+      if (!echo || cancelled) return
 
-      echo.channel(cartChannel).listen('ReservationExpired', () => {
-        clearReservation()
-        void queryClient.invalidateQueries({ queryKey: ['cart'] })
-        navigate('/cart', { replace: true })
-      })
-
+      // Invalidate the orders list whenever an order status changes
       echo
-        .private(orderChannel)
-        .listen('OrderStatusChanged', (event: { order_number: string }) => {
+        .private(`App.Models.User.${user.id}`)
+        .listen('.order.status.updated', () => {
           void queryClient.invalidateQueries({ queryKey: ['orders'] })
-          void queryClient.invalidateQueries({ queryKey: ['order', event.order_number] })
-        })
-        .listen('PaymentConfirmed', (event: { order_number: string }) => {
-          void queryClient.invalidateQueries({ queryKey: ['orders'] })
-          void queryClient.invalidateQueries({ queryKey: ['order', event.order_number] })
-          navigate(`/orders/${event.order_number}`, { replace: true })
-        })
-        .listen('PaymentFailed', (event: { order_number: string }) => {
-          navigate(`/orders/${event.order_number}?payment=failed`, { replace: true })
         })
 
-      return () => {
-        try {
-          echo.leave(cartChannel)
-          echo.leave(orderChannel)
-          disconnectEcho()
-        } catch {
-          // ignore cleanup errors
-        }
-      }
-    } catch (err) {
-      console.warn('Realtime events not available:', err)
+      // Invalidate cart when a reservation changes server-side
+      echo
+        .private(`App.Models.User.${user.id}`)
+        .listen('.cart.reservation.updated', () => {
+          void queryClient.invalidateQueries({ queryKey: ['cart'] })
+        })
+    })
+
+    return () => {
+      cancelled = true
+      // Channel cleanup is handled globally in disconnectEcho (called on logout)
     }
-  }, [clearReservation, navigate, user])
+  }, [token, user])
 }
-

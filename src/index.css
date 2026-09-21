@@ -541,10 +541,53 @@ body { min-width: 0; }
   unicode-bidi: embed;
 }
 
+/* ── Checkout Processing Overlay ── */
+.checkout-processing-overlay {
+  position: fixed;
+  inset: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 252, 250, 0.92);
+  backdrop-filter: blur(8px);
+  animation: oc-backdrop-in .25s ease-out;
+}
+.checkout-processing-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 48px 40px;
+  background: white;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px rgba(68,33,22,.12);
+  animation: oc-modal-in .35s cubic-bezier(.34,1.56,.64,1);
+}
+.checkout-processing-ring {
+  width: 56px !important;
+  height: 56px !important;
+  border-width: 4px !important;
+}
+.checkout-processing-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.checkout-processing-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: -10px;
+}
+
 /* ── Order Confirm Modal ── */
 .order-confirm-backdrop {
   position: fixed;
   inset: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -745,3 +788,90 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
 .product-detail-skeleton .skel-line--price { height: 24px; width: 40%; }
 .product-detail-skeleton .skel-line--short { width: 55%; }
 .product-detail-skeleton .skel-btn { height: 48px; border-radius: 12px; background: var(--surface2); animation: soft-pulse 1.6s ease-in-out infinite; margin-top: 8px; }
+
+/* ─── PWA Install Prompt ─────────────────────────────────────────────────── */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  right: 16px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-hard);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(26, 10, 16, 0.14);
+  animation: pwa-slide-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  max-width: 480px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .pwa-install-prompt {
+    bottom: env(safe-area-inset-bottom, 24px);
+    left: auto;
+    right: 24px;
+    max-width: 360px;
+    margin: 0;
+  }
+}
+@keyframes pwa-slide-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.pwa-install-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.pwa-install-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-dim);
+  color: var(--primary);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.pwa-install-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.pwa-install-sub {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.pwa-install-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pwa-install-btn {
+  padding: 8px 18px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+.pwa-dismiss-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.pwa-dismiss-btn:hover { background: var(--surface2); color: var(--text); }

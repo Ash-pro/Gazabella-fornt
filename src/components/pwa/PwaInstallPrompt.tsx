@@ -1,68 +1,72 @@
-import { useState, useEffect } from 'react'
-import { promptPwaInstall, canInstallPwa } from '../../lib/registerSw'
-import { useLocation } from 'react-router-dom'
-import { useCartStore } from '../../stores/cartStore'
+import { useEffect, useState } from 'react'
 import { Icon } from '../ui/Icon'
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+const DISMISSED_KEY = 'gz_pwa_dismissed'
+
+function isDismissed(): boolean {
+  try { return localStorage.getItem(DISMISSED_KEY) === '1' } catch { return false }
+}
+
+function setDismissed(): void {
+  try { localStorage.setItem(DISMISSED_KEY, '1') } catch {}
+}
+
 export function PwaInstallPrompt() {
-  const location = useLocation()
-  const busy = useCartStore((s) => s.isDrawerOpen || !!s.cartToast)
-  const [showPrompt, setShowPrompt] = useState(() => canInstallPwa() && !sessionStorage.getItem('gazabella-install-dismissed'))
-  const [installed, setInstalled] = useState(false)
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    function handleInstallable() {
-      if (!sessionStorage.getItem('gazabella-install-dismissed')) setShowPrompt(true)
-    }
+    // Don't show if already dismissed or already installed (standalone mode)
+    if (isDismissed()) return
+    if (window.matchMedia('(display-mode: standalone)').matches) return
 
-    window.addEventListener('gazabella-pwa-installable', handleInstallable)
-    return () => window.removeEventListener('gazabella-pwa-installable', handleInstallable)
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setPrompt(e as BeforeInstallPromptEvent)
+      setVisible(true)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  async function handleInstall() {
-    const success = await promptPwaInstall()
-    if (success) {
-      setInstalled(true)
-      setTimeout(() => setShowPrompt(false), 2000)
-    }
+  if (!visible || !prompt) return null
+
+  const handleInstall = async () => {
+    try {
+      await prompt.prompt()
+      const { outcome } = await prompt.userChoice
+      if (outcome === 'accepted') setVisible(false)
+    } catch {}
   }
 
-  if (!showPrompt || location.pathname !== '/' || busy) return null
+  const handleDismiss = () => {
+    setDismissed()
+    setVisible(false)
+  }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 mx-auto max-w-md animate-bounce-short lg:bottom-6 lg:left-auto lg:right-6">
-      <div className="flex items-center gap-3 rounded-2xl border border-[var(--gold)]/30 bg-[#2A1A1F] p-4 text-white shadow-2xl backdrop-blur-lg">
-        <img
-          src="/brand/symbol/logo-192.webp"
-          alt="Gazabella"
-          className="size-12 rounded-xl bg-white p-1 shadow-sm shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 text-[var(--gold)] font-extrabold text-xs">
-            <Icon name="sparkle" className="size-3.5" />
-            <span>تطبيق Gazabella للجوال</span>
-          </div>
-          <h4 className="text-sm font-extrabold truncate">ثبّتي التطبيق على شاشتكِ الرئيسية</h4>
-          <p className="text-[11px] text-white/70 truncate">تصفح فائق السرعة بلمسة واحدة</p>
+    <div className="pwa-install-prompt" role="complementary" aria-label="تثبيت التطبيق">
+      <div className="pwa-install-content">
+        <div className="pwa-install-icon" aria-hidden="true">
+          <Icon name="bag" className="size-5" />
         </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleInstall}
-            className="rounded-full bg-[var(--gold)] px-3 py-1.5 text-xs font-extrabold text-[#2A1A1F] shadow-sm hover:brightness-110 active:scale-95 transition-all"
-          >
-            {installed ? 'تم التثبيت ✓' : 'تثبيت'}
-          </button>
-          <button
-            type="button"
-            onClick={() => { sessionStorage.setItem('gazabella-install-dismissed', '1'); setShowPrompt(false) }}
-            className="rounded-full p-1 text-white/50 hover:text-white"
-            aria-label="إغلاق"
-          >
-            <Icon name="close" className="size-4" />
-          </button>
+        <div className="pwa-install-text">
+          <b className="pwa-install-title">أضيفي Gazabella لشاشتكِ</b>
+          <p className="pwa-install-sub">تجربة تطبيق أسرع وأسهل</p>
         </div>
+      </div>
+      <div className="pwa-install-actions">
+        <button type="button" className="btn-primary pwa-install-btn" onClick={handleInstall}>
+          تثبيت
+        </button>
+        <button type="button" className="pwa-dismiss-btn" aria-label="إغلاق" onClick={handleDismiss}>
+          <Icon name="close" className="size-4" />
+        </button>
       </div>
     </div>
   )

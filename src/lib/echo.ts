@@ -1,52 +1,57 @@
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
-import { useAuthStore } from '../stores/authStore'
-import { getGuestUuid } from './guest'
+/**
+ * Laravel Echo / Pusher connection management.
+ *
+ * When VITE_PUSHER_APP_KEY and VITE_PUSHER_HOST are set in the environment
+ * the module initialises a real Echo connection; otherwise it stays a no-op
+ * so the app builds and runs without a WebSocket backend.
+ */
 
-let echoInstance: Echo<'reverb'> | null = null
+type EchoInstance = {
+  disconnect(): void
+  private(channel: string): { listen(event: string, cb: (data: unknown) => void): void }
+  channel(channel: string): { listen(event: string, cb: (data: unknown) => void): void }
+}
 
-export function getEcho(): Echo<'reverb'> | null {
-  if (echoInstance) return echoInstance
+let echo: EchoInstance | null = null
+
+export async function getEcho(): Promise<EchoInstance | null> {
+  if (echo) return echo
+
+  const key = import.meta.env.VITE_PUSHER_APP_KEY as string | undefined
+  const host = import.meta.env.VITE_PUSHER_HOST as string | undefined
+
+  if (!key || !host) return null
 
   try {
-    const PusherClass = (Pusher as unknown as { default: typeof Pusher }).default || Pusher
+    const [{ default: Echo }, { default: Pusher }] = await Promise.all([
+      import('laravel-echo'),
+      import('pusher-js'),
+    ])
 
-    if (typeof window !== 'undefined') {
-      ;(window as unknown as { Pusher: typeof PusherClass }).Pusher = PusherClass
-    }
+    // @ts-expect-error – Pusher must be on window for Echo's Pusher connector
+    window.Pusher = Pusher
 
-    echoInstance = new Echo<'reverb'>({
-      broadcaster: 'reverb',
-      Pusher: PusherClass,
-      key: import.meta.env.VITE_REVERB_APP_KEY || 'gazabella-key',
-      wsHost: import.meta.env.VITE_REVERB_HOST || '127.0.0.1',
-      wsPort: Number(import.meta.env.VITE_REVERB_PORT || 8080),
-      wssPort: Number(import.meta.env.VITE_REVERB_PORT || 8080),
-      forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'https',
+    echo = new Echo({
+      broadcaster: 'pusher',
+      key,
+      wsHost: host,
+      wsPort: Number(import.meta.env.VITE_PUSHER_PORT ?? 6001),
+      wssPort: Number(import.meta.env.VITE_PUSHER_PORT ?? 6001),
+      forceTLS: import.meta.env.VITE_PUSHER_SCHEME === 'https',
+      disableStats: true,
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: new URL('/broadcasting/auth', import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1').toString(),
-      auth: {
-        headers: {
-          Accept: 'application/json',
-          'X-Guest-UUID': getGuestUuid(),
-          Authorization: `Bearer ${useAuthStore.getState().token ?? ''}`,
-        },
-      },
-    })
-
-    return echoInstance
+    }) as unknown as EchoInstance
   } catch (err) {
-    console.warn('Echo initialization failed:', err)
+    console.warn('[echo] Failed to initialise WebSocket connection:', err)
     return null
   }
+
+  return echo
 }
 
-export function disconnectEcho() {
-  try {
-    echoInstance?.disconnect()
-  } catch {
-    // ignore
+export function disconnectEcho(): void {
+  if (echo) {
+    try { echo.disconnect() } catch {}
+    echo = null
   }
-  echoInstance = null
 }
-

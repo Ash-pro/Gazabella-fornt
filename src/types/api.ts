@@ -67,8 +67,6 @@ export interface CartItem {
   compare_at_price?: string | null
   quantity: number
   subtotal: string
-  product_slug?: string
-  available_quantity?: number
   thumbnail_url: string | null
   reservation: Reservation | null
 }
@@ -94,10 +92,13 @@ export interface HeartbeatResponse {
   expires_at: string | null
 }
 
+export type UserRole = 'customer' | 'merchant' | 'delivery' | 'admin'
+
 export interface User {
   id: number
   name: string | null
   phone: string
+  role: UserRole
   created_at: string
 }
 

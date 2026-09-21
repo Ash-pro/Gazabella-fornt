@@ -16,7 +16,9 @@ export function useReservationTimer() {
     }
     const tick = () => {
       if (!expires) return
-      const remaining = Math.max(0, Math.ceil((Date.parse(expires) - Date.now()) / 1000))
+      const parsed = Date.parse(expires)
+      if (isNaN(parsed)) return
+      const remaining = Math.max(0, Math.ceil((parsed - Date.now()) / 1000))
       useCartStore.getState().setReservation(expires, remaining)
       if (remaining === 0 && !expiredChecked) { expiredChecked = true; void sync(); void queryClient.invalidateQueries({ queryKey: ['cart'] }) }
     }
