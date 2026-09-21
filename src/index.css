@@ -489,3 +489,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 
 @media(max-width:639px) { .editorial-hero h1 { font-size:26px; line-height:1.45; } .editorial-hero__copy { padding:22px 14px; } .catalog-price small, .catalog-price del { font-size:12px; } }
+
+body { min-width: 0; }
+@media(max-width:639px) { .hero-description-more { display:none; } .editorial-hero p br { display:none; } }
+@media(max-width:359px) { .editorial-hero h1 { font-size:22px; } .editorial-hero__copy { padding:18px 12px; } .hero-note { display:none; } .editorial-hero__copy .btn-primary { font-size:10px; gap:5px; padding-inline:8px; } .section-heading .text-link { display:none; } .sort-label { width:100%; } .sort-label select { width:100%; max-width:none; } .header-main { gap:4px; } .brand-lockup b { font-size:25px; } }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { useAuthStore } from '../../stores/authStore'
 import { useCartStore } from '../../stores/cartStore'
@@ -10,9 +10,10 @@ import { Dialog } from '../ui/Dialog'
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const querySearch = searchParams.get('search') || ''
-  const [draftSearch, setDraftSearch] = useState({query:querySearch,value:querySearch})
-  const search = draftSearch.query === querySearch ? draftSearch.value : querySearch
+  const [draftSearch, setDraftSearch] = useState({key:location.key,value:querySearch})
+  const search = draftSearch.key === location.key ? draftSearch.value : querySearch
   const navigate = useNavigate()
   const token = useAuthStore((s) => s.token)
   const openDrawer = useCartStore((s) => s.openDrawer)
@@ -23,7 +24,7 @@ export function Header() {
     navigate(search.trim() ? `/?search=${encodeURIComponent(search.trim())}#products` : '/#products')
     setMenuOpen(false)
   }
-  const searchField = <form onSubmit={submit} role="search" className="header-search"><Icon name="search" className="size-5" /><input aria-label="ابحثي في Gazabella" placeholder="عن ماذا تبحثين اليوم؟" value={search} onChange={(e) => setDraftSearch({query:querySearch,value:e.target.value})} /><button type="submit">بحث</button></form>
+  const searchField = <form onSubmit={submit} role="search" className="header-search"><Icon name="search" className="size-5" /><input aria-label="ابحثي في Gazabella" placeholder="عن ماذا تبحثين اليوم؟" value={search} onChange={(e) => setDraftSearch({key:location.key,value:e.target.value})} /><button type="submit">بحث</button></form>
   return <>
     <div className="announcement"><Icon name="truck" className="size-4" /> اختيارات من متاجر متعددة. سلة واحدة وتوصيل موحّد في خانيونس.</div>
     <header className="store-header">

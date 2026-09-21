@@ -23,14 +23,14 @@ export function ProductsPage() {
   const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
   const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), placeholderData: keepPreviousData })
   const currentCategory = categories.data?.find((c) => c.slug === category)
-  const active = Boolean(category || sub || search || validSort || filters.min_price !== undefined || filters.max_price !== undefined || savedOnly)
+  const active = Boolean(category || sub || search || validSort || filters.min_price !== undefined || filters.max_price !== undefined || savedOnly || page > 1)
   const CatalogTitle = active ? 'h1' : 'h2'
-  function setFilter(name: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(name, value); else next.delete(name); next.delete('page'); if (name === 'category') next.delete('sub'); setParams(next) }
+  function setFilter(name: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(name, value); else next.delete(name); next.delete('page'); if (name === 'category') next.delete('sub'); setParams(next, {state:{preserveScroll:true},replace:name === 'min_price' || name === 'max_price'}) }
   function isSaved(id: number) { try { return localStorage.getItem(`gazabella_wishlist_${id}`) === 'true' } catch { return false } }
   const list = products.data?.data.filter((p) => !savedOnly || isSaved(p.id)) || []
   return <>
     {!active && <section className="container-page editorial-hero">
-      <div className="editorial-hero__copy"><span className="eyebrow">اختيارات تشبهكِ</span><h1>تفاصيل صغيرة.<br /><em>جمال كل يوم.</em></h1><p>عناية، عطور وهدايا من متاجر مختارة.<br />اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.</p><Link to="/#products" className="btn-primary">اكتشفي المختارات <Icon name="arrow" className="size-4 rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> من خانيونس، بكل حب</div></div>
+      <div className="editorial-hero__copy"><span className="eyebrow">اختيارات تشبهكِ</span><h1>تفاصيل صغيرة.<br /><em>جمال كل يوم.</em></h1><p>عناية، عطور وهدايا من متاجر مختارة.<br /><span className="hero-description-more">اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.</span></p><Link to="/#products" className="btn-primary">اكتشفي المختارات <Icon name="arrow" className="size-4 rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> من خانيونس، بكل حب</div></div>
       <div className="editorial-hero__image"><img src="/images/hero-beauty.webp" alt="تشكيلة Gazabella للعناية والعطور" fetchPriority="high" /><span className="hero-edition">THE GAZABELLA EDIT <span>01 / BEAUTY</span></span></div>
     </section>}
     {!active && <div className="container-page service-strip"><span><Icon name="truck" className="size-4" /> سلة واحدة، توصيل موحّد</span><span><Icon name="sparkle" className="size-4" /> اختيارات بعناية</span><span><Icon name="shield" className="size-4" /> تجربة واضحة من البداية</span></div>}
