@@ -237,6 +237,7 @@ export const mockServices = {
         quantity,
         subtotal: (Number(foundVariant.price) * quantity).toFixed(2),
         thumbnail_url: foundProduct.images[0]?.url || '/images/products/serum.webp',
+        product_slug: foundProduct.slug,
         reservation: {
           expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
           seconds_remaining: 900,
