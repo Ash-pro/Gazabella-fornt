@@ -111,9 +111,9 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/serum.webp', alt_text: 'سيروم أوريليا', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 101, name: 'حجم 100 مل', price: '28.00', compare_at_price: '35.00', available_quantity: 18, sku: 'NIV-SFT-100' },
-      { id: 102, name: 'حجم 200 مل العائلي', price: '48.00', compare_at_price: '58.00', available_quantity: 12, sku: 'NIV-SFT-200' },
-      { id: 103, name: 'حجم حقيبة اليد 50 مل', price: '16.00', compare_at_price: null, available_quantity: 25, sku: 'NIV-SFT-050' },
+      { id: 101, name: 'حجم 100 مل', price: '28.00', compare_at_price: '35.00', stock: 18, sku: 'NIV-SFT-100' },
+      { id: 102, name: 'حجم 200 مل العائلي', price: '48.00', compare_at_price: '58.00', stock: 12, sku: 'NIV-SFT-200' },
+      { id: 103, name: 'حجم حقيبة اليد 50 مل', price: '16.00', compare_at_price: null, stock: 25, sku: 'NIV-SFT-050' },
     ],
   },
   {
@@ -127,8 +127,8 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/perfume.webp', alt_text: 'عطر الورد المركز', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 201, name: 'زجاجة فاخرة 50 مل', price: '120.00', compare_at_price: '150.00', available_quantity: 9, sku: 'PERF-ROSE-50' },
-      { id: 202, name: 'إصدار العروس الخاص 100 مل', price: '195.00', compare_at_price: '240.00', available_quantity: 5, sku: 'PERF-ROSE-100' },
+      { id: 201, name: 'زجاجة فاخرة 50 مل', price: '120.00', compare_at_price: '150.00', stock: 9, sku: 'PERF-ROSE-50' },
+      { id: 202, name: 'إصدار العروس الخاص 100 مل', price: '195.00', compare_at_price: '240.00', stock: 5, sku: 'PERF-ROSE-100' },
     ],
   },
   {
@@ -142,8 +142,8 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/giftbox.webp', alt_text: 'بوكس العروس الملكي', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 301, name: 'الباقة الذهبية المتكاملة (صندوق مخملي)', price: '340.00', compare_at_price: '420.00', available_quantity: 6, sku: 'BRD-ROYAL-BOX' },
-      { id: 302, name: 'الباقة الفضية المدمجة', price: '230.00', compare_at_price: '280.00', available_quantity: 8, sku: 'BRD-SILVER-BOX' },
+      { id: 301, name: 'الباقة الذهبية المتكاملة (صندوق مخملي)', price: '340.00', compare_at_price: '420.00', stock: 6, sku: 'BRD-ROYAL-BOX' },
+      { id: 302, name: 'الباقة الفضية المدمجة', price: '230.00', compare_at_price: '280.00', stock: 8, sku: 'BRD-SILVER-BOX' },
     ],
   },
   {
@@ -157,9 +157,9 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/lipstick.webp', alt_text: 'أحمر شفاه مات روبي', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 401, name: 'درجة 04 أحمر كلاسيكي', price: '38.00', compare_at_price: '45.00', available_quantity: 15, sku: 'LIP-RUBY-04' },
-      { id: 402, name: 'درجة 07 وردي ناعم (نيود)', price: '38.00', compare_at_price: '45.00', available_quantity: 20, sku: 'LIP-NUDE-07' },
-      { id: 403, name: 'درجة 12 كرزي دافئ', price: '38.00', compare_at_price: '45.00', available_quantity: 11, sku: 'LIP-CHERRY-12' },
+      { id: 401, name: 'درجة 04 أحمر كلاسيكي', price: '38.00', compare_at_price: '45.00', stock: 15, sku: 'LIP-RUBY-04' },
+      { id: 402, name: 'درجة 07 وردي ناعم (نيود)', price: '38.00', compare_at_price: '45.00', stock: 20, sku: 'LIP-NUDE-07' },
+      { id: 403, name: 'درجة 12 كرزي دافئ', price: '38.00', compare_at_price: '45.00', stock: 11, sku: 'LIP-CHERRY-12' },
     ],
   },
   {
@@ -173,8 +173,8 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/serum.webp', alt_text: 'سيروم الهيالورونيك', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 501, name: 'قطارة 30 مل', price: '55.00', compare_at_price: '70.00', available_quantity: 14, sku: 'SRM-HA-30' },
-      { id: 502, name: 'حجم توفيري 60 مل', price: '92.00', compare_at_price: '115.00', available_quantity: 7, sku: 'SRM-HA-60' },
+      { id: 501, name: 'قطارة 30 مل', price: '55.00', compare_at_price: '70.00', stock: 14, sku: 'SRM-HA-30' },
+      { id: 502, name: 'حجم توفيري 60 مل', price: '92.00', compare_at_price: '115.00', stock: 7, sku: 'SRM-HA-60' },
     ],
   },
   {
@@ -188,7 +188,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/palette.webp', alt_text: 'باليت غزة جلو', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 601, name: 'باليت متكامل مع مرآة فاخرة', price: '85.00', compare_at_price: '110.00', available_quantity: 16, sku: 'PLT-GLOW-18' },
+      { id: 601, name: 'باليت متكامل مع مرآة فاخرة', price: '85.00', compare_at_price: '110.00', stock: 16, sku: 'PLT-GLOW-18' },
     ],
   },
   {
@@ -202,7 +202,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/perfume.webp', alt_text: 'معطر اللافندر الفرنسي', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 701, name: 'عبوة رذاذ 250 مل', price: '42.00', compare_at_price: '50.00', available_quantity: 22, sku: 'MST-LAV-250' },
+      { id: 701, name: 'عبوة رذاذ 250 مل', price: '42.00', compare_at_price: '50.00', stock: 22, sku: 'MST-LAV-250' },
     ],
   },
   {
@@ -216,8 +216,8 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/bridal-robe.webp', alt_text: 'روب العروس الحريري', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 801, name: 'مقاس Standard (أبيض لؤلؤي)', price: '160.00', compare_at_price: '190.00', available_quantity: 7, sku: 'ROBE-BRD-WHT' },
-      { id: 802, name: 'مقاس Standard (وردي عاجي)', price: '160.00', compare_at_price: '190.00', available_quantity: 5, sku: 'ROBE-BRD-PNK' },
+      { id: 801, name: 'مقاس Standard (أبيض لؤلؤي)', price: '160.00', compare_at_price: '190.00', stock: 7, sku: 'ROBE-BRD-WHT' },
+      { id: 802, name: 'مقاس Standard (وردي عاجي)', price: '160.00', compare_at_price: '190.00', stock: 5, sku: 'ROBE-BRD-PNK' },
     ],
   },
   {
@@ -231,8 +231,8 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/deadsea.webp', alt_text: 'طين البحر الميت الطبيعي', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 901, name: 'عبوة زجاجية 300 غرام', price: '35.00', compare_at_price: '45.00', available_quantity: 20, sku: 'DSM-300G' },
-      { id: 902, name: 'باقة التوفير 600 غرام مع أملاح الاستحمام', price: '60.00', compare_at_price: '80.00', available_quantity: 12, sku: 'DSM-600G-SET' },
+      { id: 901, name: 'عبوة زجاجية 300 غرام', price: '35.00', compare_at_price: '45.00', stock: 20, sku: 'DSM-300G' },
+      { id: 902, name: 'باقة التوفير 600 غرام مع أملاح الاستحمام', price: '60.00', compare_at_price: '80.00', stock: 12, sku: 'DSM-600G-SET' },
     ],
   },
   {
@@ -246,7 +246,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/palette.webp', alt_text: 'طقم فرش المكياج 14 قطعة', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 1001, name: 'طقم 14 فرشاة مع حقيبة روز جولد', price: '75.00', compare_at_price: '95.00', available_quantity: 15, sku: 'BRSH-SET-14' },
+      { id: 1001, name: 'طقم 14 فرشاة مع حقيبة روز جولد', price: '75.00', compare_at_price: '95.00', stock: 15, sku: 'BRSH-SET-14' },
     ],
   },
   {
@@ -260,7 +260,7 @@ export const INITIAL_PRODUCTS: ProductDetail[] = [
       { url: '/images/products/giftbox.webp', alt_text: 'صندوق إهداء فاخر', is_primary: true, sort_order: 1 },
     ],
     variants: [
-      { id: 1101, name: 'الصندوق المخملي الفاخر مع كرت إهداء', price: '145.00', compare_at_price: '180.00', available_quantity: 8, sku: 'GFT-LUX-ROSE' },
+      { id: 1101, name: 'الصندوق المخملي الفاخر مع كرت إهداء', price: '145.00', compare_at_price: '180.00', stock: 8, sku: 'GFT-LUX-ROSE' },
     ],
   },
 ]
@@ -431,14 +431,9 @@ export function getStoredCart(): Cart {
       if (parsed && Array.isArray(parsed.items)) {
         parsed.items.forEach((item) => {
           const matched = INITIAL_PRODUCTS.find((p) =>
-            p.variants.some((v) => v.id === item.product_variant_id) || p.name === item.product_name
+            p.id === item.product_id || p.name === item.product_name
           )
           const targetUrl = matched?.images[0]?.url || '/images/products/serum.webp'
-          const matchedVariant = matched?.variants.find((v) => v.id === item.product_variant_id)
-          if (item.compare_at_price !== matchedVariant?.compare_at_price) {
-            item.compare_at_price = matchedVariant?.compare_at_price || null
-            modified = true
-          }
           if (!item.thumbnail_url || item.thumbnail_url.includes('unsplash') || item.thumbnail_url !== targetUrl) {
             item.thumbnail_url = targetUrl
             modified = true
@@ -458,7 +453,7 @@ export function getStoredCart(): Cart {
     items: [
       {
         id: 1,
-        product_variant_id: 101,
+        product_id: 1,
         product_name: 'سيروم أوريليا للترطيب اليومي',
         variant_name: 'حجم 100 مل',
         unit_price: '28.00',
@@ -467,16 +462,11 @@ export function getStoredCart(): Cart {
         subtotal: '56.00',
         thumbnail_url: '/images/products/serum.webp',
         product_slug: 'serum-aurelia-100ml',
-        available_quantity: 10,
-        reservation: {
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-          seconds_remaining: 900,
-          is_extended: false,
-        },
+        stock: 18,
       },
       {
         id: 2,
-        product_variant_id: 201,
+        product_id: 2,
         product_name: 'عطر الورد الجبلي المركز 50 مل',
         variant_name: 'زجاجة فاخرة 50 مل',
         unit_price: '120.00',
@@ -485,17 +475,11 @@ export function getStoredCart(): Cart {
         subtotal: '120.00',
         thumbnail_url: '/images/products/perfume.webp',
         product_slug: 'oud-rose-50ml',
-        available_quantity: 5,
-        reservation: {
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-          seconds_remaining: 900,
-          is_extended: false,
-        },
+        stock: 9,
       },
     ],
     total_items: 3,
     subtotal: '176.00',
-    has_active_reservation: true,
   }
   saveStoredCart(sampleCart)
   return sampleCart
@@ -526,7 +510,6 @@ export function getStoredOrders(): Order[] {
           quantity: 2,
           subtotal: '56.00',
           thumbnail_url: '/images/products/serum.webp',
-          product_variant_id: 101,
         },
         {
           id: 2,
@@ -536,24 +519,15 @@ export function getStoredOrders(): Order[] {
           quantity: 1,
           subtotal: '120.00',
           thumbnail_url: '/images/products/perfume.webp',
-          product_variant_id: 201,
         },
       ],
       subtotal: '176.00',
       delivery_fee: '15.00',
-      discount_amount: '0.00',
       total: '191.00',
-      delivery_option: { name: 'توصيل موحّد قياسي (خانيونس)', estimated_days: 1 },
-      address: {
-        full_name: 'أمل النجار',
-        phone: '0599876543',
-        city: 'خانيونس',
-        area: 'حي الأمل',
-        details: 'شارع النصر، مقابل المدرسة الثانوية',
-        landmark: 'بجانب مسجد الرحمة',
-        lat: 31.3452,
-        lng: 34.3092,
-      },
+      name: 'أمل النجار',
+      email: 'amal@example.com',
+      phone: '0599876543',
+      address: 'خانيونس، حي الأمل، شارع النصر، مقابل المدرسة الثانوية',
       payment_status: 'paid',
       tracking: [
         { status: 'pending', note: 'تم استلام طلبك بنجاح', created_at: '2026-09-20 08:00' },
@@ -561,7 +535,6 @@ export function getStoredOrders(): Order[] {
         { status: 'processing', note: 'قام التجار بتجهيز وتغليف المنتجات', created_at: '2026-09-20 08:25' },
         { status: 'shipped', note: 'الشحنة مع مندوب التوصيل (محمود أبو العوف)', created_at: '2026-09-20 08:35' },
       ],
-      coupon_code: null,
       notes: 'الرجاء الاتصال قبل الوصول بـ 15 دقيقة',
       delivery_pin: '4829',
       created_at: '2026-09-20 08:00',
@@ -574,10 +547,10 @@ export function getStoredOrders(): Order[] {
     const status = delivered ? 'delivered' : mission.delivery_status === 'in_transit' ? 'shipped' : 'processing'
     const created = new Date(Date.now() - (index + 1) * 3600_000).toISOString()
     samples.push({id:15+index,order_number:mission.order_number,status,
-      items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,thumbnail_url:product.images[0]?.url || null,product_variant_id:variant.id}],
-      subtotal:variant.price,delivery_fee:mission.delivery_fee,discount_amount:'0.00',total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2),
-      delivery_option:{name:'توصيل موحد قياسي',estimated_days:1},address:{full_name:mission.customer_name,phone:mission.customer_phone,city:mission.city,area:mission.area,details:mission.address_details},
-      payment_status:mission.payment_status,tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],coupon_code:null,notes:mission.delivery_notes,delivery_pin:String(4830+index),
+      items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,thumbnail_url:product.images[0]?.url || null}],
+      subtotal:variant.price,delivery_fee:mission.delivery_fee,total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2),
+      name:mission.customer_name,email:'customer@example.com',phone:mission.customer_phone,address:`${mission.city}، ${mission.area}، ${mission.address_details}`,
+      payment_status:mission.payment_status,tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],notes:mission.delivery_notes,delivery_pin:String(4830+index),
       escrow_expires_at:delivered ? new Date(Date.now()+47*3600_000).toISOString() : undefined,created_at:created})
   }
   saveStoredOrders(samples)
@@ -610,7 +583,7 @@ function hydrateMissions(missions: DeliveryMission[]): DeliveryMission[] {
     const order = orders.find((o) => o.order_number === mission.order_number)
     if (!order) return mission
     return {...mission,total_amount:order.total,delivery_fee:order.delivery_fee,items_count:order.items.length,
-      city:order.address?.city || mission.city,area:order.address?.area || mission.area,
-      address_details:order.address?.details || mission.address_details}
+      city:mission.city,area:mission.area,
+      address_details:mission.address_details}
   })
 }

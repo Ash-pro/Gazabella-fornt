@@ -18,10 +18,10 @@ export function ProductsPage() {
   const sub = params.get('sub') || ''
   const search = params.get('search') || ''
   const savedOnly = params.get('saved') === 'true'
-  const validSort = ['newest', 'popular', 'price_asc', 'price_desc'].includes(params.get('sort') || '') ? params.get('sort') as ProductFilters['sort'] : undefined
+  const validSort = ['-created_at', 'created_at', 'price', '-price'].includes(params.get('sort') || '') ? params.get('sort') as ProductFilters['sort'] : undefined
   const numberParam = (name: string) => { const raw = params.get(name); const n = Number(raw); return raw && Number.isFinite(n) && n >= 0 ? n : undefined }
   const page = Math.max(1, Math.floor(numberParam('page') || 1))
-  const filters: ProductFilters = { category_slug: sub || (params.getAll('category').length === 1 ? category : undefined), category_slugs: !sub && params.getAll('category').length > 1 ? params.getAll('category') : undefined, search: search || undefined, sort: validSort, min_price: numberParam('min_price'), max_price: numberParam('max_price'), page, per_page: 12 }
+  const filters: ProductFilters = { category_slug: sub || (params.getAll('category').length === 1 ? category : undefined), search: search || undefined, sort: validSort, min_price: numberParam('min_price'), max_price: numberParam('max_price'), page, per_page: 12 }
   const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: Infinity })
   const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), placeholderData: keepPreviousData, staleTime: 60_000 })
   const currentCategory = categories.data?.find((c) => c.slug === category)

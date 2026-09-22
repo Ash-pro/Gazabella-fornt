@@ -4,7 +4,7 @@ import type { ProductDetail, MerchantPrepStatus } from '../types/api'
 function read<T>(key: string, fallback: T): T { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
 export function demoProduct(product: ProductDetail): ProductDetail {
   const inventory = read<Record<string,number>>('gazabella_mock_inventory', {})
-  return { ...product, variants: product.variants.map((v) => ({...v, available_quantity: inventory[v.id] ?? v.available_quantity})) }
+  return { ...product, variants: product.variants.map((v) => ({...v, stock: inventory[String(v.id)] ?? v.stock})) }
 }
 export function demoSetStock(variantId: number, quantity: number) {
   if (!Number.isInteger(quantity) || quantity < 0 || quantity > 10000) throw new Error('أدخلي كمية صحيحة من 0 إلى 10000.')
