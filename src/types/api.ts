@@ -14,6 +14,13 @@ export interface Category {
   children: Category[]
 }
 
+export interface Brand {
+  id: number
+  name: string
+  slug: string
+  logo_url: string | null
+}
+
 export interface ProductBrief {
   store?: { name: string }
   id: number
@@ -24,6 +31,7 @@ export interface ProductBrief {
   max_price: string
   compare_at_price?: string | null
   is_available: boolean
+  is_wishlisted?: boolean
   category: { id: number; name: string }
 }
 
@@ -32,7 +40,7 @@ export interface ProductVariant {
   name: string
   price: string
   compare_at_price: string | null
-  available_quantity: number
+  stock: number
   sku: string
 }
 
@@ -42,6 +50,7 @@ export interface ProductDetail {
   name: string
   slug: string
   description: string | null
+  is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
   images: Array<{
     url: string | null
@@ -52,15 +61,9 @@ export interface ProductDetail {
   variants: ProductVariant[]
 }
 
-export interface Reservation {
-  expires_at: string
-  seconds_remaining: number
-  is_extended: boolean
-}
-
 export interface CartItem {
   id: number
-  product_variant_id: number
+  product_id: number
   product_name: string
   variant_name: string
   unit_price: string
@@ -69,37 +72,21 @@ export interface CartItem {
   subtotal: string
   thumbnail_url: string | null
   product_slug: string | null
-  available_quantity: number
-  reservation: Reservation | null
+  stock: number
 }
 
 export interface Cart {
   items: CartItem[]
   total_items: number
   subtotal: string
-  has_active_reservation: boolean
-}
-
-export interface CartReservationResponse {
-  data: Cart
-  expires_at: string
-  reserved_until?: string
-  seconds_remaining: number
-}
-
-export interface HeartbeatResponse {
-  has_reservation: boolean
-  seconds_remaining: number | null
-  is_extended: boolean
-  expires_at: string | null
 }
 
 export type UserRole = 'customer' | 'merchant' | 'delivery' | 'admin'
 
 export interface User {
   id: number
-  name: string | null
-  phone: string
+  name: string
+  email: string
   role: UserRole
   created_at: string
 }
@@ -108,33 +95,14 @@ export interface AuthResponse {
   token: string
   token_type: 'Bearer'
   user: User
-  cart_merged: boolean
 }
 
-export interface DeliveryOption {
-  id: number
+export interface CheckoutPayload {
   name: string
-  description: string | null
-  fee: string
-  estimated_days: number
-  is_available: boolean
-}
-
-export interface Coupon {
-  code: string
-  discount_type: 'fixed' | 'percentage'
-  discount_value: string
-  discount_amount: string
-}
-
-export interface CheckoutSession {
-  reservation_extended: boolean
-  expires_at: string
-  reserved_until?: string
-  seconds_remaining: number
-  cart: Cart
-  delivery_options: DeliveryOption[]
-  coupon: Coupon | null
+  email: string
+  phone: string
+  address: string
+  notes?: string
 }
 
 export type OrderStatus =
@@ -158,34 +126,18 @@ export interface Order {
     quantity: number
     subtotal: string
     thumbnail_url: string | null
-    product_variant_id: number
   }>
   subtotal: string
   delivery_fee: string
-  discount_amount: string
   total: string
-  delivery_option: { name: string; estimated_days: number }
-  address: Address | null
-  payment_method?: 'cash_on_delivery' | 'jawwal_pay'
-  payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded'
-  tracking: Array<{ status: string; note: string | null; created_at: string }>
-  coupon_code: string | null
-  notes: string | null
-  delivery_pin?: string
-  escrow_expires_at?: string
-  created_at: string
-}
-
-export interface Address {
-  full_name: string
+  name: string
+  email: string
   phone: string
-  city: string
-  area: string
-  details: string
-  landmark?: string | null
-  lat?: number | null
-  lng?: number | null
-  save_address?: boolean
+  address: string
+  notes: string | null
+  payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded'
+  tracking?: Array<{ status: string; note: string | null; created_at: string }>
+  created_at: string
 }
 
 export interface ApiErrorBody {
@@ -214,7 +166,7 @@ export interface MerchantStore {
   city: string
   area: string
   is_active: boolean
-  commission_rate?: string // للتاجر فقط
+  commission_rate?: string
 }
 
 export interface MerchantProductItem {
@@ -280,7 +232,7 @@ export interface DeliveryMission {
   payment_status: 'unpaid' | 'paid' | 'pending'
   payment_method: 'jawwal_pay' | 'cash_on_delivery'
   delivery_status: DeliveryStatus
-  pickup_stores: string[] // أسماء المتاجر المستلم منها
+  pickup_stores: string[]
   driver_name: string | null
   driver_phone: string | null
   delivery_notes: string | null

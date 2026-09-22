@@ -1,5 +1,4 @@
 import { Suspense, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Outlet } from 'react-router-dom'
 import { usePageNavigation } from '../../hooks/usePageNavigation'
 import { useAuthStore } from '../../stores/authStore'
@@ -7,7 +6,6 @@ import { useCheckoutStore } from '../../stores/checkoutStore'
 import { useCartStore } from '../../stores/cartStore'
 import { queryClient } from '../../lib/queryClient'
 import { disconnectEcho } from '../../lib/echo'
-import { gazabellaApi } from '../../api/gazabella'
 import { useRealtimeEvents } from '../../hooks/useRealtimeEvents'
 import { Footer } from './Footer'
 import { Header } from './Header'
@@ -20,21 +18,23 @@ import { PageLoader } from '../ui/AsyncState'
 
 export function AppShell() {
   usePageNavigation()
-  const token = useAuthStore((s) => s.token)
-  useEffect(() => useAuthStore.subscribe((state, previous) => { if (previous.token && !state.token) { queryClient.clear(); useCheckoutStore.getState().reset(); useCartStore.getState().clearReservation(); disconnectEcho() } }), [])
-  // H-8: only init guest session when the user is NOT authenticated
-  useQuery({
-    queryKey: ['guest-session'],
-    queryFn: gazabellaApi.initGuest,
-    staleTime: Number.POSITIVE_INFINITY,
-    retry: false,
-    enabled: !token,
-  })
+  useEffect(
+    () =>
+      useAuthStore.subscribe((state, previous) => {
+        if (previous.token && !state.token) {
+          queryClient.clear()
+          useCheckoutStore.getState().reset()
+          useCartStore.getState().clearReservation()
+          disconnectEcho()
+        }
+      }),
+    [],
+  )
   useRealtimeEvents()
 
   return (
     <div className="min-h-screen flex flex-col pb-16 lg:pb-0">
-      <a href="#main-content" className="skip-link">انتقلي إلى المحتوى</a>
+      <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
       <Header />
       <ReservationBanner />
       <CartDrawer />
