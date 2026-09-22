@@ -24,7 +24,7 @@ export function MerchantDashboard() {
   const orders = useQuery({queryKey:['merchant-orders',storeId],queryFn:() => gazabellaApi.getMerchantOrders(storeId),staleTime:30_000})
   const current = stores.data?.find((s) => s.id === storeId)
   const prep = useMutation({mutationFn:({id,status}:{id:number;status:MerchantPrepStatus}) => gazabellaApi.updateOrderPrepStatus(id,status),onSuccess:() => { setMessage('تم حفظ حالة التجهيز التجريبية.'); void client.invalidateQueries({queryKey:['merchant-orders']}); void client.invalidateQueries({queryKey:['merchant-stats']}); void client.invalidateQueries({queryKey:['orders']}); void client.invalidateQueries({queryKey:['order']}) },onError:(e) => setError(getApiErrorMessage(e))})
-  const editProduct = useMutation({mutationFn:gazabellaApi.getProduct,onSuccess:(p) => {setEditing(p);setStock(Object.fromEntries(p.variants.map((v) => [v.id,String(v.available_quantity)])));setError('')},onError:(e) => setError(getApiErrorMessage(e))})
+  const editProduct = useMutation({mutationFn:gazabellaApi.getProduct,onSuccess:(p) => {setEditing(p);setStock(Object.fromEntries(p.variants.map((v) => [v.id,String(v.stock)])));setError('')},onError:(e) => setError(getApiErrorMessage(e))})
   const saveStock = (event: React.FormEvent) => {
     event.preventDefault()
     if (!editing || !isMockMode()) return

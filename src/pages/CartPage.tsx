@@ -49,7 +49,7 @@ export function CartPage() {
           {cart.items.map((item, index) => (
             <article key={item.id} className={`grid grid-cols-[92px_1fr] gap-4 p-4 sm:grid-cols-[130px_1fr] sm:p-6 ${index ? 'border-t border-[var(--border)]' : ''}`}>
               <div className="aspect-square overflow-hidden rounded-[var(--r-md)]">
-                <ProductVisual src={item.thumbnail_url} alt={item.product_name} productId={item.product_variant_id} />
+                <ProductVisual src={item.thumbnail_url} alt={item.product_name} />
               </div>
               <div className="flex min-w-0 flex-col justify-between gap-4">
                 <div className="flex items-start justify-between gap-4">
@@ -60,7 +60,7 @@ export function CartPage() {
                     <div className="quantity-control quantity-control--small">
                       <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
                       <span className="num">{item.quantity}</span>
-                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.available_quantity ?? 10) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
                     </div>
                     <p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p>
                   </div>
