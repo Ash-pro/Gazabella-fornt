@@ -42,7 +42,7 @@ export function OrdersPage() {
                 )}
               </div>
               <p className="text-xs text-[var(--text-2)]">
-                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات · 📍 {order.address?.city || 'خانيونس'}
+                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات · 📍 {'خانيونس'}
               </p>
               <p className="mt-3 text-sm">{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</p>
               <span className="text-link mt-3">تفاصيل الطلب</span>

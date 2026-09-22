@@ -180,4 +180,12 @@ export const gazabellaApi = {
     isMockMode()
       ? mockServices.updateDeliveryStatus(missionId, status, notes)
       : apiClient.patch<ApiData<DeliveryMission[]>>(`/delivery/missions/${missionId}/status`, { status, notes }).then((r) => r.data.data),
+  // ================================================================
+  // الدفع
+  // ================================================================
+  initPayment: (orderNumber: string): Promise<{ payment_url: string }> =>
+    isMockMode()
+      ? mockServices.initPayment(orderNumber)
+      : apiClient.post<{ data: { payment_url: string } }>(`/orders/${orderNumber}/pay`).then((r) => r.data.data),
+
 }

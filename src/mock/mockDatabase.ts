@@ -3,10 +3,18 @@ import type {
   ProductDetail,
   Cart,
   Order,
-  DeliveryOption,
   MerchantStore,
   DeliveryMission,
 } from '../types/api'
+
+interface DeliveryOption {
+  id: number
+  name: string
+  description: string
+  fee: string
+  estimated_days: number
+  is_available: boolean
+}
 
 // =======================================================================
 // قاعدة البيانات الوهمية لـ Gazabella (Mock Database)

@@ -45,7 +45,7 @@ export function demoConfirmDelivery(missionId: number, pin: string) {
   order.status='delivered'
   order.payment_status='paid'
   order.escrow_expires_at = new Date(Date.now()+48*3600_000).toISOString()
-  order.tracking.push({status:'delivered',note:'تم التحقق من رمز التسليم في العرض التجريبي',created_at:new Date().toISOString()})
+  ;(order.tracking ??= []).push({status:'delivered',note:'تم التحقق من رمز التسليم في العرض التجريبي',created_at:new Date().toISOString()})
   saveStoredOrders(orders)
   saveStoredMissions(missions)
   return mission

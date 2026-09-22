@@ -7,7 +7,6 @@ import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
-import { useCheckoutStore } from '../stores/checkoutStore'
 import { formatPrice } from '../lib/format'
 import { demoDispute, demoOpenDispute } from '../mock/demoOperations'
 
@@ -71,7 +70,6 @@ export function OrderDetailPage() {
   const payment = useMutation({mutationFn:gazabellaApi.initPayment,onSuccess:(result) => {
     const url = new URL(result.payment_url,window.location.origin)
     if (!['https:',...(isMockMode() ? ['http:'] : [])].includes(url.protocol)) throw new Error('رابط الدفع غير صالح.')
-    if (useCheckoutStore.getState().pendingOrder?.order_number === orderNumber) useCheckoutStore.getState().reset()
     if (isMockMode()) { void client.invalidateQueries({queryKey:['order',orderNumber]}); void client.invalidateQueries({queryKey:['orders']}) } else window.location.assign(url.href)
   }})
   const dispute = useMutation({
@@ -88,10 +86,10 @@ export function OrderDetailPage() {
     <Link to="/orders" className="text-link mb-7"><Icon name="arrow" className="size-4" /> كل الطلبات</Link>
     {searchParams.get('payment') === 'failed' && order.payment_status !== 'paid' && <p className="demo-note mb-5" role="alert">لم تكتمل عملية الدفع. حالة طلبكِ محفوظة ويمكنكِ مراجعتها هنا.</p>}
     <div className="flex flex-wrap items-center justify-between gap-4"><div><span className="eyebrow">كل التفاصيل في مكان واحد</span><h1 className="mt-2 text-2xl font-bold num" dir="ltr">{order.order_number}</h1><p className="mt-2 text-xs text-[var(--text-3)] num">{date(order.created_at)}</p></div><span className={'status-badge status-' + order.status}>{labels[order.status] || order.status}</span></div>
-    {['unpaid','failed'].includes(order.payment_status) && order.status === 'pending' && <section className="checkout-card mt-6"><h2 className="text-lg font-bold">إتمام الدفع لهذا الطلب</h2><p className="my-3 text-sm">طلبكِ محفوظ. استئناف الدفع يستخدم الطلب نفسه.</p><button className="btn-primary" disabled={payment.isPending} onClick={() => payment.mutate(order.id)}>{payment.isPending ? 'جارٍ المتابعة…' : isMockMode() ? 'تأكيد الدفع التجريبي' : 'المتابعة إلى الدفع'}</button>{payment.isError && <p className="field-error" role="alert">{getApiErrorMessage(payment.error)}</p>}</section>}
+    {['unpaid','failed'].includes(order.payment_status) && order.status === 'pending' && <section className="checkout-card mt-6"><h2 className="text-lg font-bold">إتمام الدفع لهذا الطلب</h2><p className="my-3 text-sm">طلبكِ محفوظ. استئناف الدفع يستخدم الطلب نفسه.</p><button className="btn-primary" disabled={payment.isPending} onClick={() => payment.mutate(order.order_number)}>{payment.isPending ? 'جارٍ المتابعة…' : isMockMode() ? 'تأكيد الدفع التجريبي' : 'المتابعة إلى الدفع'}</button>{payment.isError && <p className="field-error" role="alert">{getApiErrorMessage(payment.error)}</p>}</section>}
     <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
-        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">رحلة طلبكِ</h2><ol className="order-timeline">{order.tracking.map((event,index) => <li key={event.created_at + index}><b>{labels[event.status] || event.status}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
+        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">رحلة طلبكِ</h2><ol className="order-timeline">{(order.tracking ?? []).map((event,index) => <li key={event.created_at + index}><b>{labels[event.status] || event.status}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
         <section className="checkout-card"><h2 className="mb-5 text-lg font-bold">اختياراتكِ</h2><div className="space-y-4">{order.items.map((item) => <div key={item.id} className="flex items-center gap-3 border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"><div className="size-16 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.thumbnail_url} alt={item.product_name} /></div><div className="min-w-0 flex-1"><b className="text-sm">{item.product_name}</b><p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name} · الكمية <span className="num">{item.quantity}</span></p></div><b className="whitespace-nowrap text-sm"><span className="num">{formatPrice(item.subtotal)}</span></b></div>)}</div></section>
         {order.status === 'delivered' && <section className="checkout-card"><h2 className="text-lg font-bold">متابعة ما بعد الاستلام</h2>{order.escrow_expires_at && <p className="mt-3 text-sm leading-7">تنتهي نافذة مراجعة الطلب في <span className="num">{date(order.escrow_expires_at)}</span>.</p>}{savedDispute ? <p className="demo-note mt-4" role="status">تم حفظ البلاغ التجريبي <span className="num">{savedDispute.id}</span> على هذا الجهاز. لم يُرسل إلى فريق الدعم.</p> : withinDisputeWindow && isMockMode() ? <><p className="my-3 text-sm text-[var(--text-2)]">يمكنكِ تجربة تسجيل مشكلة في الطلب خلال <span className="num">48</span> ساعة من التسليم.</p><button className="btn-ghost" onClick={() => setDisputeOpen(true)}>تسجيل مشكلة في الطلب</button></> : <p className="mt-3 text-sm text-[var(--text-2)]">{isMockMode() ? 'انتهت نافذة تسجيل المشكلة لهذا الطلب.' : 'خدمة متابعة المشكلات تنتظر الربط مع فريق الدعم.'}</p>}</section>}
       </div>

@@ -1,6 +1,5 @@
 import { demoProduct, demoPrep, demoSetPrep } from './demoOperations'
 import type {
-  ApiData,
   ApiList,
   AuthResponse,
   Cart,
@@ -338,6 +337,17 @@ export const mockServices = {
       throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404, data: { message: 'الطلب غير موجود' } } })
     }
     return delay(found)
+  },
+
+
+  initPayment: async (orderNumber: string): Promise<{ payment_url: string }> => {
+    const orders = getStoredOrders()
+    const order = orders.find((o) => o.order_number === orderNumber)
+    if (!order) throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404 } })
+    // Mock: simulate payment URL
+    order.payment_status = 'paid'
+    saveStoredOrders(orders)
+    return delay({ payment_url: `/orders/${orderNumber}?paid=1` })
   },
 
   // =======================================================================

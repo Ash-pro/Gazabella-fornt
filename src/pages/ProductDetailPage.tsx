@@ -22,7 +22,7 @@ function ProductContent({slug}: {slug: string}) {
   const query = useQuery({queryKey:['product',slug],queryFn:()=>gazabellaApi.getProduct(slug),enabled:!!slug})
   const product = query.data
   const variant = product?.variants.find((v)=>v.id===variantId) || product?.variants.find((v)=>v.stock>0) || product?.variants[0]
-  const limit = Math.min(10, variant?.available_quantity || 0)
+  const limit = Math.min(10, variant?.stock || 0)
   const add = useMutation({mutationFn:()=>gazabellaApi.addToCart(variant!.id,quantity),onSuccess:(cart)=>{syncCart(cart);useCartStore.getState().showCartToast({productName:product!.name,variantName:variant!.name,thumbnailUrl:product!.images[0]?.url,price:variant!.price})}})
   if(query.isLoading) return (
     <div className="container-page product-detail-skeleton">

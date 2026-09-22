@@ -6,6 +6,7 @@ import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
+import type { User } from '../types/api'
 
 type Mode = 'login' | 'register'
 
@@ -22,7 +23,7 @@ export function AuthPage() {
   const safeNext =
     next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/orders'
 
-  function onSuccess(token: string, user: Parameters<typeof useAuthStore.getState>['0'] extends { setSession: (t: string, u: infer U) => void } ? U : never) {
+  function onSuccess(token: string, user: User) {
     queryClient.removeQueries({ queryKey: ['orders'] })
     queryClient.removeQueries({ queryKey: ['order'] })
     useAuthStore.getState().setSession(token, user)

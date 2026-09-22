@@ -135,6 +135,9 @@ export interface Order {
   phone: string
   address: string
   notes: string | null
+  payment_method?: 'cash_on_delivery' | 'jawwal_pay' | string
+  escrow_expires_at?: string
+  delivery_pin?: string
   payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded'
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
   created_at: string
