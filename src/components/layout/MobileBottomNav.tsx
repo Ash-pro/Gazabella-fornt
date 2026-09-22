@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../../api/gazabella'
 import { useCartStore } from '../../stores/cartStore'
@@ -9,8 +9,7 @@ export function MobileBottomNav() {
   const location = useLocation()
   const token = useAuthStore((state) => state.token)
   const openDrawer = useCartStore((state) => state.openDrawer)
-  const navigate = useNavigate()
-  const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart, staleTime: 30_000 })
 
   // لا نعرض الشريط السفلي داخل لوحة التاجر أو لوحة التوصيل لتفادي التداخل
   if (location.pathname.startsWith('/merchant') || location.pathname.startsWith('/delivery')) {
@@ -40,14 +39,12 @@ export function MobileBottomNav() {
         </NavLink>
 
         {/* الفئات */}
-        <button
-          type="button"
-          onClick={() => { navigate('/#categories') }}
+        <Link to="/#categories"
           className="flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold text-[var(--text-3)] hover:text-[var(--primary)] transition-colors"
         >
           <Icon name="filter" className="size-5" />
           <span>الفئات</span>
-        </button>
+        </Link>
 
         {/* السلة السريعة المنزلقة */}
         <button

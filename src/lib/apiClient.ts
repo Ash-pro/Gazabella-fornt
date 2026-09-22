@@ -3,6 +3,11 @@ import { getGuestUuid } from './guest'
 import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
 
+// Guard: VITE_API_BASE_URL must be set in non-mock mode
+if (import.meta.env.VITE_DATA_SOURCE !== 'mock' && !import.meta.env.VITE_API_BASE_URL) {
+  throw new Error('[Gazabella] VITE_API_BASE_URL مطلوب عندما لا يكون VITE_DATA_SOURCE=mock')
+}
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 12_000,

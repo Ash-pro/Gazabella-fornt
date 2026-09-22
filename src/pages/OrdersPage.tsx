@@ -5,7 +5,6 @@ import { gazabellaApi } from '../api/gazabella'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
-const logoutError = getApiErrorMessage
 import { formatPrice } from '../lib/format'
 import type { OrderStatus } from '../types/api'
 
@@ -28,7 +27,7 @@ export function OrdersPage() {
   return (
     <div className="container-page py-10 sm:py-14">
       <span className="eyebrow">حسابك ومشترياتك</span>
-      <div className="flex items-center justify-between"><h1 className="section-title mt-2">طلباتي</h1><button className="btn-ghost" disabled={logout.isPending} onClick={() => logout.mutate()}>تسجيل الخروج</button></div>{logout.isError && <p className="field-error">{logoutError(logout.error)}</p>}
+      <div className="flex items-center justify-between"><h1 className="section-title mt-2">طلباتي</h1><button className="btn-ghost" disabled={logout.isPending} onClick={() => logout.mutate()}>تسجيل الخروج</button></div>{logout.isError && <p className="field-error">{getApiErrorMessage(logout.error)}</p>}
       <div className="mt-8 grid gap-4">
         {!ordersQuery.data?.data.length && <EmptyState title="لا توجد طلبات بعد" message="عندما تتمين أول طلب سيظهر هنا بكل تفاصيله." />}
         {ordersQuery.data?.data.map((order) => (

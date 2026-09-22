@@ -20,12 +20,15 @@ import { PageLoader } from '../ui/AsyncState'
 
 export function AppShell() {
   usePageNavigation()
+  const token = useAuthStore((s) => s.token)
   useEffect(() => useAuthStore.subscribe((state, previous) => { if (previous.token && !state.token) { queryClient.clear(); useCheckoutStore.getState().reset(); useCartStore.getState().clearReservation(); disconnectEcho() } }), [])
+  // H-8: only init guest session when the user is NOT authenticated
   useQuery({
     queryKey: ['guest-session'],
     queryFn: gazabellaApi.initGuest,
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
+    enabled: !token,
   })
   useRealtimeEvents()
 

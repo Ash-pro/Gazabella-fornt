@@ -24,7 +24,7 @@ export function CartDrawer() {
   return <Dialog title="اختياراتكِ في السلة" sheet onClose={close}>
     <div className="flex-1 overflow-y-auto p-5">
       {cart.isLoading ? <PageLoader label="نحمّل السلة…" /> : cart.isError ? <ErrorState message={getApiErrorMessage(cart.error)} onRetry={() => void cart.refetch()} /> : !cart.data?.items.length ? <div className="py-14 text-center"><Icon name="bag" className="mx-auto size-12 text-[var(--primary)]" /><h3 className="mt-5 text-xl font-bold">مساحة لاختياراتكِ القادمة</h3><p className="my-3 text-sm text-[var(--text-2)]">اكتشفي شيئًا تحبينه وأضيفيه هنا.</p><Link className="btn-primary mt-3" to="/#products" onClick={close}>اكتشفي المنتجات</Link></div> : cart.data.items.map((item) => <article key={item.id} className="flex gap-4 border-b border-[var(--border)] py-5 first:pt-0">
-        <Link onClick={close} to={item.product_slug ? `/products/${item.product_slug}` : "/#products"} className="h-28 w-24 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.thumbnail_url} alt={item.product_name} /></Link>
+        <Link onClick={close} to="/#products" className="h-28 w-24 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.thumbnail_url} alt={item.product_name} /></Link>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-bold leading-6">{item.product_name}</h3>
           <p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name}</p>

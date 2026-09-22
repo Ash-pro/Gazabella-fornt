@@ -12,12 +12,6 @@ export function ProductsPage() {
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [, setWishlistVersion] = useState(0)
-  const [showTop, setShowTop] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 600)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
   useEffect(() => { const changed = () => setWishlistVersion((v) => v + 1); window.addEventListener('gazabella-wishlist', changed); return () => window.removeEventListener('gazabella-wishlist', changed) }, [])
   useEffect(() => { if (!params.has('store')) return; const next = new URLSearchParams(params); next.delete('store'); setParams(next, {replace:true,state:{preserveScroll:true}}) }, [params, setParams])
   const category = params.get('category') || ''
@@ -28,8 +22,8 @@ export function ProductsPage() {
   const numberParam = (name: string) => { const raw = params.get(name); const n = Number(raw); return raw && Number.isFinite(n) && n >= 0 ? n : undefined }
   const page = Math.max(1, Math.floor(numberParam('page') || 1))
   const filters: ProductFilters = { category_slug: sub || (params.getAll('category').length === 1 ? category : undefined), category_slugs: !sub && params.getAll('category').length > 1 ? params.getAll('category') : undefined, search: search || undefined, sort: validSort, min_price: numberParam('min_price'), max_price: numberParam('max_price'), page, per_page: 12 }
-  const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
-  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), placeholderData: keepPreviousData })
+  const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: Infinity })
+  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), placeholderData: keepPreviousData, staleTime: 60_000 })
   const currentCategory = categories.data?.find((c) => c.slug === category)
   const active = Boolean(category || sub || search || validSort || filters.min_price !== undefined || filters.max_price !== undefined || savedOnly || page > 1)
   const CatalogTitle = active ? 'h1' : 'h2'
@@ -67,15 +61,5 @@ export function ProductsPage() {
     </section>
     {!active && <section className="container-page collection-editorial"><img src="/images/products/bridal-robe.webp" alt="تشكيلة العروس" loading="lazy" /><div><span className="eyebrow">للحظات التي تبقى</span><h2>ليومكِ الأجمل،<br />تفاصيل على ذوقكِ.</h2><p>اكتشفي تشكيلة العروس والعطور والهدايا، واجمعي اختياراتكِ المفضلة في طلب واحد.</p><Link to="/?category=bridal#products" className="btn-primary">اكتشفي تشكيلة العروس <Icon name="arrow" className="size-4 rotate-180" /></Link></div></section>}
     <section className="container-page closing-note"><Icon name="sparkle" className="size-6" /><h2>الجمال أقرب مما تتخيّلين.</h2><p>متاجر متعددة. تجربة واحدة. Gazabella.</p></section>
-    {showTop && (
-      <button
-        type="button"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        aria-label="العودة إلى الأعلى"
-        className="back-to-top"
-      >
-        <Icon name="arrow" className="size-5" />
-      </button>
-    )}
   </>
 }

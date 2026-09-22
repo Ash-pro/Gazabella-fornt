@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
@@ -28,6 +28,7 @@ type Values = z.infer<typeof schema>
 export function CheckoutPage() {
   const navigate = useNavigate()
   const started = useRef(false)
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const checkout = useCheckoutStore()
   const user = useAuthStore((s) => s.user)
   const seconds = useCartStore((s) => s.secondsRemaining)
@@ -35,18 +36,26 @@ export function CheckoutPage() {
   const [couponError, setCouponError] = useState('')
   const [step, setStep] = useState<1 | 2>(1)
   const [submitted, setSubmitted] = useState(false)
-  const [now, setNow] = useState(Date.now)
-  useEffect(() => { const timer=setInterval(() => setNow(Date.now()),1000); return () => clearInterval(timer) }, [])
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { full_name: user?.name || '', phone: user?.phone || '', city: 'خانيونس', area: '', details: '', notes: '', ...checkout.draft, landmark: checkout.draft.landmark || '', delivery_option_id: checkout.draft.delivery_option_id || checkout.session?.delivery_options.find((d) => d.is_available)?.id || 0 } })
-  const values = useWatch({ control: form.control })
-  useEffect(() => { useCheckoutStore.getState().setDraft(values) }, [values])
-  const begin = useMutation({ mutationFn: () => gazabellaApi.beginCheckout(coupon.trim() || undefined), onSuccess: (session) => { checkout.setSession(session); useCartStore.getState().setReservation(session.expires_at || session.reserved_until || null, session.seconds_remaining); form.setValue('delivery_option_id', session.delivery_options.find((d) => d.is_available)?.id || 0) } })
+  // H-2: don't default to 0 — leave undefined if no available option so Zod positive() shows the error
+  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { full_name: user?.name || '', phone: user?.phone || '', city: 'خانيونس', area: '', details: '', notes: '', ...checkout.draft, landmark: checkout.draft.landmark || '', delivery_option_id: checkout.draft.delivery_option_id || checkout.session?.delivery_options.find((d) => d.is_available)?.id } })
+  // H-5: use form.watch() (no re-render) instead of useWatch for draft persistence; debounce storage
+  useEffect(() => {
+    const { unsubscribe } = form.watch((data) => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+      draftTimerRef.current = setTimeout(() => { useCheckoutStore.getState().setDraft(data as Values) }, 400)
+    })
+    return () => { unsubscribe(); if (draftTimerRef.current) clearTimeout(draftTimerRef.current) }
+  }, [form])
+  // C-4: use stable mutate ref so useEffect deps don't change every render
+  const beginMutateRef = useRef<() => void>(() => {})
+  const begin = useMutation({ mutationFn: () => gazabellaApi.beginCheckout(coupon.trim() || undefined), onSuccess: (session) => { checkout.setSession(session); useCartStore.getState().setReservation(session.expires_at || session.reserved_until || null, session.seconds_remaining); const firstAvailable = session.delivery_options.find((d) => d.is_available); if (firstAvailable) form.setValue('delivery_option_id', firstAvailable.id) } })
+  useEffect(() => { beginMutateRef.current = () => begin.mutate() }, [begin])
   useEffect(() => {
     if (checkout.session || checkout.beginAttempted || started.current) return
     started.current = true
     checkout.markBeginAttempted()
-    begin.mutate()
-  }, [checkout, begin])
+    beginMutateRef.current()
+  }, [checkout.session, checkout.beginAttempted, checkout.markBeginAttempted])
   const payment = useMutation({ mutationFn: gazabellaApi.initPayment, onSuccess: (response) => {
     const url = new URL(response.payment_url, window.location.origin)
     if (!['https:', ...(isMockMode() ? ['http:'] : [])].includes(url.protocol)) throw new Error('رابط الدفع غير صالح.')
@@ -58,9 +67,11 @@ export function CheckoutPage() {
   const session = checkout.session
   if (!session && (begin.isPending || !checkout.beginAttempted)) return <div className="container-page"><PageLoader label="نجهّز تفاصيل التوصيل…" /></div>
   if (!session) return <div className="container-page py-10"><ErrorState message={begin.error ? getApiErrorMessage(begin.error) : 'لم تكتمل جلسة الدفع. عودي إلى السلة للتحقق من الحجز.'} /><Link className="btn-primary" to="/cart" onClick={checkout.reset}>العودة إلى السلة</Link></div>
+  // H-5: read live values from form for render — no useWatch needed, avoids full re-render on keystroke
+  const values = form.getValues()
   const selected = session.delivery_options.find((d) => d.id === values.delivery_option_id && d.is_available)
   const total = Number(session.cart.subtotal) + Number(selected?.fee || 0) - Number(session.coupon?.discount_amount || 0)
-  const expired = seconds === 0 || Date.parse(session.expires_at || session.reserved_until || '') <= now
+  const expired = seconds === 0
   const busy = create.isPending || payment.isPending || submitted
   const error = create.error || payment.error
   return <div className="container-page py-8 sm:py-12">

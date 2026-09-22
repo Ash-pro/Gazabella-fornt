@@ -23,19 +23,18 @@ export function useRealtimeEvents(): void {
     void getEcho().then((echo) => {
       if (!echo || cancelled) return
 
+      // Use a single channel reference to avoid duplicate Pusher subscriptions
+      const ch = echo.private(`App.Models.User.${user.id}`)
+
       // Invalidate the orders list whenever an order status changes
-      echo
-        .private(`App.Models.User.${user.id}`)
-        .listen('.order.status.updated', () => {
-          void queryClient.invalidateQueries({ queryKey: ['orders'] })
-        })
+      ch.listen('.order.status.updated', () => {
+        void queryClient.invalidateQueries({ queryKey: ['orders'] })
+      })
 
       // Invalidate cart when a reservation changes server-side
-      echo
-        .private(`App.Models.User.${user.id}`)
-        .listen('.cart.reservation.updated', () => {
-          void queryClient.invalidateQueries({ queryKey: ['cart'] })
-        })
+      ch.listen('.cart.reservation.updated', () => {
+        void queryClient.invalidateQueries({ queryKey: ['cart'] })
+      })
     })
 
     return () => {

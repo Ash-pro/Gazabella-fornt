@@ -13,8 +13,8 @@ export function Header() {
   const [searchParams] = useSearchParams()
   const token = useAuthStore((s) => s.token)
   const openDrawer = useCartStore((s) => s.openDrawer)
-  const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
+  const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart, staleTime: 30_000 })
+  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: Infinity })
   const searchField = <SearchBox />
   return <>
     <div className="announcement"><Icon name="truck" className="size-4" /> اختيارات من متاجر متعددة. سلة واحدة وتوصيل موحّد في خانيونس.</div>

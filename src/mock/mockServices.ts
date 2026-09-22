@@ -72,7 +72,7 @@ export const mockServices = {
 
   verifyOtp: async (phone: string, otp: string): Promise<AuthResponse> => {
     if (otp !== '123456') {
-      throw { response: { status: 422, data: { message: 'رمز التحقق غير صحيح، يرجى إدخال 123456' } } }
+      throw Object.assign(new Error('رمز التحقق غير صحيح، يرجى إدخال 123456'), { response: { status: 422, data: { message: 'رمز التحقق غير صحيح، يرجى إدخال 123456' } } })
     }
     return delay({
       token: 'gazabella_mock_bearer_token_' + Date.now(),
@@ -192,7 +192,7 @@ export const mockServices = {
   getProduct: async (slug: string): Promise<ProductDetail> => {
     const found = INITIAL_PRODUCTS.find((p) => p.slug === slug)
     if (!found) {
-      throw { response: { status: 404, data: { message: 'المنتج المطلوب غير موجود' } } }
+      throw Object.assign(new Error('المنتج المطلوب غير موجود'), { response: { status: 404, data: { message: 'المنتج المطلوب غير موجود' } } })
     }
     return delay(demoProduct(found))
   },
@@ -215,7 +215,7 @@ export const mockServices = {
     }
 
     if (!foundProduct || !foundVariant) {
-      throw { response: { status: 404, data: { message: 'المتغير المطلوب غير موجود' } } }
+      throw Object.assign(new Error('المتغير المطلوب غير موجود'), { response: { status: 404, data: { message: 'المتغير المطلوب غير موجود' } } })
     }
 
     const existingIndex = cart.items.findIndex((item) => item.product_variant_id === productVariantId)
@@ -236,8 +236,6 @@ export const mockServices = {
         quantity,
         subtotal: (Number(foundVariant.price) * quantity).toFixed(2),
         thumbnail_url: foundProduct.images[0]?.url || '/images/products/serum.webp',
-        product_slug: foundProduct.slug,
-        available_quantity: foundVariant.available_quantity,
         reservation: {
           expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
           seconds_remaining: 900,
@@ -400,7 +398,7 @@ export const mockServices = {
       payment_status: 'unpaid',
       payment_method: 'cash_on_delivery',
       delivery_status: 'pending_pickup',
-      pickup_stores: [...new Set(cart.items.map((i) => { const p = INITIAL_PRODUCTS.find((p) => p.variants.some((v) => v.id === i.product_variant_id)); return INITIAL_MERCHANT_STORES.find((s) => s.id === ((p!.id - 1) % 3) + 1)!.name }))],
+      pickup_stores: [...new Set(cart.items.map((i) => { const p = INITIAL_PRODUCTS.find((p) => p.variants.some((v) => v.id === i.product_variant_id)); if (!p) return 'متجر غير محدد'; const store = INITIAL_MERCHANT_STORES.find((s) => s.id === ((p.id - 1) % 3) + 1); return store?.name ?? 'متجر غير محدد' }))],
       driver_name: 'محمود أبو العوف',
       driver_phone: '0598112233',
       delivery_notes: payload.notes || null,
@@ -428,7 +426,7 @@ export const mockServices = {
     const orders = getStoredOrders()
     const found = orders.find((o) => o.order_number === orderNumber)
     if (!found) {
-      throw { response: { status: 404, data: { message: 'الطلب غير موجود' } } }
+      throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404, data: { message: 'الطلب غير موجود' } } })
     }
     return delay(found)
   },

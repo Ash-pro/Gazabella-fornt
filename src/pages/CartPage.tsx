@@ -60,9 +60,9 @@ export function CartPage() {
                     <div className="quantity-control quantity-control--small">
                       <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
                       <span className="num">{item.quantity}</span>
-                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= 10 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.available_quantity ?? 10) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
                     </div>
-                    <div className="cart-item-price">{item.compare_at_price && Number(item.compare_at_price) > Number(item.unit_price) && <del className="line-through text-gray-400 text-sm"><span className="num">{formatPrice(Number(item.compare_at_price) * item.quantity)}</span></del>}<p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p></div>
+                    <p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p>
                   </div>
                 </div>
               </article>
