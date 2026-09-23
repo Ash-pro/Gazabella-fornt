@@ -62,3 +62,30 @@ export function getApiErrorMessage(error: unknown): string {
   const mock = error as { response?: { data?: { message?: string } } }
   return mock?.response?.data?.message || 'حدث خطأ غير متوقع. حاول مرة أخرى.'
 }
+
+// ── Image URL Helper ──────────────────────────────────────────────────────
+// Laravel بيرجع الصور بـ APP_URL اللي ممكن يكون localhost —
+// هنا بنستبدل أي prefix بـ VITE_STORAGE_URL لو موجود
+const STORAGE_URL = (import.meta.env.VITE_STORAGE_URL as string | undefined)?.replace(/\/$/, '')
+
+export function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  // لو الـ URL كامل ومصدره نفس الـ storage — استخدمه مباشرة
+  if (STORAGE_URL && (url.startsWith('http://') || url.startsWith('https://'))) {
+    // استبدل أي origin مختلف بـ STORAGE_URL (يعالج حالة localhost vs cloudflare)
+    try {
+      const parsed = new URL(url)
+      const storageOrigin = new URL(STORAGE_URL).origin
+      if (parsed.origin !== storageOrigin) {
+        return STORAGE_URL + parsed.pathname + parsed.search
+      }
+    } catch {
+      // URL مش valid — رجّعه كما هو
+    }
+  }
+  // لو مسار نسبي مثل /storage/... أضف STORAGE_URL
+  if (STORAGE_URL && url.startsWith('/')) {
+    return STORAGE_URL + url
+  }
+  return url
+}
