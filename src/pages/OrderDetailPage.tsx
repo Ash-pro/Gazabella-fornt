@@ -14,7 +14,7 @@ const labels: Record<string, string> = { pending: 'استلام الطلب', con
 const payments: Record<string, string> = { unpaid: 'غير مدفوع', pending: 'بانتظار التأكيد', paid: 'مدفوع', failed: 'لم يكتمل الدفع', refunded: 'تم استرداد المبلغ' }
 const date = (value: string) => new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
-function OrderConfirmModal({ orderNumber, onClose }: { orderNumber: string; onClose: () => void }) {
+function OrderConfirmModal({ orderId, onClose }: { orderId: string; onClose: () => void }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     timerRef.current = setTimeout(onClose, 6000)
@@ -40,9 +40,9 @@ function OrderConfirmModal({ orderNumber, onClose }: { orderNumber: string; onCl
         <p className="oc-eyebrow">يسعدنا خدمتكِ</p>
         <h2 className="oc-title">طلبكِ على الطريق ✨</h2>
         <p className="oc-body">وصلنا طلبكِ بنجاح، سيتواصل معكِ فريق Gazabella قريبًا لتأكيد وقت التوصيل.</p>
-        <div className="oc-order-num" dir="ltr" aria-label={`رقم الطلب ${orderNumber}`}>
+        <div className="oc-order-num" dir="ltr" aria-label={`رقم الطلب ${orderId}`}>
           <span className="oc-order-label">رقم الطلب</span>
-          <span className="num">{orderNumber}</span>
+          <span className="num">{orderId}</span>
         </div>
         <button type="button" className="btn-primary oc-btn" onClick={onClose}>
           <Icon name="sparkle" className="size-4" />
@@ -55,34 +55,34 @@ function OrderConfirmModal({ orderNumber, onClose }: { orderNumber: string; onCl
 }
 
 export function OrderDetailPage() {
-  const { orderNumber = '' } = useParams()
+  const { orderId = '' } = useParams()
   const [searchParams] = useSearchParams()
   const client = useQueryClient()
   const [disputeOpen, setDisputeOpen] = useState(false)
   const [showConfirm, setShowConfirm] = useState(() => {
     if (searchParams.get('created') === '1') return true
-    try { return sessionStorage.getItem('gz_order_confirmed') === orderNumber } catch { return false }
+    try { return sessionStorage.getItem('gz_order_confirmed') === orderId } catch { return false }
   })
   const [reason, setReason] = useState('')
   const [now, setNow] = useState(Date.now)
   useEffect(() => { const timer=setInterval(() => setNow(Date.now()),30_000); return () => clearInterval(timer) }, [])
-  const orderQuery = useQuery({ queryKey: ['order', orderNumber], queryFn: () => gazabellaApi.getOrder(orderNumber), enabled: Boolean(orderNumber), refetchInterval: (query) => ['pending','confirmed','processing','shipped'].includes(query.state.data?.status || '') ? 30_000 : false })
+  const orderQuery = useQuery({ queryKey: ['order', orderId], queryFn: () => gazabellaApi.getOrder(orderId), enabled: Boolean(orderId), refetchInterval: (query) => ['pending','confirmed','processing','shipped'].includes(query.state.data?.status || '') ? 30_000 : false })
   const payment = useMutation({mutationFn:gazabellaApi.initPayment,onSuccess:(result) => {
     const url = new URL(result.payment_url,window.location.origin)
     if (!['https:',...(isMockMode() ? ['http:'] : [])].includes(url.protocol)) throw new Error('رابط الدفع غير صالح.')
-    if (isMockMode()) { void client.invalidateQueries({queryKey:['order',orderNumber]}); void client.invalidateQueries({queryKey:['orders']}) } else window.location.assign(url.href)
+    if (isMockMode()) { void client.invalidateQueries({queryKey:['order',orderId]}); void client.invalidateQueries({queryKey:['orders']}) } else window.location.assign(url.href)
   }})
   const dispute = useMutation({
-    mutationFn: async () => { if (!isMockMode()) throw new Error('هذه الخدمة تنتظر ربط الخادم.'); return demoOpenDispute(orderNumber, reason) },
-    onSuccess: () => { setDisputeOpen(false); void client.invalidateQueries({queryKey:['order',orderNumber]}) },
+    mutationFn: async () => { if (!isMockMode()) throw new Error('هذه الخدمة تنتظر ربط الخادم.'); return demoOpenDispute(orderId, reason) },
+    onSuccess: () => { setDisputeOpen(false); void client.invalidateQueries({queryKey:['order',orderId]}) },
   })
   if (orderQuery.isLoading) return <div className="container-page"><PageLoader /></div>
   if (orderQuery.isError || !orderQuery.data) return <div className="container-page"><ErrorState message={getApiErrorMessage(orderQuery.error)} onRetry={() => void orderQuery.refetch()} /></div>
   const order = orderQuery.data
-  const savedDispute = isMockMode() ? demoDispute(orderNumber) : undefined
+  const savedDispute = isMockMode() ? demoDispute(orderId) : undefined
   const withinDisputeWindow = order.status === 'delivered' && order.escrow_expires_at && Date.parse(order.escrow_expires_at) > now
   return <div className="container-page py-8 sm:py-12">
-    {showConfirm && <OrderConfirmModal orderNumber={order.order_number} onClose={() => { try { sessionStorage.removeItem('gz_order_confirmed') } catch {}; setShowConfirm(false) }} />}
+    {showConfirm && <OrderConfirmModal orderId={order.order_number} onClose={() => { try { sessionStorage.removeItem('gz_order_confirmed') } catch {}; setShowConfirm(false) }} />}
     <Link to="/orders" className="text-link mb-7"><Icon name="arrow" className="size-4" /> كل الطلبات</Link>
     {searchParams.get('payment') === 'failed' && order.payment_status !== 'paid' && <p className="demo-note mb-5" role="alert">لم تكتمل عملية الدفع. حالة طلبكِ محفوظة ويمكنكِ مراجعتها هنا.</p>}
     <div className="flex flex-wrap items-center justify-between gap-4"><div><span className="eyebrow">كل التفاصيل في مكان واحد</span><h1 className="mt-2 text-2xl font-bold num" dir="ltr">{order.order_number}</h1><p className="mt-2 text-xs text-[var(--text-3)] num">{date(order.created_at)}</p></div><span className={'status-badge status-' + order.status}>{labels[order.status] || order.status}</span></div>

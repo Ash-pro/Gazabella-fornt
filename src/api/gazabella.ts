@@ -4,10 +4,13 @@ import type {
   ApiData,
   ApiList,
   AuthResponse,
+  Banner,
+  BannerType,
   Brand,
   Cart,
   Category,
   CheckoutPayload,
+  Collection,
   DeliveryMission,
   DeliveryStats,
   DeliveryStatus,
@@ -19,16 +22,30 @@ import type {
   Order,
   ProductBrief,
   ProductDetail,
+  SiteSettings,
   User,
 } from '../types/api'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// فلاتر المنتجات
+//   category_slug / brand_slug  → للـ mock فقط (بيبني الفلتر من الـ slug)
+//   category_id   / brand_id   → للـ API الحقيقي (integer IDs)
+// ─────────────────────────────────────────────────────────────────────────────
 export interface ProductFilters {
+  // Mock mode
   category_slug?: string
   brand_slug?: string
+  // Real API
+  category_id?: number
+  brand_id?: number
+  collection_id?: number
+  featured?: boolean
+  in_stock?: boolean
+  // مشتركة
   search?: string
   min_price?: number
   max_price?: number
-  sort?: 'price' | '-price' | 'created_at' | '-created_at'
+  sort?: 'price' | '-price' | 'created_at' | '-created_at' | 'sort_order' | '-sort_order'
   page?: number
   per_page?: number
 }
@@ -36,6 +53,12 @@ export interface ProductFilters {
 // Mock يعمل فقط عند VITE_DATA_SOURCE=mock صراحةً
 export const isMockMode = (): boolean =>
   import.meta.env.VITE_DATA_SOURCE === 'mock'
+
+// بيحول فلاتر الـ UI (slug-based) إلى params API-compatible
+function toApiProductParams(filters: ProductFilters): Record<string, unknown> {
+  const { category_slug: _cs, brand_slug: _bs, ...rest } = filters
+  return rest as Record<string, unknown>
+}
 
 export const gazabellaApi = {
   // ── المصادقة ─────────────────────────────────────────────────────────
@@ -65,24 +88,41 @@ export const gazabellaApi = {
       ? mockServices.getHome()
       : apiClient.get('/home').then((r) => r.data),
 
+  // ── الإعدادات والبانرات والكولكشنات ──────────────────────────────────
+  getSettings: (): Promise<SiteSettings> =>
+    isMockMode()
+      ? mockServices.getSettings()
+      : apiClient.get<ApiData<SiteSettings>>('/settings').then((r) => r.data.data),
+
+  getBanners: (type?: BannerType): Promise<Banner[]> =>
+    isMockMode()
+      ? mockServices.getBanners(type)
+      : apiClient.get<ApiList<Banner>>('/banners', { params: type ? { type } : undefined }).then((r) => r.data.data),
+
+  getCollections: (): Promise<Collection[]> =>
+    isMockMode()
+      ? mockServices.getCollections()
+      : apiClient.get<ApiList<Collection>>('/collections').then((r) => r.data.data),
+
   // ── التصنيفات والبراندات ─────────────────────────────────────────────
   getCategories: (): Promise<Category[]> =>
     isMockMode()
       ? mockServices.getCategories()
-      : apiClient.get<ApiList<Category>>('/categories', { params: { per_page: 50 } }).then((r) => r.data.data),
+      : apiClient.get<ApiList<Category>>('/categories', { params: { per_page: 100 } }).then((r) => r.data.data),
 
   getBrands: (): Promise<Brand[]> =>
     isMockMode()
       ? mockServices.getBrands()
-      : apiClient.get<ApiList<Brand>>('/brands', { params: { per_page: 50 } }).then((r) => r.data.data),
+      : apiClient.get<ApiList<Brand>>('/brands', { params: { per_page: 100 } }).then((r) => r.data.data),
 
   // ── المنتجات ─────────────────────────────────────────────────────────
+  // في API mode: يُحذف category_slug/brand_slug ويُستخدم category_id/brand_id
   getProducts: (filters: ProductFilters) =>
     isMockMode()
       ? mockServices.getProducts(filters)
-      : apiClient.get<ApiList<ProductBrief>>('/products', { params: filters }).then((r) => r.data),
+      : apiClient.get<ApiList<ProductBrief>>('/products', { params: toApiProductParams(filters) }).then((r) => r.data),
 
-  getProduct: (slug: string) =>
+  getProduct: (slug: string): Promise<ProductDetail> =>
     isMockMode()
       ? mockServices.getProduct(slug)
       : apiClient.get<ApiData<ProductDetail>>(`/products/${slug}`).then((r) => r.data.data),
@@ -93,49 +133,54 @@ export const gazabellaApi = {
       ? mockServices.getWishlist()
       : apiClient.get<ApiList<ProductBrief>>('/wishlist').then((r) => r.data.data),
 
-  // API يقبل product slug كـ path param
-  toggleWishlist: (productSlug: string) =>
+  toggleWishlist: (productSlug: string): Promise<{ wishlisted: boolean }> =>
     isMockMode()
       ? mockServices.toggleWishlist(productSlug)
       : apiClient.post<{ wishlisted: boolean }>(`/wishlist/${productSlug}`).then((r) => r.data),
 
   // ── السلة ────────────────────────────────────────────────────────────
-  getCart: () =>
+  getCart: (): Promise<Cart> =>
     isMockMode()
       ? mockServices.getCart()
       : apiClient.get<ApiData<Cart>>('/cart').then((r) => r.data.data),
 
-  addToCart: (product_id: number, quantity: number) =>
+  addToCart: (product_id: number, quantity: number): Promise<Cart> =>
     isMockMode()
       ? mockServices.addToCart(product_id, quantity)
       : apiClient.post<ApiData<Cart>>('/cart/items', { product_id, quantity }).then((r) => r.data.data),
 
-  updateCartItem: (itemId: number, quantity: number) =>
+  updateCartItem: (itemId: number, quantity: number): Promise<Cart> =>
     isMockMode()
       ? mockServices.updateCartItem(itemId, quantity)
       : apiClient.patch<ApiData<Cart>>(`/cart/items/${itemId}`, { quantity }).then((r) => r.data.data),
 
-  removeCartItem: (itemId: number) =>
+  removeCartItem: (itemId: number): Promise<Cart> =>
     isMockMode()
       ? mockServices.removeCartItem(itemId)
       : apiClient.delete<ApiData<Cart>>(`/cart/items/${itemId}`).then((r) => r.data.data),
 
+  clearCart: (): Promise<Cart> =>
+    isMockMode()
+      ? mockServices.clearCart()
+      : apiClient.delete<ApiData<Cart>>('/cart').then((r) => r.data.data),
+
   // ── الطلبات ──────────────────────────────────────────────────────────
-  checkout: (payload: CheckoutPayload) =>
+  checkout: (payload: CheckoutPayload): Promise<Order> =>
     isMockMode()
       ? mockServices.checkout(payload)
       : apiClient.post<ApiData<Order>>('/checkout', payload).then((r) => r.data.data),
 
-  getOrders: (status?: string) =>
+  // API ما بدعم فلتر status — بنجيب كل الطلبات
+  getOrders: (): Promise<ApiList<Order>> =>
     isMockMode()
-      ? mockServices.getOrders(status)
-      : apiClient.get<ApiList<Order>>('/orders', { params: status ? { status } : undefined }).then((r) => r.data),
+      ? mockServices.getOrders()
+      : apiClient.get<ApiList<Order>>('/orders').then((r) => r.data),
 
-  // ملاحظة: API يقبل integer ID — تأكد من route model binding في Laravel
-  getOrder: (orderNumber: string) =>
+  // Mock: يقبل order_number (string) — API: يقبل integer ID
+  getOrder: (orderId: number | string): Promise<Order> =>
     isMockMode()
-      ? mockServices.getOrder(orderNumber)
-      : apiClient.get<ApiData<Order>>(`/orders/${orderNumber}`).then((r) => r.data.data),
+      ? mockServices.getOrder(String(orderId))
+      : apiClient.get<ApiData<Order>>(`/orders/${orderId}`).then((r) => r.data.data),
 
   // =======================================================================
   // لوحة التاجر — غير موجود في API الحالي، يعمل بالـ mock دائماً

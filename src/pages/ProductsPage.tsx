@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { gazabellaApi, type ProductFilters } from '../api/gazabella'
+import { gazabellaApi, isMockMode, type ProductFilters } from '../api/gazabella'
 import { getImageUrl } from '../lib/apiClient'
 import { CatalogFilters } from '../components/product/CatalogFilters'
 import { ProductCard } from '../components/product/ProductCard'
@@ -22,16 +22,32 @@ export function ProductsPage() {
   const validSort = ['-created_at', 'created_at', 'price', '-price'].includes(params.get('sort') || '') ? params.get('sort') as ProductFilters['sort'] : undefined
   const numberParam = (name: string) => { const raw = params.get(name); const n = Number(raw); return raw && Number.isFinite(n) && n >= 0 ? n : undefined }
   const page = Math.max(1, Math.floor(numberParam('page') || 1))
-  const filters: ProductFilters = { category_slug: sub || (params.getAll('category').length === 1 ? category : undefined), search: search || undefined, sort: validSort, min_price: numberParam('min_price'), max_price: numberParam('max_price'), page, per_page: 12 }
-  const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: Infinity })
+  const categoriesData = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: Infinity })
+  // Resolve slug → category_id for API mode
+  const resolvedCategorySlug = sub || (params.getAll('category').length === 1 ? category : undefined)
+  const resolvedCategoryId = !isMockMode() && resolvedCategorySlug
+    ? (() => {
+        const flat = (categoriesData.data ?? []).flatMap((c) => [c, ...(c.children ?? [])])
+        return flat.find((c) => c.slug === resolvedCategorySlug)?.id
+      })()
+    : undefined
+  const filters: ProductFilters = {
+    ...(isMockMode() ? { category_slug: resolvedCategorySlug } : { category_id: resolvedCategoryId }),
+    search: search || undefined,
+    sort: validSort,
+    min_price: numberParam('min_price'),
+    max_price: numberParam('max_price'),
+    page,
+    per_page: 12,
+  }
   const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), placeholderData: keepPreviousData, staleTime: 60_000 })
-  const currentCategory = categories.data?.find((c) => c.slug === category)
+  const currentCategory = categoriesData.data?.find((c) => c.slug === category)
   const active = Boolean(category || sub || search || validSort || filters.min_price !== undefined || filters.max_price !== undefined || savedOnly || page > 1)
   const CatalogTitle = active ? 'h1' : 'h2'
   function setFilter(name: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(name, value); else next.delete(name); next.delete('page'); if (name === 'category') next.delete('sub'); setParams(next, {state:{preserveScroll:true},replace:name === 'min_price' || name === 'max_price'}) }
   function isSaved(id: number) { try { return localStorage.getItem(`gazabella_wishlist_${id}`) === 'true' } catch { return false } }
   const chips = [
-    ...params.getAll('category').map((value) => ({key:'category',value,label:categories.data?.find((c) => c.slug === value)?.name || value})),
+    ...params.getAll('category').map((value) => ({key:'category',value,label:categoriesData.data?.find((c) => c.slug === value)?.name || value})),
     ...(sub ? [{key:'sub',value:sub,label:currentCategory?.children.find((c) => c.slug === sub)?.name || sub}] : []),
     ...(filters.min_price !== undefined || filters.max_price !== undefined ? [{key:'price',value:'',label:`السعر: ${filters.min_price ?? 0} ₪ – ${filters.max_price === undefined ? 'بلا حد' : filters.max_price + ' ₪'}`}] : []),
     ...(search ? [{key:'search',value:search,label:search}] : []),
@@ -51,11 +67,11 @@ export function ProductsPage() {
       <div className="editorial-hero__image"><img src="/images/hero-beauty.webp" alt="تشكيلة Gazabella للعناية والعطور" fetchPriority="high" /><span className="hero-edition">THE GAZABELLA EDIT <span>01 / BEAUTY</span></span></div>
     </section>}
     {!active && <div className="container-page service-strip"><span><Icon name="truck" className="size-4" /> سلة واحدة، توصيل موحّد</span><span><Icon name="sparkle" className="size-4" /> اختيارات بعناية</span><span><Icon name="shield" className="size-4" /> تجربة واضحة من البداية</span></div>}
-    <section id="categories" className="container-page category-section"><div className="section-heading"><h2>لكل جانب من جمالكِ</h2><span>اكتشفي الأقسام</span></div><nav className="category-rail" aria-label="تسوق حسب الفئة">{categories.data?.map((c) => <Link key={c.id} to={`/?category=${c.slug}#products`} className={category === c.slug ? 'category-tile active' : 'category-tile'}><div><img src={getImageUrl(c.image_url) || '/brand/symbol/logo-128.webp'} alt="" loading="lazy" /></div><span>{c.name}</span></Link>)}</nav></section>
+    <section id="categories" className="container-page category-section"><div className="section-heading"><h2>لكل جانب من جمالكِ</h2><span>اكتشفي الأقسام</span></div><nav className="category-rail" aria-label="تسوق حسب الفئة">{categoriesData.data?.map((c) => <Link key={c.id} to={`/?category=${c.slug}#products`} className={category === c.slug ? 'category-tile active' : 'category-tile'}><div><img src={getImageUrl(c.image_url) || '/brand/symbol/logo-128.webp'} alt="" loading="lazy" /></div><span>{c.name}</span></Link>)}</nav></section>
     <section id="products" className="container-page catalog-section">
       <div className="section-heading"><div><span className="eyebrow">{active ? 'اختياراتكِ، بطريقتكِ' : 'THE EVERYDAY EDIT'}</span><CatalogTitle>{savedOnly ? 'محفوظاتكِ في هذه النتائج' : search ? `نتائج «${search}»` : currentCategory?.children.find((c) => c.slug === sub)?.name || currentCategory?.name || 'مختارات تستحق مكانًا لديكِ'}</CatalogTitle><p>{products.data ? <><span className="num">{savedOnly ? list.length : products.data.meta.total}</span> منتج</> : 'نجهّز مختاراتكِ…'}{products.isFetching && !products.isLoading ? ' · جارٍ التحديث' : ''}</p></div><Link className="text-link" to="/?sort=newest#products">وصل حديثًا <Icon name="arrow" className="size-4 rotate-180" /></Link></div>
       <div className="catalog-toolbar"><button className="filter-toggle" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="filter" className="size-4" /> تصفية</button><button className={`filter-toggle ${savedOnly ? 'active' : ''}`} aria-pressed={savedOnly} onClick={() => setFilter('saved', savedOnly ? '' : 'true')}><Icon name="heart" className="size-4" /> المحفوظات</button><label className="sort-label">ترتيب حسب <select aria-label="ترتيب المنتجات" value={validSort || ''} onChange={(e) => setFilter('sort', e.target.value)}><option value="">المختارات</option><option value="newest">الأحدث</option><option value="popular">الأكثر طلبًا</option><option value="price_asc">السعر: الأقل أولًا</option><option value="price_desc">السعر: الأعلى أولًا</option></select></label></div>
-      {filtersOpen && <CatalogFilters categories={categories.data || []} onClose={() => setFiltersOpen(false)} />}
+      {filtersOpen && <CatalogFilters categories={categoriesData.data || []} onClose={() => setFiltersOpen(false)} />}
       {!!chips.length && <div className="active-filters">{chips.map((chip) => <button key={chip.key + chip.value} onClick={() => removeChip(chip.key,chip.value)} aria-label={`إزالة فلتر ${chip.label}`}>{chip.label} ×</button>)}{chips.length > 1 && <button onClick={() => setParams({}, {state:{preserveScroll:true}})}>مسح الكل</button>}</div>}
       {!products.data && products.isLoading ? <div className="catalog-grid" aria-label="جارٍ تحميل المنتجات">{Array.from({length: 8}, (_, i) => <div key={i} className="product-skeleton"><div /><span /><span /></div>)}</div> : !products.data && products.isError ? <ErrorState message={getApiErrorMessage(products.error)} onRetry={() => void products.refetch()} /> : !list.length ? <EmptyState title="لم نجد منتجات مطابقة" message="جرّبي قسمًا آخر أو وسّعي نطاق السعر. يمكنكِ أيضًا مسح التصفية." /> : <div className="catalog-grid" aria-busy={products.isFetching}>{list.map((product) => <ProductCard key={product.id} product={product} />)}</div>}
       {products.data && products.data.meta.last_page > 1 && <nav className="pagination" aria-label="صفحات المنتجات"><button disabled={page === 1 || products.isPlaceholderData} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page - 1)); setParams(next) }}>السابق</button><span><span className="num">{page}</span> / <span className="num">{products.data.meta.last_page}</span></span><button disabled={page >= products.data.meta.last_page || products.isPlaceholderData} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page + 1)); setParams(next) }}>التالي</button></nav>}

@@ -43,7 +43,7 @@ export default function App() {
               <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
               <Route path="checkout" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><CheckoutPage /></ProtectedRoute></Suspense>} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
-              <Route path="orders/:orderNumber" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
+              <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
             </Route>
 
             {/* لوحة تحكم التاجر */}

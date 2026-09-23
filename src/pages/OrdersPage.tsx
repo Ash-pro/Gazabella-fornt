@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { gazabellaApi } from '../api/gazabella'
+import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -31,7 +31,7 @@ export function OrdersPage() {
       <div className="mt-8 grid gap-4">
         {!ordersQuery.data?.data.length && <EmptyState title="لا توجد طلبات بعد" message="عندما تتمين أول طلب سيظهر هنا بكل تفاصيله." />}
         {ordersQuery.data?.data.map((order) => (
-          <Link to={`/orders/${order.order_number}`} key={order.id} className="order-card hover:border-[var(--primary)] transition-all">
+          <Link to={`/orders/${isMockMode() ? order.order_number : order.id}`} key={order.id} className="order-card hover:border-[var(--primary)] transition-all">
             <div className="space-y-1.5">
               <div className="flex items-center gap-3">
                 <p className="font-mono text-base font-black text-[var(--primary)] num" dir="ltr">{order.order_number}</p>

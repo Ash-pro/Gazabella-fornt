@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { gazabellaApi } from '../api/gazabella'
+import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -53,11 +53,11 @@ export function CheckoutPage() {
         notes: v.notes || undefined,
       }),
     onSuccess: (order) => {
-      setConfirmed(order.order_number)
+      setConfirmed(isMockMode() ? order.order_number : String(order.id))
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
-      try { sessionStorage.setItem('gz_order_confirmed', order.order_number) } catch {}
-      navigate(`/orders/${order.order_number}?created=1`, { replace: true })
+      try { sessionStorage.setItem('gz_order_confirmed', isMockMode() ? order.order_number : String(order.id)) } catch {}
+      navigate(`/orders/${isMockMode() ? order.order_number : order.id}?created=1`, { replace: true })
     },
   })
 

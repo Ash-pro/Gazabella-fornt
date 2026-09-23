@@ -18,6 +18,10 @@ import type {
   DeliveryMission,
   DeliveryStatus,
   DeliveryStats,
+  Banner,
+  BannerType,
+  Collection,
+  SiteSettings,
 } from '../types/api'
 import type { ProductFilters } from '../api/gazabella'
 import {
@@ -126,6 +130,26 @@ export const mockServices = {
   getWishlist: async (): Promise<ProductBrief[]> => delay([]),
 
   toggleWishlist: async (_slug: string): Promise<{ wishlisted: boolean }> => delay({ wishlisted: true }),
+
+  getSettings: async (): Promise<SiteSettings> =>
+    delay({
+      store_name: 'Gazabella',
+      tagline: 'جمالكِ، قصتنا',
+      logo_url: '/brand/symbol/logo-192.webp',
+      favicon_url: null,
+      phone: null,
+      email: null,
+      address: null,
+    }),
+
+  getBanners: async (_type?: BannerType): Promise<Banner[]> => delay([]),
+
+  getCollections: async (): Promise<Collection[]> => delay([]),
+
+  clearCart: async (): Promise<Cart> => {
+    saveStoredCart({ items: [], total_items: 0, subtotal: '0.00' })
+    return delay({ items: [], total_items: 0, subtotal: '0.00' })
+  },
 
   // ── Products & Categories ──
   getCategories: async (): Promise<Category[]> => delay(INITIAL_CATEGORIES),

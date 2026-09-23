@@ -157,6 +157,50 @@ export interface ApiData<T> {
   data: T
 }
 
+
+// =======================================================================
+// Banners
+// =======================================================================
+export type BannerType = 'hero' | 'promo' | 'announcement'
+
+export interface Banner {
+  id: number
+  type: BannerType
+  title: string | null
+  subtitle: string | null
+  image_url: string | null
+  link_url: string | null
+  link_label: string | null
+  starts_at: string | null
+  ends_at: string | null
+}
+
+// =======================================================================
+// Collections
+// =======================================================================
+export interface Collection {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  image_url: string | null
+  products_count?: number
+}
+
+// =======================================================================
+// Site Settings
+// =======================================================================
+export interface SiteSettings {
+  store_name: string
+  tagline: string | null
+  logo_url: string | null
+  favicon_url: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  social_links?: Record<string, string>
+}
+
 // =======================================================================
 // أنواع لوحة التاجر (Merchant Dashboard Types)
 // =======================================================================
