@@ -2,12 +2,14 @@ import { demoProduct, demoPrep, demoSetPrep } from './demoOperations'
 import type {
   ApiList,
   AuthResponse,
+  Brand,
   Cart,
   Category,
   CheckoutPayload,
   Order,
   ProductBrief,
   ProductDetail,
+  User,
   MerchantStore,
   MerchantProductItem,
   MerchantOrderItem,
@@ -71,6 +73,59 @@ export const mockServices = {
   },
 
   logout: async () => delay({ message: 'تم تسجيل الخروج بنجاح' }),
+
+  register: async (payload: { name: string; email: string; password: string; password_confirmation: string }): Promise<AuthResponse> =>
+    delay({
+      token: 'gazabella_mock_token_' + Date.now(),
+      token_type: 'Bearer' as const,
+      user: {
+        id: 101,
+        name: payload.name,
+        email: payload.email,
+        role: 'customer' as const,
+        created_at: new Date().toISOString(),
+      },
+    }),
+
+  login: async (email: string, _password: string): Promise<AuthResponse> =>
+    delay({
+      token: 'gazabella_mock_token_' + Date.now(),
+      token_type: 'Bearer' as const,
+      user: {
+        id: 101,
+        name: 'أمل النجار',
+        email,
+        role: 'customer' as const,
+        created_at: new Date().toISOString(),
+      },
+    }),
+
+  getMe: async (): Promise<User> =>
+    delay({
+      id: 101,
+      name: 'أمل النجار',
+      email: 'amal@example.com',
+      role: 'customer' as const,
+      created_at: new Date().toISOString(),
+    }),
+
+  getHome: async () =>
+    delay({
+      featured_categories: INITIAL_CATEGORIES.slice(0, 6),
+      new_arrivals: [],
+      best_sellers: [],
+    }),
+
+  getBrands: async (): Promise<Brand[]> =>
+    delay([
+      { id: 1, name: 'غزابيلا', slug: 'gazabella', logo_url: null },
+      { id: 2, name: 'سيروم كير', slug: 'serum-care', logo_url: null },
+      { id: 3, name: 'بيوتي لاب', slug: 'beauty-lab', logo_url: null },
+    ]),
+
+  getWishlist: async (): Promise<ProductBrief[]> => delay([]),
+
+  toggleWishlist: async (_slug: string): Promise<{ wishlisted: boolean }> => delay({ wishlisted: true }),
 
   // ── Products & Categories ──
   getCategories: async (): Promise<Category[]> => delay(INITIAL_CATEGORIES),

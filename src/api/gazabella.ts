@@ -39,19 +39,19 @@ export const isMockMode = (): boolean =>
 
 export const gazabellaApi = {
   // ── المصادقة ─────────────────────────────────────────────────────────
-  register: (payload: { name: string; email: string; password: string; password_confirmation: string }) =>
+  register: (payload: { name: string; email: string; password: string; password_confirmation: string }): Promise<AuthResponse> =>
     isMockMode()
-      ? mockServices.verifyOtp('', '')
+      ? mockServices.register(payload)
       : apiClient.post<AuthResponse>('/auth/register', payload).then((r) => r.data),
 
-  login: (email: string, password: string) =>
+  login: (email: string, password: string): Promise<AuthResponse> =>
     isMockMode()
-      ? mockServices.verifyOtp('', '')
+      ? mockServices.login(email, password)
       : apiClient.post<AuthResponse>('/auth/login', { email, password }).then((r) => r.data),
 
   getMe: (): Promise<User> =>
     isMockMode()
-      ? Promise.resolve(null as unknown as User)
+      ? mockServices.getMe()
       : apiClient.get<ApiData<User>>('/auth/me').then((r) => r.data.data),
 
   logout: () =>
@@ -62,19 +62,19 @@ export const gazabellaApi = {
   // ── الصفحة الرئيسية ──────────────────────────────────────────────────
   getHome: () =>
     isMockMode()
-      ? Promise.resolve({})
+      ? mockServices.getHome()
       : apiClient.get('/home').then((r) => r.data),
 
   // ── التصنيفات والبراندات ─────────────────────────────────────────────
-  getCategories: () =>
+  getCategories: (): Promise<Category[]> =>
     isMockMode()
       ? mockServices.getCategories()
-      : apiClient.get<ApiData<Category[]>>('/categories').then((r) => r.data.data),
+      : apiClient.get<ApiList<Category>>('/categories', { params: { per_page: 50 } }).then((r) => r.data.data),
 
   getBrands: (): Promise<Brand[]> =>
     isMockMode()
-      ? Promise.resolve([])
-      : apiClient.get<ApiData<Brand[]>>('/brands').then((r) => r.data.data),
+      ? mockServices.getBrands()
+      : apiClient.get<ApiList<Brand>>('/brands', { params: { per_page: 50 } }).then((r) => r.data.data),
 
   // ── المنتجات ─────────────────────────────────────────────────────────
   getProducts: (filters: ProductFilters) =>
@@ -90,13 +90,14 @@ export const gazabellaApi = {
   // ── القائمة المفضلة ──────────────────────────────────────────────────
   getWishlist: (): Promise<ProductBrief[]> =>
     isMockMode()
-      ? Promise.resolve([])
-      : apiClient.get<ApiData<ProductBrief[]>>('/wishlist').then((r) => r.data.data),
+      ? mockServices.getWishlist()
+      : apiClient.get<ApiList<ProductBrief>>('/wishlist').then((r) => r.data.data),
 
-  toggleWishlist: (productId: number) =>
+  // API يقبل product slug كـ path param
+  toggleWishlist: (productSlug: string) =>
     isMockMode()
-      ? Promise.resolve({ wishlisted: true })
-      : apiClient.post<{ wishlisted: boolean }>(`/wishlist/${productId}`).then((r) => r.data),
+      ? mockServices.toggleWishlist(productSlug)
+      : apiClient.post<{ wishlisted: boolean }>(`/wishlist/${productSlug}`).then((r) => r.data),
 
   // ── السلة ────────────────────────────────────────────────────────────
   getCart: () =>
@@ -122,7 +123,7 @@ export const gazabellaApi = {
   // ── الطلبات ──────────────────────────────────────────────────────────
   checkout: (payload: CheckoutPayload) =>
     isMockMode()
-      ? Promise.resolve({ order_number: 'MOCK-001', id: 1 } as Order)
+      ? mockServices.checkout(payload)
       : apiClient.post<ApiData<Order>>('/checkout', payload).then((r) => r.data.data),
 
   getOrders: (status?: string) =>
@@ -130,62 +131,45 @@ export const gazabellaApi = {
       ? mockServices.getOrders(status)
       : apiClient.get<ApiList<Order>>('/orders', { params: status ? { status } : undefined }).then((r) => r.data),
 
+  // ملاحظة: API يقبل integer ID — تأكد من route model binding في Laravel
   getOrder: (orderNumber: string) =>
     isMockMode()
       ? mockServices.getOrder(orderNumber)
       : apiClient.get<ApiData<Order>>(`/orders/${orderNumber}`).then((r) => r.data.data),
 
   // =======================================================================
-  // لوحة التاجر
+  // لوحة التاجر — غير موجود في API الحالي، يعمل بالـ mock دائماً
   // =======================================================================
   getMerchantStores: (): Promise<MerchantStore[]> =>
-    isMockMode()
-      ? mockServices.getMerchantStores()
-      : apiClient.get<ApiData<MerchantStore[]>>('/merchant/stores').then((r) => r.data.data),
+    mockServices.getMerchantStores(),
 
   getMerchantStats: (storeId = 1): Promise<MerchantStats> =>
-    isMockMode()
-      ? mockServices.getMerchantStats(storeId)
-      : apiClient.get<ApiData<MerchantStats>>(`/merchant/${storeId}/stats`).then((r) => r.data.data),
+    mockServices.getMerchantStats(storeId),
 
   getMerchantProducts: (storeId = 1): Promise<MerchantProductItem[]> =>
-    isMockMode()
-      ? mockServices.getMerchantProducts(storeId)
-      : apiClient.get<ApiList<MerchantProductItem>>(`/merchant/${storeId}/products`).then((r) => r.data.data),
+    mockServices.getMerchantProducts(storeId),
 
   getMerchantOrders: (storeId = 1): Promise<MerchantOrderItem[]> =>
-    isMockMode()
-      ? mockServices.getMerchantOrders(storeId)
-      : apiClient.get<ApiList<MerchantOrderItem>>(`/merchant/${storeId}/orders`).then((r) => r.data.data),
+    mockServices.getMerchantOrders(storeId),
 
   updateOrderPrepStatus: (orderItemId: number, status: MerchantPrepStatus) =>
-    isMockMode()
-      ? mockServices.updateOrderPrepStatus(orderItemId, status)
-      : apiClient.patch(`/merchant/order-items/${orderItemId}/status`, { status }).then((r) => r.data),
+    mockServices.updateOrderPrepStatus(orderItemId, status),
 
   // =======================================================================
-  // لوحة التوصيل
+  // لوحة التوصيل — غير موجود في API الحالي، يعمل بالـ mock دائماً
   // =======================================================================
   getDeliveryStats: (): Promise<DeliveryStats> =>
-    isMockMode()
-      ? mockServices.getDeliveryStats()
-      : apiClient.get<ApiData<DeliveryStats>>('/delivery/stats').then((r) => r.data.data),
+    mockServices.getDeliveryStats(),
 
   getDeliveryMissions: (filterStatus?: DeliveryStatus): Promise<DeliveryMission[]> =>
-    isMockMode()
-      ? mockServices.getDeliveryMissions(filterStatus)
-      : apiClient.get<ApiList<DeliveryMission>>('/delivery/missions', { params: { status: filterStatus } }).then((r) => r.data.data),
+    mockServices.getDeliveryMissions(filterStatus),
 
   updateDeliveryStatus: (missionId: number, status: DeliveryStatus, notes?: string): Promise<DeliveryMission[]> =>
-    isMockMode()
-      ? mockServices.updateDeliveryStatus(missionId, status, notes)
-      : apiClient.patch<ApiData<DeliveryMission[]>>(`/delivery/missions/${missionId}/status`, { status, notes }).then((r) => r.data.data),
-  // ================================================================
-  // الدفع
-  // ================================================================
-  initPayment: (orderNumber: string): Promise<{ payment_url: string }> =>
-    isMockMode()
-      ? mockServices.initPayment(orderNumber)
-      : apiClient.post<{ data: { payment_url: string } }>(`/orders/${orderNumber}/pay`).then((r) => r.data.data),
+    mockServices.updateDeliveryStatus(missionId, status, notes),
 
+  // =======================================================================
+  // الدفع — غير موجود في API الحالي، يعمل بالـ mock دائماً
+  // =======================================================================
+  initPayment: (orderNumber: string): Promise<{ payment_url: string }> =>
+    mockServices.initPayment(orderNumber),
 }
