@@ -21,27 +21,25 @@ export interface Brand {
   logo_url: string | null
 }
 
+export interface ProductImage {
+  url: string
+  alt_text: string | null
+  is_primary: boolean
+  sort_order: number
+}
+
 export interface ProductBrief {
   store?: { name: string }
   id: number
   name: string
   slug: string
-  thumbnail_url: string | null
-  min_price: string
-  max_price: string
-  compare_at_price?: string | null
-  is_available: boolean
-  is_wishlisted?: boolean
-  category: { id: number; name: string }
-}
-
-export interface ProductVariant {
-  id: number
-  name: string
-  price: string
-  compare_at_price: string | null
+  price: number
+  discount_price: number | null
+  in_stock: boolean
   stock: number
-  sku: string
+  is_wishlisted?: boolean
+  images: ProductImage[]
+  category: { id: number; name: string }
 }
 
 export interface ProductDetail {
@@ -50,27 +48,24 @@ export interface ProductDetail {
   name: string
   slug: string
   description: string | null
+  price: number
+  discount_price: number | null
+  in_stock: boolean
+  stock: number
   is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
-  images: Array<{
-    url: string | null
-    alt_text: string | null
-    is_primary: boolean
-    sort_order: number
-  }>
-  variants: ProductVariant[]
+  images: ProductImage[]
 }
-
 export interface CartItem {
   id: number
   product_id: number
   product_name: string
-  variant_name: string
+  variant_name?: string | null
   unit_price: string
   compare_at_price?: string | null
   quantity: number
   subtotal: string
-  thumbnail_url: string | null
+  image_url: string | null
   product_slug: string | null
   stock: number
 }
@@ -103,6 +98,8 @@ export interface CheckoutPayload {
   phone: string
   address: string
   notes?: string
+  payment_method: 'jawwal_pay' | 'cash_on_delivery'
+  payment_reference?: string
 }
 
 export type OrderStatus =
@@ -121,11 +118,11 @@ export interface Order {
   items: Array<{
     id: number
     product_name: string
-    variant_name: string
+    variant_name?: string | null
     unit_price: string
     quantity: number
     subtotal: string
-    thumbnail_url: string | null
+    image_url: string | null
   }>
   subtotal: string
   delivery_fee: string
@@ -138,7 +135,7 @@ export interface Order {
   payment_method?: 'cash_on_delivery' | 'jawwal_pay' | string
   escrow_expires_at?: string
   delivery_pin?: string
-  payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded'
+  payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded' | 'unknown'
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
   created_at: string
 }
@@ -221,12 +218,10 @@ export interface MerchantProductItem {
   name: string
   slug: string
   category_name: string
-  thumbnail_url: string | null
-  variants_count: number
+  image_url: string | null
   total_stock: number
   is_active: boolean
-  min_price: string
-  max_price: string
+  price: number
 }
 
 export type MerchantPrepStatus = 'pending' | 'preparing' | 'ready_for_pickup' | 'picked_up'

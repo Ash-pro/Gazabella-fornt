@@ -45,7 +45,7 @@ function validateStock(cart: Cart) {
   const products = INITIAL_PRODUCTS.map(demoProduct)
   if (cart.items.some((i) => {
     const product = products.find((p) => p.id === i.product_id)
-    return i.quantity > (product?.variants[0]?.stock ?? 0)
+    return i.quantity > (product?.stock ?? 0)
   })) throw new Error('تغيّر المخزون المتاح. راجعي كميات السلة قبل المتابعة.')
 }
 
@@ -127,9 +127,17 @@ export const mockServices = {
       { id: 3, name: 'بيوتي لاب', slug: 'beauty-lab', logo_url: null },
     ]),
 
-  getWishlist: async (): Promise<ProductBrief[]> => delay([]),
+  getWishlist: async (): Promise<ProductBrief[]> => {
+    const slugs: string[] = JSON.parse(localStorage.getItem('gazabella_demo_wishlist') || '[]')
+    return delay(INITIAL_PRODUCTS.filter((p) => slugs.includes(p.slug)).map(demoProduct))
+  },
 
-  toggleWishlist: async (_slug: string): Promise<{ wishlisted: boolean }> => delay({ wishlisted: true }),
+  toggleWishlist: async (slug: string): Promise<{ wishlisted: boolean }> => {
+    const slugs: string[] = JSON.parse(localStorage.getItem('gazabella_demo_wishlist') || '[]')
+    const wishlisted = !slugs.includes(slug)
+    localStorage.setItem('gazabella_demo_wishlist', JSON.stringify(wishlisted ? [...slugs, slug] : slugs.filter((s) => s !== slug)))
+    return delay({ wishlisted })
+  },
 
   getSettings: async (): Promise<SiteSettings> =>
     delay({
@@ -155,7 +163,7 @@ export const mockServices = {
   getCategories: async (): Promise<Category[]> => delay(INITIAL_CATEGORIES),
 
   getProducts: async (filters: ProductFilters): Promise<ApiList<ProductBrief>> => {
-    let list = INITIAL_PRODUCTS.map(demoProduct)
+    let list = [...INITIAL_PRODUCTS]
 
     if (filters.category_slug) {
       const slug = filters.category_slug
@@ -211,21 +219,19 @@ export const mockServices = {
     }
 
     const briefs: ProductBrief[] = list.map((p) => {
-      const prices = p.variants.map((v) => Number(v.price))
-      const min = Math.min(...prices)
-      const max = Math.max(...prices)
-      const cheapest = p.variants.reduce((a, b) => Number(a.price) < Number(b.price) ? a : b)
+      const detail = demoProduct(p)
       return {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        store: p.store,
-        thumbnail_url: p.images[0]?.url || null,
-        min_price: min.toFixed(2),
-        max_price: max.toFixed(2),
-        compare_at_price: cheapest.compare_at_price,
-        is_available: p.variants.some((v) => v.stock > 0),
-        category: { id: p.category.id, name: p.category.name },
+        id: detail.id,
+        name: detail.name,
+        slug: detail.slug,
+        store: detail.store,
+        images: detail.images,
+        price: detail.price,
+        discount_price: detail.discount_price,
+        in_stock: detail.in_stock,
+        stock: detail.stock,
+        is_wishlisted: detail.is_wishlisted,
+        category: { id: detail.category.id, name: detail.category.name },
       }
     })
 
@@ -257,14 +263,16 @@ export const mockServices = {
     if (!product) {
       throw Object.assign(new Error('المنتج غير موجود'), { response: { status: 404, data: { message: 'المنتج غير موجود' } } })
     }
-    const variant = product.variants[0]
-    if (!variant) throw new Error('لا تتوفر متغيرات لهذا المنتج.')
+    if (!product.in_stock) throw new Error('هذا المنتج غير متوفر حاليًا.')
 
     const existingIndex = cart.items.findIndex((item) => item.product_id === productId)
     const requested = quantity + (cart.items[existingIndex]?.quantity || 0)
-    if (quantity < 1 || !Number.isInteger(quantity) || requested > Math.min(10, variant.stock)) {
+    if (quantity < 1 || !Number.isInteger(quantity) || requested > Math.min(10, product.stock)) {
       throw new Error('الكمية المطلوبة تتجاوز المخزون المتاح أو الحد الأقصى 10 قطع.')
     }
+
+    const unitPrice = String(product.discount_price ?? product.price)
+    const imageUrl = product.images.find((i) => i.is_primary)?.url ?? product.images[0]?.url ?? null
 
     if (existingIndex > -1) {
       cart.items[existingIndex].quantity += quantity
@@ -276,12 +284,11 @@ export const mockServices = {
         id: Date.now(),
         product_id: productId,
         product_name: product.name,
-        variant_name: variant.name,
-        unit_price: variant.price,
-        stock: variant.stock,
+        unit_price: unitPrice,
+        stock: product.stock,
         quantity,
-        subtotal: (Number(variant.price) * quantity).toFixed(2),
-        thumbnail_url: product.images[0]?.url || '/images/products/serum.webp',
+        subtotal: (Number(unitPrice) * quantity).toFixed(2),
+        image_url: imageUrl,
         product_slug: product.slug,
       })
     }
@@ -297,7 +304,7 @@ export const mockServices = {
     const item = cart.items.find((i) => i.id === itemId)
     if (item) {
       const product = INITIAL_PRODUCTS.map(demoProduct).find((p) => p.id === item.product_id)
-      const maxStock = product?.variants[0]?.stock ?? 0
+      const maxStock = product?.stock ?? 0
       if (!Number.isInteger(quantity) || quantity < 0 || quantity > Math.min(10, maxStock)) throw new Error('الكمية المطلوبة غير متاحة.')
       if (quantity <= 0) {
         cart.items = cart.items.filter((i) => i.id !== itemId)
@@ -342,11 +349,11 @@ export const mockServices = {
       items: cart.items.map((i, index) => ({
         id: Math.max(0, ...orders.flatMap((o) => o.items.map((item) => item.id))) + index + 1,
         product_name: i.product_name,
-        variant_name: i.variant_name,
+        variant_name: i.variant_name ?? undefined,
         unit_price: i.unit_price,
         quantity: i.quantity,
         subtotal: i.subtotal,
-        thumbnail_url: i.thumbnail_url,
+        image_url: i.image_url,
       })),
       subtotal: subtotalNum.toFixed(2),
       delivery_fee: deliveryFeeNum.toFixed(2),
@@ -357,6 +364,7 @@ export const mockServices = {
       address: payload.address,
       notes: payload.notes || null,
       payment_status: 'unpaid',
+      payment_method: 'cash_on_delivery',
       tracking: [
         { status: 'confirmed', note: 'تم تأكيد الطلب التجريبي — الدفع عند الاستلام', created_at: new Date().toISOString() },
       ],
@@ -423,6 +431,7 @@ export const mockServices = {
     const orders = getStoredOrders()
     const order = orders.find((o) => o.order_number === orderNumber)
     if (!order) throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404 } })
+    if (order.payment_method !== 'jawwal_pay') throw new Error('هذا الطلب يُدفع عند الاستلام.')
     // Mock: simulate payment URL
     order.payment_status = 'paid'
     saveStoredOrders(orders)
@@ -454,12 +463,10 @@ export const mockServices = {
       name: p.name,
       slug: p.slug,
       category_name: p.category.name,
-      thumbnail_url: p.images[0]?.url || null,
-      variants_count: p.variants.length,
-      total_stock: p.variants.reduce((acc, v) => acc + v.stock, 0),
-      is_active: true,
-      min_price: Math.min(...p.variants.map((v) => Number(v.price))).toFixed(2),
-      max_price: Math.max(...p.variants.map((v) => Number(v.price))).toFixed(2),
+      image_url: p.images.find((i) => i.is_primary)?.url ?? p.images[0]?.url ?? null,
+      total_stock: p.stock,
+      is_active: p.in_stock,
+      price: p.price,
     }))
     return delay(list)
   },
@@ -477,7 +484,7 @@ export const mockServices = {
           id: item.id,
           order_number: o.order_number,
           product_name: item.product_name,
-          variant_name: item.variant_name,
+          variant_name: item.variant_name ?? '',
           unit_price: item.unit_price,
           quantity: item.quantity,
           subtotal: item.subtotal,

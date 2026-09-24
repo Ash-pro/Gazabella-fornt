@@ -6,6 +6,16 @@ import App from './App'
 import { queryClient } from './lib/queryClient'
 import { registerServiceWorker } from './lib/registerSw'
 import './index.css'
+import { useAuthStore } from './stores/authStore'
+import { useCheckoutStore } from './stores/checkoutStore'
+
+useAuthStore.subscribe((state, previous) => {
+  if (state.token !== previous.token) {
+    void queryClient.cancelQueries()
+    queryClient.clear()
+    useCheckoutStore.getState().reset()
+  }
+})
 
 registerServiceWorker()
 

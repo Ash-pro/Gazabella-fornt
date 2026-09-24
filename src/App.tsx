@@ -4,7 +4,10 @@ import { AppShell } from './components/layout/AppShell'
 import { DemoRoleBar } from './components/layout/DemoRoleBar'
 import { PageLoader } from './components/ui/AsyncState'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
-import { isMockMode } from './api/gazabella'
+import { useQuery } from '@tanstack/react-query'
+import { ErrorState } from './components/ui/AsyncState'
+import { getApiErrorMessage } from './lib/apiClient'
+import { gazabellaApi, isMockMode } from './api/gazabella'
 import { useAuthStore } from './stores/authStore'
 
 import { ProductsPage } from './pages/ProductsPage'
@@ -21,7 +24,10 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const token = useAuthStore((state) => state.token)
   const location = useLocation()
+  const session = useQuery({ queryKey: ['session'], queryFn: gazabellaApi.getMe, enabled: !!token, retry: false })
   if (!token) return <Navigate to={`/auth?next=${encodeURIComponent(location.pathname + location.search)}`} replace />
+  if (session.isPending) return <PageLoader label="نتحقق من الجلسة…" />
+  if (session.isError) return <ErrorState message={getApiErrorMessage(session.error)} onRetry={() => void session.refetch()} />
   return children
 }
 
@@ -41,7 +47,7 @@ export default function App() {
               <Route path="products/:slug" element={<Suspense fallback={<PageLoader />}><ProductDetailPage /></Suspense>} />
               <Route path="cart" element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
               <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
-              <Route path="checkout" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><CheckoutPage /></ProtectedRoute></Suspense>} />
+              <Route path="checkout" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
               <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
             </Route>

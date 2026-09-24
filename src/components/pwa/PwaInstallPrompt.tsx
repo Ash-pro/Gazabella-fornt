@@ -40,7 +40,8 @@ export function PwaInstallPrompt() {
     try {
       await prompt.prompt()
       const { outcome } = await prompt.userChoice
-      if (outcome === 'accepted') { setVisible(false); setPrompt(null) }
+      setVisible(false); setPrompt(null)
+      if (outcome === 'dismissed') setDismissed()
     } catch {}
   }
 

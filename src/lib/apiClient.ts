@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
 
 // ── Cart Token (للمستخدم الضيف) ──────────────────────────────────────────
-const CART_TOKEN_KEY = 'gz_cart_token'
+const CART_TOKEN_KEY = `gz_cart_token:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
 
 export function getCartToken(): string | null {
   try { return localStorage.getItem(CART_TOKEN_KEY) } catch { return null }
@@ -17,7 +17,7 @@ export function clearCartToken(): void {
 
 // ── Axios Instance ────────────────────────────────────────────────────────
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 12_000,
   headers: {
     Accept: 'application/json',
@@ -46,9 +46,9 @@ apiClient.interceptors.response.use(
     return response
   },
   (error: AxiosError<ApiErrorBody>) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && error.config?.headers.get('Authorization') === `Bearer ${useAuthStore.getState().token}`) {
       useAuthStore.getState().clearSession()
-      clearCartToken()
+
     }
     return Promise.reject(error)
   },
@@ -56,7 +56,11 @@ apiClient.interceptors.response.use(
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
-    return error.response?.data?.message ?? 'تعذر الاتصال بالخادم. حاول مرة أخرى.'
+    if (error.response?.status === 401) return 'انتهت الجلسة. يرجى تسجيل الدخول مجددًا.'
+    if (error.response?.status === 403) return 'لا تملك صلاحية تنفيذ هذا الإجراء.'
+    if (error.response?.status === 429) return 'طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.'
+    const messages = Object.values(error.response?.data?.errors ?? {}).flat().filter((message) => typeof message === 'string')
+    return messages.join(' — ') || error.response?.data?.message || 'تعذر الاتصال بالخادم. حاول مرة أخرى.'
   }
   if (error instanceof Error) return error.message
   const mock = error as { response?: { data?: { message?: string } } }
@@ -76,7 +80,7 @@ export function getImageUrl(url: string | null | undefined): string | null {
     try {
       const parsed = new URL(url)
       const storageOrigin = new URL(STORAGE_URL).origin
-      if (parsed.origin !== storageOrigin) {
+      if (parsed.origin !== storageOrigin && ['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname)) {
         return STORAGE_URL + parsed.pathname + parsed.search
       }
     } catch {

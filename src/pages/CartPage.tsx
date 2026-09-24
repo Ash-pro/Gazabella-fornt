@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { gazabellaApi } from '../api/gazabella'
+import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
@@ -49,18 +49,18 @@ export function CartPage() {
           {cart.items.map((item, index) => (
             <article key={item.id} className={`grid grid-cols-[92px_1fr] gap-4 p-4 sm:grid-cols-[130px_1fr] sm:p-6 ${index ? 'border-t border-[var(--border)]' : ''}`}>
               <div className="aspect-square overflow-hidden rounded-[var(--r-md)]">
-                <ProductVisual src={item.thumbnail_url} alt={item.product_name} />
+                <ProductVisual src={item.image_url} alt={item.product_name} />
               </div>
               <div className="flex min-w-0 flex-col justify-between gap-4">
                 <div className="flex items-start justify-between gap-4">
-                  <div><h2 className="font-extrabold leading-6">{item.product_name}</h2><p className="mt-1 text-xs text-[var(--text-2)]">الحجم: {item.variant_name}</p></div>
+                  <div><h2 className="font-extrabold leading-6">{item.product_name}</h2>{item.variant_name && <p className="mt-1 text-xs text-[var(--text-2)]">الحجم: {item.variant_name}</p>}</div>
                   <button type="button" className="text-[var(--text-3)] transition-colors hover:text-[var(--error)]" disabled={busy} onClick={() => removeMutation.mutate(item.id)} aria-label={`حذف ${item.product_name}`}><Icon name="trash" className="size-5" /></button>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="quantity-control quantity-control--small">
                       <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
                       <span className="num">{item.quantity}</span>
-                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= (isMockMode() ? Math.min(10, item.stock) : item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
                     </div>
                     <p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p>
                   </div>
@@ -77,9 +77,9 @@ export function CartPage() {
             </div>
             <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">المجموع</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
             <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>
-            {reserveMutation.isPending ? 'نحجز اختياراتك…' : 'متابعة إلى التوصيل والدفع'}
+            {reserveMutation.isPending ? 'جارٍ المتابعة…' : 'متابعة إلى التوصيل والدفع'}
           </button>
-          <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[var(--text-2)]"><Icon name="clock" className="mt-1 size-4 shrink-0" />نتحقق من التوافر قبل المتابعة. يظهر وقت الحجز المتبقي أعلى الصفحة.</p>
+          <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[var(--text-2)]"><Icon name="clock" className="mt-1 size-4 shrink-0" />تُراجع الأسعار والكميات عند إتمام الطلب. إضافة المنتجات للسلة لا تحجز المخزون.</p>
           {reserveMutation.isError && <p className="mt-4 rounded-lg bg-[var(--error-bg)] p-3 text-sm text-[var(--error)]">{getApiErrorMessage(reserveMutation.error)}</p>}
         </aside>
       </div>

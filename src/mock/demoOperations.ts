@@ -1,15 +1,34 @@
 import { getStoredOrders, saveStoredOrders, getStoredMissions, saveStoredMissions } from './mockDatabase'
+import type { MockProduct } from './mockDatabase'
 import type { ProductDetail, MerchantPrepStatus } from '../types/api'
 
 function read<T>(key: string, fallback: T): T { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
-export function demoProduct(product: ProductDetail): ProductDetail {
+export function demoProduct(product: MockProduct): ProductDetail {
   const inventory = read<Record<string,number>>('gazabella_mock_inventory', {})
-  return { ...product, variants: product.variants.map((v) => ({...v, stock: inventory[String(v.id)] ?? v.stock})) }
+  // Use cheapest variant as the main price; apply inventory overrides
+  const variants = product.variants.map((v) => ({ ...v, stock: inventory[String(v.id)] ?? v.stock }))
+  const cheapest = variants.reduce((a, b) => Number(a.price) < Number(b.price) ? a : b, variants[0])
+  const totalStock = inventory[String(product.id)] ?? variants.reduce((sum, v) => sum + v.stock, 0)
+  return {
+    id: product.id,
+    store: product.store,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    price: Number(cheapest?.compare_at_price ?? cheapest?.price ?? 0),
+    discount_price: cheapest?.compare_at_price && Number(cheapest.compare_at_price) > Number(cheapest.price) ? Number(cheapest.price) : null,
+    in_stock: totalStock > 0,
+    stock: totalStock,
+    is_wishlisted: product.is_wishlisted,
+    category: product.category,
+    images: product.images,
+  }
 }
-export function demoSetStock(variantId: number, quantity: number) {
+export function demoSetStock(productId: number, quantity: number) {
   if (!Number.isInteger(quantity) || quantity < 0 || quantity > 10000) throw new Error('أدخلي كمية صحيحة من 0 إلى 10000.')
   const inventory = read<Record<string,number>>('gazabella_mock_inventory', {})
-  inventory[variantId] = quantity
+  // Store by all variant IDs of this product (we use productId as key now for simplicity)
+  inventory[String(productId)] = quantity
   localStorage.setItem('gazabella_mock_inventory', JSON.stringify(inventory))
 }
 export function demoPrep(itemId: number): MerchantPrepStatus { return read<Record<string,MerchantPrepStatus>>('gazabella_mock_prep', {})[itemId] || 'preparing' }

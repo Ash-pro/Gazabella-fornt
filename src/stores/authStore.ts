@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () => set({ token: null, user: null }),
     }),
     {
-      name: 'gazabella_auth',
+      name: `gazabella_auth:${import.meta.env.VITE_DATA_SOURCE === 'mock' ? 'mock' : import.meta.env.VITE_API_BASE_URL || '/api/v1'}`,
       storage: createJSONStorage(() => localStorage),
     },
   ),

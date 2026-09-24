@@ -1,0 +1,177 @@
+[
+  {
+    "method": "get",
+    "path": "/api/status",
+    "summary": "Health check",
+    "response_schema": true,
+    "authenticated": false
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/auth/register",
+    "summary": "Register a new customer",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/auth/login",
+    "summary": "Log in a customer",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/auth/logout",
+    "summary": "Revoke the current access token",
+    "response_schema": false,
+    "authenticated": true
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/auth/me",
+    "summary": "Get the authenticated customer",
+    "response_schema": false,
+    "authenticated": true
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/banners",
+    "summary": "List active banners (hero, promo, announcement) within their live window",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/brands",
+    "summary": "List brands",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/brands/{slug}",
+    "summary": "Get a brand by slug",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/cart",
+    "summary": "Get the current cart (customer or guest via X-Cart-Token header)",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "delete",
+    "path": "/api/v1/cart",
+    "summary": "Clear the cart",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/cart/items",
+    "summary": "Add a product to the cart",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "delete",
+    "path": "/api/v1/cart/items/{item}",
+    "summary": "Remove an item from the cart",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "patch",
+    "path": "/api/v1/cart/items/{item}",
+    "summary": "Update a cart item quantity",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/categories",
+    "summary": "List categories",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/categories/{slug}",
+    "summary": "Get a category by slug",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/checkout",
+    "summary": "Convert the current cart into an order (cash on delivery)",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/collections",
+    "summary": "List active product collections (e.g. \"The Everyday Edit\")",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/home",
+    "summary": "Aggregated data for the storefront homepage in a single call",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/orders",
+    "summary": "List the authenticated customer's orders",
+    "response_schema": false,
+    "authenticated": true
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/orders/{order}",
+    "summary": "Get one of the authenticated customer's orders",
+    "response_schema": false,
+    "authenticated": true
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/products",
+    "summary": "List products",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/products/{slug}",
+    "summary": "Get a product by slug",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/settings",
+    "summary": "Site branding, tagline and contact info (header/footer chrome)",
+    "response_schema": false,
+    "authenticated": false
+  },
+  {
+    "method": "get",
+    "path": "/api/v1/wishlist",
+    "summary": "List the customer's wishlisted products",
+    "response_schema": false,
+    "authenticated": true
+  },
+  {
+    "method": "post",
+    "path": "/api/v1/wishlist/{product}",
+    "summary": "Toggle a product in the wishlist (adds if absent, removes if present)",
+    "response_schema": false,
+    "authenticated": true
+  }
+]

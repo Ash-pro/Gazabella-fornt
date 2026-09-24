@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
@@ -19,8 +20,9 @@ const statusLabel: Record<OrderStatus, string> = {
 }
 
 export function OrdersPage() {
+  const [page, setPage] = useState(1)
   const logout = useMutation({mutationFn: gazabellaApi.logout, onSuccess: () => useAuthStore.getState().clearSession()})
-  const ordersQuery = useQuery({ queryKey: ['orders'], queryFn: () => gazabellaApi.getOrders() })
+  const ordersQuery = useQuery({ queryKey: ['orders', page], queryFn: () => gazabellaApi.getOrders(page) })
   if (ordersQuery.isLoading) return <div className="container-page"><PageLoader label="نحمّل طلباتك…" /></div>
   if (ordersQuery.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(ordersQuery.error)} onRetry={() => void ordersQuery.refetch()} /></div>
 
@@ -42,19 +44,20 @@ export function OrdersPage() {
                 )}
               </div>
               <p className="text-xs text-[var(--text-2)]">
-                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات · 📍 {'خانيونس'}
+                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات
               </p>
               <p className="mt-3 text-sm">{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</p>
               <span className="text-link mt-3">تفاصيل الطلب</span>
             </div>
             <div className="mr-auto text-left flex flex-col items-end">
-              <span className={`status-badge status-${order.status}`}>{statusLabel[order.status]}</span>
+              <span className={`status-badge status-${order.status}`}>{statusLabel[order.status] || order.status}</span>
               <p className="mt-2 font-mono text-lg font-bold text-[var(--text)]"><span className="num">{formatPrice(order.total)}</span></p>
             </div>
             <Icon name="chevron" className="size-5 text-[var(--text-3)] shrink-0" />
           </Link>
         ))}
       </div>
+      {ordersQuery.data && ordersQuery.data.meta.last_page > 1 && <nav aria-label="صفحات الطلبات" className="flex justify-center gap-4 mt-6"><button className="btn-ghost" disabled={page <= 1 || ordersQuery.isFetching} onClick={() => setPage(page - 1)}>السابق</button><span>{page} / {ordersQuery.data.meta.last_page}</span><button className="btn-ghost" disabled={page >= ordersQuery.data.meta.last_page || ordersQuery.isFetching} onClick={() => setPage(page + 1)}>التالي</button></nav>}
     </div>
   )
 }

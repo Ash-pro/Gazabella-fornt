@@ -14,6 +14,7 @@ export function DemoRoleBar() {
       localStorage.removeItem('gazabella_mock_prep')
       localStorage.removeItem('gazabella_mock_inventory')
       localStorage.removeItem('gazabella_mock_disputes')
+      localStorage.removeItem('gazabella_demo_wishlist')
       sessionStorage.removeItem('gazabella_checkout')
       window.location.reload()
     }

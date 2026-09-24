@@ -4,209 +4,65 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
-import { PageLoader } from '../components/ui/AsyncState'
-import { Icon } from '../components/ui/Icon'
+import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
-import { useCheckoutStore } from '../stores/checkoutStore'
 import { money } from '../lib/format'
 
 const schema = z.object({
   name: z.string().trim().min(3, 'أدخل الاسم الكامل'),
   email: z.string().trim().email('أدخل بريدًا إلكترونيًا صحيحًا'),
-  phone: z.string().trim().min(8, 'أدخل رقم جوال صحيح'),
-  address: z.string().trim().min(10, 'أضف تفاصيل كافية للعنوان'),
-  notes: z.string().max(500).optional(),
+  phone: z.string().trim().regex(/^\+?[\d\s()-]{8,20}$/, 'أدخل رقم جوال صحيح'),
+  address: z.string().trim().min(10, 'أدخل المدينة والحي والشارع أو أقرب معلم'),
+  notes: z.string().trim().max(500, 'الحد الأقصى 500 حرف').optional(),
 })
 type Values = z.infer<typeof schema>
 
 export function CheckoutPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const setConfirmed = useCheckoutStore((s) => s.setConfirmedOrderNumber)
-
-  // جلب السلة
-  const cartQuery = useQuery({
-    queryKey: ['cart'],
-    queryFn: gazabellaApi.getCart,
-  })
-
-  const form = useForm<Values>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: user?.name ?? '',
-      email: user?.email ?? '',
-      phone: '',
-      address: '',
-      notes: '',
-    },
-  })
-
-  const checkoutMutation = useMutation({
-    mutationFn: (v: Values) =>
-      gazabellaApi.checkout({
-        name: v.name,
-        email: v.email,
-        phone: v.phone,
-        address: v.address,
-        notes: v.notes || undefined,
-      }),
+  const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: {
+    name: user?.name ?? '', email: user?.email ?? '', phone: '', address: '', notes: '',
+  } })
+  const checkout = useMutation({
+    mutationFn: (values: Values) => gazabellaApi.checkout({ ...values, payment_method: 'cash_on_delivery' }),
     onSuccess: (order) => {
-      setConfirmed(isMockMode() ? order.order_number : String(order.id))
-      void queryClient.invalidateQueries({ queryKey: ['cart'] })
+      queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
+      queryClient.setQueryData(['order', order.order_number], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
-      try { sessionStorage.setItem('gz_order_confirmed', isMockMode() ? order.order_number : String(order.id)) } catch {}
-      navigate(`/orders/${isMockMode() ? order.order_number : order.id}?created=1`, { replace: true })
+      navigate(`/orders/${encodeURIComponent(order.order_number)}`, { replace: true })
     },
   })
-
-  if (cartQuery.isLoading) {
-    return <div className="container-page"><PageLoader label="نجهّز السلة…" /></div>
-  }
-
+  if (cartQuery.isPending) return <div className="container-page"><PageLoader label="نجهّز السلة…" /></div>
+  if (cartQuery.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(cartQuery.error)} onRetry={() => void cartQuery.refetch()} /></div>
   const cart = cartQuery.data
-  if (!cart || cart.items.length === 0) {
-    return (
-      <div className="container-page py-10 text-center">
-        <p className="mb-4 text-[var(--text-2)]">السلة فارغة.</p>
-        <Link className="btn-primary" to="/">تصفح المنتجات</Link>
-      </div>
-    )
-  }
-
-  return (
-    <div className="container-page py-8 sm:py-12">
-      <Link to="/cart" className="text-link mb-6">
-        <Icon name="arrow" className="size-4" /> العودة إلى السلة
-      </Link>
-      <span className="eyebrow block">خطوة واحدة وننفذ طلبكِ</span>
-      <h1 className="section-title mt-2">إتمام الطلب</h1>
-
-      <form
-        className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start mt-8"
-        onSubmit={form.handleSubmit((v) => checkoutMutation.mutate(v))}
-      >
-        {/* ── بيانات التوصيل ── */}
-        <section className="checkout-card space-y-4">
-          <h2 className="text-xl font-bold">بيانات التوصيل</h2>
-
-          <label className="field-label">
-            الاسم الكامل
-            <input
-              className="form-field mt-2"
-              {...form.register('name')}
-              autoComplete="name"
-              placeholder="سارة أحمد"
-            />
-            {form.formState.errors.name && (
-              <span className="field-error">{form.formState.errors.name.message}</span>
-            )}
-          </label>
-
-          <label className="field-label">
-            البريد الإلكتروني
-            <input
-              className="form-field mt-2"
-              type="email"
-              dir="ltr"
-              {...form.register('email')}
-              autoComplete="email"
-              placeholder="example@gmail.com"
-            />
-            {form.formState.errors.email && (
-              <span className="field-error">{form.formState.errors.email.message}</span>
-            )}
-          </label>
-
-          <label className="field-label">
-            رقم الجوال
-            <input
-              className="form-field mt-2"
-              type="tel"
-              dir="ltr"
-              inputMode="tel"
-              {...form.register('phone')}
-              autoComplete="tel"
-              placeholder="0591234567"
-            />
-            {form.formState.errors.phone && (
-              <span className="field-error">{form.formState.errors.phone.message}</span>
-            )}
-          </label>
-
-          <label className="field-label sm:col-span-2">
-            العنوان التفصيلي
-            <textarea
-              className="form-field mt-2"
-              rows={3}
-              {...form.register('address')}
-              autoComplete="street-address"
-              placeholder="المدينة، الحي، اسم الشارع، أقرب معلم…"
-            />
-            {form.formState.errors.address && (
-              <span className="field-error">{form.formState.errors.address.message}</span>
-            )}
-          </label>
-
-          <label className="field-label">
-            ملاحظة للتوصيل (اختياري)
-            <textarea
-              className="form-field mt-2"
-              rows={2}
-              maxLength={500}
-              {...form.register('notes')}
-              placeholder="أي تفاصيل تساعدنا على الوصول إليكِ"
-            />
-          </label>
-        </section>
-
-        {/* ── ملخص الطلب ── */}
-        <aside className="order-summary lg:sticky lg:top-40">
-          <h2 className="text-lg font-bold">ملخص اختياراتكِ</h2>
-
-          <div className="my-5 space-y-3 border-y border-[var(--border)] py-4">
-            {cart.items.map((item) => (
-              <div key={item.id} className="flex justify-between gap-4 text-sm">
-                <span>
-                  {item.product_name}
-                  <small className="block mt-1 text-[var(--text-3)]">
-                    {item.variant_name} × <span className="num">{item.quantity}</span>
-                  </small>
-                </span>
-                <b className="whitespace-nowrap">
-                  <span className="num">{money(item.subtotal)}</span>
-                </b>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between border-t border-[var(--border)] pt-4 font-bold">
-            <span>المجموع</span>
-            <span className="text-xl text-[var(--primary)]">
-              <span className="num">{money(cart.subtotal)}</span>
-            </span>
-          </div>
-
-          {checkoutMutation.isError && (
-            <p className="field-error mt-4" role="alert">
-              {getApiErrorMessage(checkoutMutation.error)}
-            </p>
-          )}
-
-          <button
-            className="btn-primary w-full mt-6"
-            disabled={checkoutMutation.isPending}
-          >
-            {checkoutMutation.isPending ? 'جارٍ إرسال الطلب…' : 'تأكيد الطلب'}
-            <Icon name="arrow" className="size-4 rotate-180" />
-          </button>
-
-          <p className="mt-4 text-center text-xs text-[var(--text-3)]">
-            الدفع عند الاستلام • طلب واحد • إجمالي واضح
-          </p>
-        </aside>
-      </form>
-    </div>
-  )
+  if (!cart.items.length) return <div className="container-page py-16 text-center"><h1 className="section-title">السلة فارغة</h1><Link className="btn-primary mt-6" to="/">تصفح المنتجات</Link></div>
+  return <div className="container-page py-10">
+    <Link className="text-link" to="/cart">العودة إلى السلة</Link>
+    <h1 className="section-title my-6">إتمام الطلب</h1>
+    <form onSubmit={form.handleSubmit((values) => checkout.mutate(values))} className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      {isMockMode() ? <section className="checkout-card space-y-5">
+        <h2 className="text-lg font-bold">بيانات التوصيل</h2>
+        {([{ name: 'name', label: 'الاسم الكامل', autoComplete: 'name' }, { name: 'email', label: 'البريد الإلكتروني', autoComplete: 'email' }, { name: 'phone', label: 'رقم الجوال', autoComplete: 'tel' }, { name: 'address', label: 'المدينة والحي والشارع / أقرب معلم', autoComplete: 'street-address' }, { name: 'notes', label: 'ملاحظات التوصيل (اختياري)', autoComplete: 'off' }] as const).map((field) => <div key={field.name}>
+          <label className="field-label" htmlFor={field.name}>{field.label}</label>
+          <input id={field.name} className="form-field" {...form.register(field.name)} autoComplete={field.autoComplete} type={field.name === 'email' ? 'email' : field.name === 'phone' ? 'tel' : 'text'} aria-invalid={!!form.formState.errors[field.name]} aria-describedby={`${field.name}-error`} disabled={checkout.isPending} />
+          <p id={`${field.name}-error`} className="field-error">{form.formState.errors[field.name]?.message}</p>
+        </div>)}
+        <h2 className="text-lg font-bold">الدفع عند الاستلام</h2>
+        <p className="text-sm">تُدفع قيمة الطلب عند استلام المنتجات.</p>
+      </section> : <section className="checkout-card space-y-5"><h2 className="text-lg font-bold">إتمام الطلب غير متاح مؤقتًا</h2><p className="leading-8">نحتاج إلى تأكيد تكلفة التوصيل والإجمالي قبل استقبال طلبكِ. اختياراتكِ محفوظة في السلة، ويمكنكِ تعديلها أو متابعة التسوق.</p><Link className="btn-primary" to="/cart">مراجعة السلة</Link></section>}
+      <aside className="order-summary space-y-4 self-start">
+        <h2 className="text-lg font-bold">مراجعة الطلب</h2>
+        {cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span>{item.product_name} × {item.quantity}</span><b className="whitespace-nowrap">{money(item.subtotal)}</b></div>)}
+        <div className="flex justify-between border-t pt-4"><span>قيمة المنتجات</span><b>{money(cart.subtotal)}</b></div>
+        <p className="text-sm">رسوم التوصيل: لم تُحدد بعد.</p>
+        {!isMockMode() && <p role="status" className="demo-note">إتمام الطلب غير متاح مؤقتًا حتى يتوفر احتساب رسوم التوصيل والإجمالي قبل التأكيد. يمكنكِ الاحتفاظ باختياراتكِ في السلة.</p>}
+        {isMockMode() && <p className="demo-note">عرض تجريبي فقط؛ لا يُرسل طلب حقيقي. رسوم العرض تظهر في الطلب الناتج.</p>}
+        {checkout.isError && <p role="alert" className="field-error">{getApiErrorMessage(checkout.error)}</p>}
+        <button className="btn-primary w-full" disabled={!isMockMode() || checkout.isPending}>{checkout.isPending ? 'جارٍ إنشاء الطلب…' : isMockMode() ? 'إنشاء طلب تجريبي' : 'التأكيد غير متاح مؤقتًا'}</button>
+      </aside>
+    </form>
+  </div>
 }

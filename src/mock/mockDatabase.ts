@@ -1,6 +1,5 @@
 import type {
   Category,
-  ProductDetail,
   Cart,
   Order,
   MerchantStore,
@@ -19,6 +18,29 @@ interface DeliveryOption {
 // =======================================================================
 // قاعدة البيانات الوهمية لـ Gazabella (Mock Database)
 // =======================================================================
+
+// Internal mock-only types — these include variants for mock data simulation
+export interface MockVariant {
+  id: number
+  name: string
+  price: string
+  compare_at_price: string | null
+  stock: number
+  sku: string
+}
+
+export interface MockProduct {
+  id: number
+  store?: { name: string }
+  name: string
+  slug: string
+  description: string | null
+  category: { id: number; name: string; slug: string }
+  images: Array<{ url: string; alt_text: string | null; is_primary: boolean; sort_order: number }>
+  variants: MockVariant[]
+  is_wishlisted?: boolean
+}
+
 
 export const INITIAL_CATEGORIES: Category[] = [
   {
@@ -107,7 +129,7 @@ export const INITIAL_CATEGORIES: Category[] = [
   },
 ]
 
-export const INITIAL_PRODUCTS: ProductDetail[] = [
+export const INITIAL_PRODUCTS: MockProduct[] = [
   {
     id: 1,
     store: { name: "متجر روز غزة للجمال (Gaza Rose)" },
@@ -442,8 +464,8 @@ export function getStoredCart(): Cart {
             p.id === item.product_id || p.name === item.product_name
           )
           const targetUrl = matched?.images[0]?.url || '/images/products/serum.webp'
-          if (!item.thumbnail_url || item.thumbnail_url.includes('unsplash') || item.thumbnail_url !== targetUrl) {
-            item.thumbnail_url = targetUrl
+          if (!item.image_url || item.image_url.includes('unsplash') || item.image_url !== targetUrl) {
+            item.image_url = targetUrl
             modified = true
           }
         })
@@ -468,7 +490,7 @@ export function getStoredCart(): Cart {
         compare_at_price: '35.00',
         quantity: 2,
         subtotal: '56.00',
-        thumbnail_url: '/images/products/serum.webp',
+        image_url: '/images/products/serum.webp',
         product_slug: 'serum-aurelia-100ml',
         stock: 18,
       },
@@ -481,7 +503,7 @@ export function getStoredCart(): Cart {
         compare_at_price: '150.00',
         quantity: 1,
         subtotal: '120.00',
-        thumbnail_url: '/images/products/perfume.webp',
+        image_url: '/images/products/perfume.webp',
         product_slug: 'oud-rose-50ml',
         stock: 9,
       },
@@ -517,7 +539,7 @@ export function getStoredOrders(): Order[] {
           unit_price: '28.00',
           quantity: 2,
           subtotal: '56.00',
-          thumbnail_url: '/images/products/serum.webp',
+          image_url: '/images/products/serum.webp',
         },
         {
           id: 2,
@@ -526,7 +548,7 @@ export function getStoredOrders(): Order[] {
           unit_price: '120.00',
           quantity: 1,
           subtotal: '120.00',
-          thumbnail_url: '/images/products/perfume.webp',
+          image_url: '/images/products/perfume.webp',
         },
       ],
       subtotal: '176.00',
@@ -555,7 +577,7 @@ export function getStoredOrders(): Order[] {
     const status = delivered ? 'delivered' : mission.delivery_status === 'in_transit' ? 'shipped' : 'processing'
     const created = new Date(Date.now() - (index + 1) * 3600_000).toISOString()
     samples.push({id:15+index,order_number:mission.order_number,status,
-      items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,thumbnail_url:product.images[0]?.url || null}],
+      items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,image_url:product.images[0]?.url || null}],
       subtotal:variant.price,delivery_fee:mission.delivery_fee,total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2),
       name:mission.customer_name,email:'customer@example.com',phone:mission.customer_phone,address:`${mission.city}، ${mission.area}، ${mission.address_details}`,
       payment_status:mission.payment_status,tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],notes:mission.delivery_notes,delivery_pin:String(4830+index),
