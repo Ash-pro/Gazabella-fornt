@@ -1,0 +1,19 @@
+# توحيد نهايات الأسطر — LF في المستودع وفي نسخة العمل على كل الأنظمة
+* text=auto eol=lf
+
+# ملفات Windows التنفيذية تبقى CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# ملفات ثنائية — لا تحويل
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.pdf binary
