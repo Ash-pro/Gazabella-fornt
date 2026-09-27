@@ -13,6 +13,7 @@
     "test:mvp0": "node tests/mvp0-http.integration.mjs",
     "dev:mvp0": "node scripts/dev-local.mjs",
     "build:mvp0": "tsc -b && vite build --mode mvp0",
+    "build:staging": "tsc -b && vite build --mode staging",
     "scan:leaks": "node scripts/leak-scan.mjs"
   },
   "dependencies": {

@@ -1,0 +1,37 @@
+# P1-FE-01 · P1-QA-02 — CI للواجهة: كل PR + فحص تسريب ليلي على Staging
+name: frontend
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '30 0 * * *'   # 03:30 Asia/Gaza — فحص التسريب الليلي
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build:mvp0
+      - run: npm run build:staging
+
+  leak-scan:
+    # يعمل فقط إذا ضُبط رابط Staging كمتغير في المستودع (Settings → Variables → STAGING_API_URL)
+    if: github.event_name != 'pull_request' && vars.STAGING_API_URL != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/leak-scan.mjs --base "${{ vars.STAGING_API_URL }}"
+        env:
+          LEAK_SCAN_TOKEN: ${{ secrets.STAGING_CUSTOMER_TOKEN }}
+          LEAK_SCAN_STORE_NAMES: ${{ vars.PARTNER_STORE_NAMES }}

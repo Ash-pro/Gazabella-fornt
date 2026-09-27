@@ -8,6 +8,7 @@ import { queryClient } from '../../lib/queryClient'
 import { disconnectEcho } from '../../lib/echo'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { EnvBanner } from './EnvBanner'
 import { MobileBottomNav } from './MobileBottomNav'
 import { CartDrawer } from '../cart/CartDrawer'
 import { CartToast } from '../cart/CartToast'
@@ -32,6 +33,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen flex flex-col pb-16 lg:pb-0">
       <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
+      <EnvBanner />
       <Header />
       <CartDrawer />
       <CartToast />

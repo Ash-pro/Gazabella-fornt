@@ -1033,3 +1033,7 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
   .payment-picker__logo img { width: 50px; height: 32px; }
   .payment-picker__copy strong { font-size: 15px; }
 }
+
+/* ── P1-FE-01 شريط بيئة Staging ── */
+.env-banner { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 16px; background: repeating-linear-gradient(-45deg, #2A1A1F, #2A1A1F 12px, #3a2229 12px, #3a2229 24px); color: #F3DDB0; font-size: 12.5px; font-weight: 700; text-align: center; }
+.env-banner__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold, #BF9545); box-shadow: 0 0 0 3px rgba(191,149,69,.25); flex: none; }
