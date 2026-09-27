@@ -862,7 +862,7 @@ cards:[
  {id:'P1-QA-01',track:'QA',title:'تشغيل سيناريوهات P1-S1…S4 على Staging',status:'todo',dep:['P1-BE-02','P1-FE-01'],
   spec:'كل طرف يشغّل سيناريوهات الطرف الآخر. لقطات + رقم الطلب كدليل.',
   dod:['4 سيناريوهات ناجحة بأدلة','أي خلل ← بطاقة جديدة لا تعديل صامت']},
- {id:'P1-QA-02',track:'QA',title:'فحص آلي لتسريب هوية المتجر',status:'todo',
+ {id:'P1-QA-02',track:'QA',title:'فحص آلي لتسريب هوية المتجر',status:'review',evidence:'tests/leak-scan.test.mjs (Mock ✓) · npm run scan:leaks -- --base … (Staging عند جاهزيته)',
   spec:'سكربت Node في <code>tests/</code> يمر على استجابات Staging (<code>/products</code> · <code>/cart</code> · <code>/orders</code> · <code>/orders/{n}</code>) ويفشل عند ظهور <code>store</code> أو <code>commission</code> أو <code>sub_order</code>.',
   dod:['السكربت في CI الواجهة (ليلياً)','نتيجة صفر مخالفات']},
  {id:'P1-OPS-01',track:'OPS',title:'سياسة النسخ الاحتياطي والترحيل',status:'todo',
@@ -889,7 +889,7 @@ risks:[
  ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
  ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
 ],
-log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-05: openapi.yaml v1.1.0 — دمج ملحق MVP0 + C-P1-01/02/03/05، /auth/me، /orders/checkout/quote، Idempotency-Key، /checkout deprecated، تحويل nullable إلى صيغة 3.1 (22 خطأ قديم أُصلح) — Redocly valid','أشرف + Claude'],['27-09-2026','P1-FE-04: lib/realtime.ts (عقد C-P1-03) + authorizer بـ Bearer في echo.ts + تحديث تفاصيل الطلب عند الحدث — معطّل حتى P3','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-QA-02: فاحص التسريب tests/lib/leakScan.mjs + اختبار Mock + scripts/leak-scan.mjs للـ API الحقيقي · إزالة store من أنواع وبيانات منتجات العميل','أشرف + Claude'],['27-09-2026','P1-FE-05: openapi.yaml v1.1.0 — دمج ملحق MVP0 + C-P1-01/02/03/05، /auth/me، /orders/checkout/quote، Idempotency-Key، /checkout deprecated، تحويل nullable إلى صيغة 3.1 (22 خطأ قديم أُصلح) — Redocly valid','أشرف + Claude'],['27-09-2026','P1-FE-04: lib/realtime.ts (عقد C-P1-03) + authorizer بـ Bearer في echo.ts + تحديث تفاصيل الطلب عند الحدث — معطّل حتى P3','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
 },
 
 /* ═══════════════════════════ PHASE 2 ═══════════════════════════ */

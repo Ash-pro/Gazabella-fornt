@@ -228,7 +228,6 @@ export const mockServices = {
         id: detail.id,
         name: detail.name,
         slug: detail.slug,
-        store: detail.store,
         images: detail.images,
         price: detail.price,
         discount_price: detail.discount_price,

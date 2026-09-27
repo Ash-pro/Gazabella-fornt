@@ -11,7 +11,6 @@ export function demoProduct(product: MockProduct): ProductDetail {
   const totalStock = inventory[String(product.id)] ?? variants.reduce((sum, v) => sum + v.stock, 0)
   return {
     id: product.id,
-    store: product.store,
     name: product.name,
     slug: product.slug,
     description: product.description,

@@ -30,7 +30,6 @@ export interface ProductImage {
 
 export interface ProductBrief {
   variants?: ProductVariant[]
-  store?: { name: string }
   id: number
   name: string
   slug: string
@@ -45,7 +44,6 @@ export interface ProductBrief {
 
 export interface ProductDetail {
   variants?: ProductVariant[]
-  store?: { name: string }
   id: number
   name: string
   slug: string
