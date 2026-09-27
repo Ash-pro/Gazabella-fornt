@@ -87,6 +87,13 @@ test('payment methods: missing server list falls back to COD only (D-01, P1-FE-0
   assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y',is_sandbox:true}]).map(m=>m.code),['cod','jawwal_pay'])
   assert.deepEqual(pm.resolvePaymentMethods([{code:'bitcoin',label:'z'}]).map(m=>m.code),['cod'])
 })
+test('order status + payment method labels are unified (D-21, P1-FE-03)',async()=>{
+  const os=await server.ssrLoadModule('/src/lib/orderStatus.ts')
+  assert.equal(os.orderStatusLabel('pending'),'بانتظار التأكيد');assert.equal(os.orderStatusLabel('shipped'),'خرج للتوصيل')
+  assert.equal(os.orderStatusLabel('delivered'),'تم التسليم');assert.equal(os.orderStatusLabel('weird'),'قيد المعالجة')
+  assert.equal(os.paymentMethodLabel('cod'),'الدفع عند الاستلام');assert.equal(os.paymentMethodLabel('cash_on_delivery'),'الدفع عند الاستلام')
+  assert.equal(os.paymentMethodLabel('jawwal_pay'),'جوال باي');assert.equal(os.paymentMethodLabel(undefined),'—')
+})
 test('invalid authentication payload does not establish a session',async()=>{
   client.apiClient.defaults.adapter=async config=>respond({data:{user:{id:1}}},config)
   await assert.rejects(api.otpVerify('0591234567','123456'),/غير مكتملة/)

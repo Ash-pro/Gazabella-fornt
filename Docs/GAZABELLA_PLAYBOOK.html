@@ -844,7 +844,7 @@ cards:[
  {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'review',evidence:'37/37 · build:mvp0 ✓ · لقطة Mock',
   spec:'المكوّن الجديد، تعديل <code>Mvp0CheckoutPage</code> (السطر 90 والأسطر 321–335)، النوع <code>PaymentMethodOption</code>، الافتراضي COD عند غياب الحقل. <code>CheckoutPage</code> القديم (عقد legacy) لا يُلمس.',
   dod:['اختبار وحدة: غياب الحقل ← COD','<code>npm run test:mvp0</code> ينشئ طلب COD','لقطة Staging: خيار COD وحده']},
- {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'todo',
+ {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'review',evidence:'38/38 · لقطات Mock: القائمة · التفاصيل · نافذة النجاح',
   spec:'<code>src/lib/orderStatus.ts</code>، استبدال الكائنات المحلية في <code>OrderDetailPage</code> و<code>OrdersPage</code>، رسالة نجاح عند <code>?created=1</code> حسب <code>payment_method</code>.',
   dod:['لا تكرار لتعريف التسميات في المشروع','لقطة لرسالة النجاح']},
  {id:'P1-FE-04',track:'FE',title:'Echo authorizer + تحديث تفاصيل الطلب',refs:['G-03','C-P1-03'],status:'todo',
@@ -889,7 +889,7 @@ risks:[
  ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
  ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
 ],
-log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
 },
 
 /* ═══════════════════════════ PHASE 2 ═══════════════════════════ */
