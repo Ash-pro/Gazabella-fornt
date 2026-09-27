@@ -767,8 +767,8 @@ contracts:[
   "payment_method": "cod", "total": 155.00, "currency": "ILS", "items": [ ... ] } }`}]},
  {id:'C-P1-03',title:'عقد البث — قناة وحدث وحمولة',status:'ready',
   body:'القناة <code>private-App.Models.User.{id}</code> · الأحداث <code>order.status.updated</code> و<code>cart.reservation.updated</code> · المصادقة <code>POST /broadcasting/auth</code> بـ Bearer. الحمولة: <code>order_number · status · status_label · updated_at</code> فقط.'},
- {id:'C-P1-04',title:'مزامنة <code>openapi.yaml</code> مع ملحق عقد MVP0',status:'todo',
-  body:'دمج <code>Docs/MVP0_CONTRACT_DELTA.md</code>: <code>POST /auth/guest/init</code> · <code>X-Guest-UUID</code> · <code>POST /orders/checkout/quote</code> · <code>POST /orders</code> + <code>Idempotency-Key</code> · <code>compare_at_price</code> · تعليم <code>POST /checkout</code> كـ <code>deprecated</code> · إضافة C-P1-01…03.'},
+ {id:'C-P1-04',title:'مزامنة <code>openapi.yaml</code> مع ملحق عقد MVP0',status:'done',
+  body:'دمج <code>Docs/Backup/03-api-review-and-guides/MVP0_CONTRACT_DELTA.md</code>: <code>POST /auth/guest/init</code> · <code>X-Guest-UUID</code> · <code>POST /orders/checkout/quote</code> · <code>POST /orders</code> + <code>Idempotency-Key</code> · <code>compare_at_price</code> · تعليم <code>POST /checkout</code> كـ <code>deprecated</code> · إضافة C-P1-01…03.'},
  {id:'C-P1-05',title:'رسوم التوصيل والإعفاء التعويضي (D-22)',status:'ready',
   body:'يُضاف لـ <code>POST /orders/checkout/quote</code> و<code>GET /orders</code> و<code>GET /orders/{n}</code>. <code>delivery_fee</code> إلزامي دائماً. غياب <code>delivery_waiver</code> = رسوم عادية. سبب غير معروف يُتجاهل. <b>التعويض يُمنح</b> من الإدارة ككوبون <code>free_delivery</code> مرتبط بالعميل، لمرة واحدة، مع سبب (تأخير · إزالة بند D-05 · نزاع).',
   code:[{lang:'json',src:`{
@@ -850,7 +850,7 @@ cards:[
  {id:'P1-FE-04',track:'FE',title:'Echo authorizer + تحديث تفاصيل الطلب',refs:['G-03','C-P1-03'],status:'review',evidence:'39/39 · build ✓ · يتفعّل بضبط VITE_PUSHER_* (P3)',
   spec:'إضافة <code>authorizer</code> في <code>echo.ts</code> وتحديث <code>useRealtimeEvents</code>. يبقى معطلاً حتى تُضبط متغيرات <code>VITE_PUSHER_*</code> في P3.',
   dod:['البناء ينجح بدون المتغيرات (no-op)','محلياً مع Reverb: الحدث يحدّث صفحة التفاصيل']},
- {id:'P1-FE-05',track:'FE',title:'مزامنة <code>openapi.yaml</code>',refs:['C-P1-04','G-05'],status:'todo',
+ {id:'P1-FE-05',track:'FE',title:'مزامنة <code>openapi.yaml</code>',refs:['C-P1-04','G-05'],status:'review',evidence:'openapi 1.1.0 · Redocly: valid 🎉',
   spec:'نقل ملحق عقد MVP0 وعقود C-P1-01…03 إلى <code>Docs/openapi.yaml</code>، وتعليم <code>POST /checkout</code> deprecated. التحقق بـ Bruno collection.',
   dod:['<code>openapi.yaml</code> يمر بمدقق Swagger بلا أخطاء','Bruno: كل طلبات MVP0 تنجح على Staging']},
  {id:'P1-FE-06',track:'FE',title:'عرض رسوم التوصيل والإعفاء التعويضي',refs:['D-22','C-P1-05'],status:'review',evidence:'36/36 اختبار · build:mvp0 ✓',
@@ -889,7 +889,7 @@ risks:[
  ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
  ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
 ],
-log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-04: lib/realtime.ts (عقد C-P1-03) + authorizer بـ Bearer في echo.ts + تحديث تفاصيل الطلب عند الحدث — معطّل حتى P3','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-05: openapi.yaml v1.1.0 — دمج ملحق MVP0 + C-P1-01/02/03/05، /auth/me، /orders/checkout/quote، Idempotency-Key، /checkout deprecated، تحويل nullable إلى صيغة 3.1 (22 خطأ قديم أُصلح) — Redocly valid','أشرف + Claude'],['27-09-2026','P1-FE-04: lib/realtime.ts (عقد C-P1-03) + authorizer بـ Bearer في echo.ts + تحديث تفاصيل الطلب عند الحدث — معطّل حتى P3','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
 },
 
 /* ═══════════════════════════ PHASE 2 ═══════════════════════════ */

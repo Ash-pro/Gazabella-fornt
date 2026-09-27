@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: Gazabella API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     العقد الرسمي بين Backend (Laravel 12) وFrontend (Codex).
     
@@ -14,6 +14,14 @@ info:
     - Heartbeat: READ-ONLY — لا يمدد الحجز
     - تمديد الحجز: مرة واحدة فقط عبر POST /orders/checkout/begin
     - order_number format: GAZ-YYYY-XXXX
+    - طرق الدفع يحددها الخادم عبر `payment_methods` — الإنتاج: `cod` فقط (D-01)
+    - طلب COD يُعاد بحالة `confirmed` فور إنشائه (G-01)
+    - `delivery_fee` إلزامي في كل عرض وطلب؛ الإعفاء عبر `delivery_waiver` فقط (D-22)
+    - POST /orders يتطلب `Idempotency-Key` (UUID ثابت لكل محاولة)
+
+    ## المرجع
+    - `Docs/GAZABELLA_PLAYBOOK.html` — العقود C-P1-01…05 والقرارات D-xx
+    - v1.1.0 (27/09/2026): دمج ملحق عقد MVP0 + C-P1-01 · C-P1-02 · C-P1-03 · C-P1-05
     
     ## Authentication
     - Guest: `X-Guest-UUID` header (UUID v4)
@@ -90,8 +98,8 @@ components:
         id: { type: integer, example: 1 }
         name: { type: string, example: "مستحضرات العناية بالبشرة" }
         slug: { type: string, example: "skincare" }
-        image_url: { type: string, nullable: true, example: "https://..." }
-        parent_id: { type: integer, nullable: true, example: null }
+        image_url: { type: [string, "null"], example: "https://..." }
+        parent_id: { type: [integer, "null"], example: null }
         children:
           type: array
           items: { $ref: '#/components/schemas/Category' }
@@ -107,9 +115,8 @@ components:
           format: decimal
           example: "25.00"
         compare_at_price:
-          type: string
+          type: [string, "null"]
           format: decimal
-          nullable: true
           example: "30.00"
         available_quantity:
           type: integer
@@ -125,8 +132,7 @@ components:
         name: { type: string, example: "كريم مرطب للوجه" }
         slug: { type: string, example: "face-moisturizer-001" }
         thumbnail_url:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: "https://..."
         min_price:
           type: string
@@ -150,7 +156,7 @@ components:
         id: { type: integer, example: 1 }
         name: { type: string, example: "كريم مرطب للوجه" }
         slug: { type: string, example: "face-moisturizer-001" }
-        description: { type: string, nullable: true }
+        description: { type: [string, "null"] }
         category:
           type: object
           properties:
@@ -163,7 +169,7 @@ components:
             type: object
             properties:
               url: { type: string }
-              alt_text: { type: string, nullable: true }
+              alt_text: { type: [string, "null"] }
               is_primary: { type: boolean }
               sort_order: { type: integer }
         variants:
@@ -176,7 +182,13 @@ components:
       type: object
       properties:
         id: { type: integer, example: 7 }
+        product_id: { type: integer, example: 1 }
+        product_slug: { type: [string, "null"], example: "face-moisturizer-001" }
         product_variant_id: { type: integer, example: 3 }
+        stock:
+          type: integer
+          description: المتاح لهذا الخيار الآن — للحد الأعلى في الواجهة (min(10, stock))
+          example: 12
         product_name: { type: string, example: "كريم مرطب للوجه" }
         variant_name: { type: string, example: "50ml" }
         unit_price:
@@ -188,10 +200,9 @@ components:
           type: string
           format: decimal
           example: "50.00"
-        thumbnail_url: { type: string, nullable: true }
+        thumbnail_url: { type: [string, "null"] }
         reservation:
-          type: object
-          nullable: true
+          type: [object, "null"]
           properties:
             expires_at:
               type: string
@@ -231,7 +242,7 @@ components:
           type: string
           format: decimal
           example: "50.00"
-        thumbnail_url: { type: string, nullable: true }
+        thumbnail_url: { type: [string, "null"] }
         # NOTE: product_id/variant_id لأغراض الربط فقط (لا يعرضان store_id)
         product_variant_id: { type: integer, example: 3 }
 
@@ -244,7 +255,8 @@ components:
         status:
           type: string
           enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
-          example: "pending"
+          example: "confirmed"
+          description: "COD يُنشأ confirmed مباشرة (G-01). payment_status منفصلة."
         items:
           type: array
           items: { $ref: '#/components/schemas/OrderItem' }
@@ -256,6 +268,13 @@ components:
           type: string
           format: decimal
           example: "5.00"
+          description: إلزامي (D-22)
+        delivery_fee_original:
+          type: [string, "null"]
+          format: decimal
+          description: الرسوم قبل الإعفاء — تُعرض مشطوبة (C-P1-05)
+        delivery_waiver:
+          oneOf: [{ $ref: '#/components/schemas/DeliveryWaiver' }, { type: "null" }]
         discount_amount:
           type: string
           format: decimal
@@ -264,20 +283,30 @@ components:
           type: string
           format: decimal
           example: "80.00"
+        payment_method:
+          type: string
+          enum: [cod, jawwal_pay]
+          example: "cod"
+        delivery_pin:
+          type: [string, "null"]
+          description: "كود التسليم (4 أرقام) — لمالك الطلب فقط، من confirmed حتى shipped (P2 · C-P2-01)"
+          example: "4821"
         delivery_option:
           type: object
           properties:
             name: { type: string, example: "توصيل عادي" }
             estimated_days: { type: integer, example: 3 }
         address:
-          type: object
-          nullable: true
+          type: [object, "null"]
           properties:
             full_name: { type: string }
             phone: { type: string }
             city: { type: string }
             area: { type: string }
             details: { type: string }
+            landmark: { type: [string, "null"] }
+            lat: { type: [number, "null"] }
+            lng: { type: [number, "null"] }
         payment_status:
           type: string
           enum: [unpaid, pending, paid, failed, refunded]
@@ -288,20 +317,57 @@ components:
             type: object
             properties:
               status: { type: string }
-              note: { type: string, nullable: true }
+              note: { type: [string, "null"] }
               created_at: { type: string, format: date-time }
-        coupon_code: { type: string, nullable: true, example: "SAVE10" }
-        notes: { type: string, nullable: true }
+        coupon_code: { type: [string, "null"], example: "SAVE10" }
+        notes: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
         # NOTE: sub_orders لا تظهر هنا أبداً
         # NOTE: store_id لا يظهر هنا أبداً
+
+    # ── Payment method option (C-P1-01) ──
+    PaymentMethodOption:
+      type: object
+      required: [code, label]
+      properties:
+        code: { type: string, enum: [cod, jawwal_pay], example: "cod" }
+        label: { type: string, example: "الدفع نقداً عند الاستلام" }
+        is_sandbox: { type: boolean, example: false, description: "true = بيئة تجريبية، لا أموال حقيقية" }
+
+    # ── Delivery fee waiver (C-P1-05 · D-22) ──
+    DeliveryWaiver:
+      type: object
+      required: [reason, label]
+      description: غيابه = رسوم توصيل عادية. سبب غير معروف تتجاهله الواجهة.
+      properties:
+        reason: { type: string, enum: [compensation, free_threshold, promotion], example: "compensation" }
+        label: { type: string, example: "عرض تعويضي — توصيل مجاني" }
+
+    # ── Checkout quote (MVP0 delta + C-P1-05) ──
+    CheckoutQuote:
+      type: object
+      required: [quote_token, expires_at, subtotal, delivery_fee, discount_amount, total, currency]
+      properties:
+        quote_token: { type: string, description: "موقّع — مرتبط بالمستخدم والسلة والتوصيل والكوبون" }
+        expires_at:
+          type: string
+          format: date-time
+          description: "≤ 5 دقائق أو نهاية الحجز، أيهما أقرب"
+        subtotal: { type: string, format: decimal, example: "176.00" }
+        delivery_fee: { type: string, format: decimal, example: "0.00", description: "إلزامي دائماً — 0.00 فقط مع delivery_waiver" }
+        delivery_fee_original: { type: [string, "null"], format: decimal, example: "15.00" }
+        delivery_waiver:
+          oneOf: [{ $ref: '#/components/schemas/DeliveryWaiver' }, { type: "null" }]
+        discount_amount: { type: string, format: decimal, example: "0.00" }
+        total: { type: string, format: decimal, example: "176.00" }
+        currency: { type: string, example: "ILS" }
 
     # ── User ──
     User:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        name: { type: string, nullable: true, example: "محمد أبو علي" }
+        name: { type: [string, "null"], example: "محمد أبو علي" }
         phone: { type: string, example: "+970591234567" }
         created_at: { type: string, format: date-time }
 
@@ -311,7 +377,7 @@ components:
       properties:
         id: { type: integer, example: 1 }
         name: { type: string, example: "توصيل عادي" }
-        description: { type: string, nullable: true }
+        description: { type: [string, "null"] }
         fee:
           type: string
           format: decimal
@@ -464,6 +530,9 @@ paths:
                   type: string
                   pattern: '^\d{6}$'
                   example: "482917"
+                name:
+                  type: [string, "null"]
+                  description: اختياري — لتسمية حساب جديد
       responses:
         '200':
           description: تم التحقق — Token صالح
@@ -501,6 +570,24 @@ paths:
                 type: object
                 properties:
                   message: { type: string, example: "تم تسجيل الخروج بنجاح" }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: المستخدم الحالي
+      description: يعيد بيانات المستخدم المصادق عليه فقط، بلا حقول داخلية.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: المستخدم الحالي
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   # ════════════════════════════
@@ -541,9 +628,14 @@ paths:
           schema: { type: string, format: uuid }
           required: false
         - in: query
+          name: category_id
+          schema: { type: integer }
+          description: يشمل الفئات الأبناء
+        - in: query
           name: category_slug
           schema: { type: string }
           example: "skincare"
+          deprecated: true
         - in: query
           name: search
           schema: { type: string }
@@ -771,10 +863,15 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Cart' }
-                  reserved_until:
+                  expires_at:
                     type: string
                     format: date-time
                     example: "2026-09-20T22:38:49Z"
+                  reserved_until:
+                    type: string
+                    format: date-time
+                    deprecated: true
+                    description: موروث — استخدم expires_at
                   seconds_remaining: { type: integer, example: 900 }
         '409':
           description: بعض العناصر غير متوفرة بالكمية المطلوبة
@@ -812,7 +909,7 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         '200':
-          description: حالة الحجز الحالية
+          description: "حالة الحجز الحالية — عند انتهاء الحجز تبقى 200 مع has_reservation=false وseconds_remaining/expires_at = null"
           content:
             application/json:
               schema:
@@ -820,25 +917,12 @@ paths:
                 properties:
                   has_reservation: { type: boolean }
                   seconds_remaining:
-                    type: integer
-                    nullable: true
+                    type: [integer, "null"]
                     example: 423
                   is_extended: { type: boolean, example: false }
                   expires_at:
-                    type: string
+                    type: [string, "null"]
                     format: date-time
-                    nullable: true
-        '200 (expired)':
-          description: الحجز انتهى (لا يزال 200 — Frontend يتعامل معه)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  has_reservation: { type: boolean, example: false }
-                  seconds_remaining: { type: integer, nullable: true, example: null }
-                  is_extended: { type: boolean, example: false }
-                  expires_at: { type: string, nullable: true, example: null }
 
   # ════════════════════════════
   # ORDERS
@@ -864,8 +948,7 @@ paths:
               type: object
               properties:
                 coupon_code:
-                  type: string
-                  nullable: true
+                  type: [string, "null"]
                   example: "SAVE10"
       responses:
         '200':
@@ -876,18 +959,30 @@ paths:
                 type: object
                 properties:
                   reservation_extended: { type: boolean, example: true }
-                  reserved_until:
+                  expires_at:
                     type: string
                     format: date-time
                     example: "2026-09-20T22:53:49Z"
+                  reserved_until:
+                    type: string
+                    format: date-time
+                    deprecated: true
+                    description: موروث — استخدم expires_at
                   seconds_remaining: { type: integer, example: 1800 }
+                  active_cities:
+                    type: array
+                    items: { type: string }
+                    example: ["خانيونس"]
+                  payment_methods:
+                    type: array
+                    description: "C-P1-01 — مصدر خيارات الدفع الوحيد. الإنتاج: [cod] (D-01). غيابه عند الواجهة = cod فقط."
+                    items: { $ref: '#/components/schemas/PaymentMethodOption' }
                   cart: { $ref: '#/components/schemas/Cart' }
                   delivery_options:
                     type: array
                     items: { $ref: '#/components/schemas/DeliveryOption' }
                   coupon:
-                    type: object
-                    nullable: true
+                    type: [object, "null"]
                     properties:
                       code: { type: string }
                       discount_type: { type: string, enum: [fixed, percentage] }
@@ -909,6 +1004,58 @@ paths:
                 message: "رمز الكوبون غير صالح أو انتهت صلاحيته"
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /orders/checkout/quote:
+    post:
+      tags: [Orders]
+      summary: مراجعة الإجمالي وإصدار عرض موقّع
+      description: |
+        يحسب الإجماليات (المنتجات · التوصيل · الإعفاء · الخصم) ويعيد `quote_token`.
+        صلاحية العرض ≤ 5 دقائق أو نهاية الحجز. أي تغيير في السلة/التوصيل/الكوبون يستلزم عرضاً جديداً.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delivery_option_id, city]
+              properties:
+                delivery_option_id: { type: integer, example: 1 }
+                city: { type: string, example: "خانيونس", description: "ضمن active_cities" }
+                coupon_code: { type: [string, "null"] }
+      responses:
+        '200':
+          description: عرض سعر صالح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CheckoutQuote' }
+        '409':
+          description: الحجز منتهٍ أو السلة تغيّرت
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /checkout:
+    post:
+      tags: [Orders]
+      deprecated: true
+      summary: (موروث) إنشاء طلب بالعقد القديم
+      description: |
+        **مُهمل** — يستخدمه العقد القديم فقط (`VITE_API_CONTRACT=legacy`).
+        البديل: `POST /orders/checkout/begin` ← `POST /orders/checkout/quote` ← `POST /orders`.
+        سيُحذف بعد إغلاق P1.
+      security:
+        - bearerAuth: []
+      responses:
+        '410':
+          description: غير مدعوم في عقد MVP0
+
   /orders:
     post:
       tags: [Orders]
@@ -920,27 +1067,41 @@ paths:
         - يُنشئ sub_orders داخلياً (مخفية عن العميل)
         - يُنشئ order_items كـ snapshot (product_name, variant_name, unit_price)
         - يُطبّق الكوبون إن وجد
-        - الخطوة التالية: POST /payments/init
+        - `payment_method=cod` ← الطلب يُعاد `confirmed` فوراً و`payment_status=unpaid` حتى التحصيل (G-01)
+        - `payment_method=jawwal_pay` ← `pending` والخطوة التالية POST /payments/init (معطّل إنتاجياً — D-01/D-17)
+        - نفس `Idempotency-Key` + نفس الجسم ← الطلب نفسه (200). نفس المفتاح + جسم مختلف ← 409
       security:
         - bearerAuth: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, format: uuid }
+          description: UUID ثابت لكل محاولة — يُعاد نفسه عند إعادة الإرسال بعد انقطاع
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [delivery_option_id, address]
+              required: [delivery_option_id, address, payment_method, quote_token]
               properties:
                 delivery_option_id:
                   type: integer
                   example: 1
-                coupon_code:
+                payment_method:
                   type: string
-                  nullable: true
+                  enum: [cod, jawwal_pay]
+                  description: "يجب أن تكون ضمن payment_methods من checkout/begin — وإلا 422 PAYMENT_METHOD_DISABLED"
+                  example: "cod"
+                quote_token:
+                  type: string
+                  description: من POST /orders/checkout/quote
+                coupon_code:
+                  type: [string, "null"]
                   example: "SAVE10"
                 notes:
-                  type: string
-                  nullable: true
+                  type: [string, "null"]
                   maxLength: 500
                   example: "اتصلوا قبل التوصيل"
                 address:
@@ -949,9 +1110,12 @@ paths:
                   properties:
                     full_name: { type: string, example: "محمد أبو علي" }
                     phone: { type: string, example: "+970591234567" }
-                    city: { type: string, example: "غزة" }
-                    area: { type: string, example: "الرمال" }
-                    details: { type: string, example: "شارع عمر المختار، بناية الياسمين، طابق 3" }
+                    city: { type: string, example: "خانيونس", description: "ضمن active_cities" }
+                    area: { type: string, example: "الأمل" }
+                    details: { type: string, example: "شارع النصر، مقابل المدرسة" }
+                    landmark: { type: [string, "null"], maxLength: 200, example: "بجانب مسجد الرحمة" }
+                    lat: { type: [number, "null"] }
+                    lng: { type: [number, "null"] }
                     save_address: { type: boolean, default: false }
       responses:
         '201':
@@ -963,10 +1127,19 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/Order' }
                   next_step:
-                    type: string
+                    type: [string, "null"]
+                    description: "null لطلب COD"
                     example: "POST /api/v1/payments/init"
+        '200':
+          description: إعادة إرسال بنفس Idempotency-Key ونفس الجسم — يُعاد الطلب نفسه
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Order' }
         '409':
-          description: الحجز منتهٍ — يجب العودة للسلة
+          description: الحجز منتهٍ · العرض منتهٍ/تغيّر · المفتاح مستعمل بجسم مختلف
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -1036,6 +1209,8 @@ paths:
       tags: [Payments]
       summary: بدء عملية الدفع عبر Jawwal Pay
       description: |
+        ⏸️ **مؤجل (D-17):** Sandbox محلي فقط، ومعطّل في الإنتاج حتى اعتماد Jawwal Pay — يعيد 409 PAYMENT_METHOD_DISABLED.
+
         يُنشئ جلسة دفع مع Jawwal Pay ويعيد payment_url.
         Frontend يُحوّل المستخدم إلى هذا الـ URL.
         بعد إتمام الدفع → Jawwal Pay يُرسل webhook إلى /payments/webhook
@@ -1131,12 +1306,21 @@ paths:
                 message: "Invalid webhook signature"
 
 # ─────────────────────────────────────────────
-# WEBSOCKET EVENTS (Laravel Reverb)
+# WEBSOCKET EVENTS (Laravel Reverb) — C-P1-03 (G-03)
 # ─────────────────────────────────────────────
-# هذه ليست HTTP endpoints — موثّقة هنا للمرجع
+# هذه ليست HTTP endpoints — موثّقة هنا للمرجع. تُلغي القنوات السابقة (orders.{userId} · cart.{userId}).
 #
-# cart.{userId}       → ReservationExpired    { cart_item_ids: [], message: string }
-# products            → StockDepleted         { product_variant_id: int, available: int }
-# private-orders.{userId} → OrderStatusChanged { order_number: string, status: string }
-# private-orders.{userId} → PaymentConfirmed   { order_number: string, payment_id: int }
-# private-orders.{userId} → PaymentFailed      { order_number: string, reason: string }
+# المصادقة:  POST {API_ORIGIN}/broadcasting/auth   (خارج /api/v1)
+#            Authorization: Bearer <sanctum>   body: { socket_id, channel_name }
+#            مالك القناة ← 200 · غيره ← 403
+#
+# القناة:    private-App.Models.User.{userId}
+#
+# الحدث:     order.status.updated        (broadcastAs)
+#   الحمولة: { order_number: string, status: string, status_label: string, updated_at: date-time }
+#
+# الحدث:     cart.reservation.updated    (broadcastAs)
+#   الحمولة: { has_reservation: boolean, expires_at: date-time|null }
+#
+# ممنوع في أي حمولة: store_id · sub_orders · commission · أي بيانات متجر
+# الواجهة تحتفظ بـ polling كل 30 ثانية احتياطاً.
