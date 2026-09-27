@@ -582,7 +582,11 @@ export function getStoredOrders(): Order[] {
     const created = new Date(Date.now() - (index + 1) * 3600_000).toISOString()
     samples.push({id:15+index,order_number:mission.order_number,status,
       items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,image_url:product.images[0]?.url || null}],
-      subtotal:variant.price,delivery_fee:mission.delivery_fee,total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2),
+      subtotal:variant.price,
+      // D-22 — عرض وهمي لإعفاء تعويضي حتى يجهز الـ API: الطلب الأول من هذه العينات بتوصيل مجاني
+      ...(index===0
+        ? {delivery_fee:'0.00',delivery_fee_original:mission.delivery_fee,delivery_waiver:{reason:'compensation' as const,label:'عرض تعويضي — توصيل مجاني'},total:Number(variant.price).toFixed(2)}
+        : {delivery_fee:mission.delivery_fee,total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2)}),
       name:mission.customer_name,email:'customer@example.com',phone:mission.customer_phone,address:`${mission.city}، ${mission.area}، ${mission.address_details}`,
       payment_status:legacyPaymentStatusMap[mission.payment_status] ?? 'pending',tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],notes:mission.delivery_notes,delivery_pin:String(4830+index),
       escrow_expires_at:delivered ? new Date(Date.now()+47*3600_000).toISOString() : undefined,created_at:created})

@@ -1,4 +1,5 @@
 import { useAuthStore } from '../stores/authStore'
+import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
 import { mockServices } from '../mock/mockServices'
@@ -150,6 +151,8 @@ interface RawOrder {
   subtotal: number | string
   delivery_fee?: number | string
   shipping_fee?: number | string
+  delivery_fee_original?: number | string | null
+  delivery_waiver?: { reason?: string; label?: string } | null
   total: number | string
   name?: string
   customer?: { name?: string; email?: string; phone?: string }
@@ -167,7 +170,8 @@ interface RawOrder {
 }
 
 export function normalizeOrder(raw: RawOrder): Order {
-  if (!raw || !Array.isArray(raw.items)) throw new Error('تفاصيل الطلب الواردة من الخادم غير مكتملة.')
+  if (!raw) throw new Error('تفاصيل الطلب الواردة من الخادم غير مكتملة.')
+  const rawItems = Array.isArray(raw.items) ? raw.items : []
   // يحوّل القيم المالية لنص — يدعم null/undefined بقيمة افتراضية
   const amount = (value: unknown, fallback?: string): string => {
     if (value === null || value === undefined || value === '') {
@@ -184,7 +188,7 @@ export function normalizeOrder(raw: RawOrder): Order {
     id: raw.id,
     order_number: raw.order_number ?? String(raw.id),
     status: raw.status as Order['status'],
-    items: raw.items.map((item) => {
+    items: rawItems.map((item) => {
       const imgs = item.product?.images ?? []
       const img = imgs.find((i) => i.is_primary) ?? imgs[0]
       return {
@@ -198,7 +202,8 @@ export function normalizeOrder(raw: RawOrder): Order {
       }
     }),
     subtotal: amount(raw.subtotal, '0.00'),
-    delivery_fee: amount(raw.delivery_fee ?? raw.shipping_fee, '0.00'),
+    // D-22: رسوم التوصيل إلزامية — غيابها خطأ، لا نعرض «توصيل مجاني» افتراضياً
+    ...normalizeDeliveryFee(raw, amount),
     total: amount(raw.total, '0.00'),
     name: raw.name ?? raw.customer?.name ?? '',
     email: raw.email ?? raw.customer?.email ?? '',
@@ -211,6 +216,7 @@ export function normalizeOrder(raw: RawOrder): Order {
     escrow_expires_at: raw.escrow_expires_at,
     delivery_pin: raw.delivery_pin,
     tracking: raw.tracking ?? [],
+    items_count: (raw as unknown as { items_count?: number }).items_count ?? rawItems.length,
     created_at: raw.created_at,
   }
 }

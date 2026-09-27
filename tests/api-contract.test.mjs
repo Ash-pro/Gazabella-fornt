@@ -68,6 +68,18 @@ test('missing order totals are rejected instead of displaying free shipping',()=
   const order=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,status:'pending',payment_status:'pending'})
   assert.equal(order.delivery_fee,'0');assert.equal(order.payment_status,'pending')
 })
+test('delivery fee: normal fee passes through without waiver (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:15,delivery_fee:5,status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_fee,'5');assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
+})
+test('delivery fee: compensation waiver keeps the original fee for strike-through (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'compensation',label:'عرض تعويضي — توصيل مجاني'},status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_fee,'0');assert.equal(o.delivery_fee_original,'5.00');assert.deepEqual(o.delivery_waiver,{reason:'compensation',label:'عرض تعويضي — توصيل مجاني'})
+})
+test('delivery fee: unknown waiver reason is ignored and original is dropped (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'hack',label:'x'},status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
+})
 test('invalid authentication payload does not establish a session',async()=>{
   client.apiClient.defaults.adapter=async config=>respond({data:{user:{id:1}}},config)
   await assert.rejects(api.otpVerify('0591234567','123456'),/غير مكتملة/)

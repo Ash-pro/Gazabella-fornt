@@ -45,9 +45,9 @@ export function OrdersPage() {
                 )}
               </div>
               <p className="text-xs text-[var(--text-2)]">
-                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات
+                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items_count ?? order.items.length}</span> منتجات
               </p>
-              <p className="mt-3 text-sm">{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</p>
+              <p className="mt-3 text-sm">{order.items.length > 0 ? <>{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</> : <span className="text-[var(--text-3)]">{order.items_count ?? 0} منتج</span>}</p>
               <span className="text-link mt-3">تفاصيل الطلب</span>
             </div>
             <div className="mr-auto text-left flex flex-col items-end">

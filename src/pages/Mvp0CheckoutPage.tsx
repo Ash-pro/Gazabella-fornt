@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { DeliveryFeeRow } from '../components/checkout/DeliveryFee'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -363,9 +364,7 @@ export function Mvp0CheckoutPage() {
                 <div className="flex justify-between text-[var(--text-2)]">
                   <span>المنتجات</span><span className="num">{money(quote.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[var(--text-2)]">
-                  <span>التوصيل</span><span className="num">{money(quote.delivery_fee)}</span>
-                </div>
+                <DeliveryFeeRow fees={quote} className="text-[var(--text-2)]" />
                 {parseFloat(quote.discount_amount) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>خصم الكوبون</span><span className="num">− {money(quote.discount_amount)}</span>

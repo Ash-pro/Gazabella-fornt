@@ -1,4 +1,5 @@
 import { apiClient } from '../lib/apiClient'
+import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { clearGuestUuid, getGuestUuid } from '../lib/guest'
 import { useAuthStore } from '../stores/authStore'
 import type { ProductFilters } from './gazabella'
@@ -49,7 +50,7 @@ export function normalizeMvp0Order(raw: Omit<Order, 'address' | 'payment_status'
   if (!status) throw new Error('حالة الدفع غير معروفة.')
   return { id: raw.id, order_number: raw.order_number, status: raw.status,
     items: raw.items.map(i => ({ id: i.id, product_name: i.product_name, variant_name: i.variant_name, quantity: i.quantity, unit_price: amount(i.unit_price), subtotal: amount(i.subtotal), image_url: i.thumbnail_url ?? null })),
-    subtotal: amount(raw.subtotal), delivery_fee: amount(raw.delivery_fee), total: amount(raw.total),
+    subtotal: amount(raw.subtotal), ...normalizeDeliveryFee(raw, amount), total: amount(raw.total),
     discount_amount: amount(raw.discount_amount ?? 0),
     name: raw.address.full_name, phone: raw.address.phone, email: '',
     address: [raw.address.city, raw.address.area, raw.address.details, raw.address.landmark].filter(Boolean).join('، '),

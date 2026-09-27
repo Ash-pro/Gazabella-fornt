@@ -999,3 +999,11 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
 .quick-buy-quantity, .quick-buy-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .quick-buy-total { border-top: 1px solid var(--border); padding-top: 14px; }
 .quick-buy-content .quantity-control button { min-width: 44px; min-height: 44px; }
+
+/* ── D-22 رسوم التوصيل والإعفاء التعويضي ── */
+.delivery-fee { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.delivery-fee__amount { display: inline-flex; align-items: baseline; gap: 8px; }
+.delivery-fee__was { color: var(--text-3); font-weight: 400; font-size: .85em; }
+.delivery-fee__free { color: var(--success); }
+.delivery-waiver { display: inline-block; font-size: 11px; font-weight: 700; line-height: 1.6; padding: 1px 8px; border-radius: 999px; background: var(--success-bg); color: var(--success); }
+.delivery-waiver--compensation { background: rgba(191, 149, 69, .16); color: #8a6a2c; }
