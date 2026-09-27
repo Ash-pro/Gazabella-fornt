@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gazabella Playbook — المرجع الموحد للتنفيذ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --primary:#9B2D52;--primary-2:#B5456B;--primary-dim:rgba(155,45,82,.10);
+  --gold:#BF9545;--gold-2:#D4AE68;--gold-dim:rgba(191,149,69,.14);
+  --bg:#FFF8F2;--surface:#FFFFFF;--surface-2:#FDF4EE;--border:#EDD5C5;
+  --text:#2A1A1F;--text-2:#6E4A57;--text-3:#A98695;
+  --ok:#15803d;--ok-bg:#dcfce7;--warn:#b45309;--warn-bg:#fef3c7;--bad:#b91c1c;--bad-bg:#fee2e2;--info:#1d4ed8;--info-bg:#dbeafe;--mute:#475569;--mute-bg:#f1f5f9;
+  --be:#0e7490;--be-bg:#cffafe;--fe:#9B2D52;--fe-bg:#fce7f3;--ux:#7c3aed;--ux-bg:#ede9fe;--qa:#15803d;--qa-bg:#dcfce7;--ops:#b45309;--ops-bg:#fef3c7;--biz:#334155;--biz-bg:#e2e8f0;
+  --code-bg:#1E1418;--code-fg:#F3E6EA;
+  --shadow:0 2px 14px rgba(42,26,31,.07);--r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#150E11;--surface:#1F1519;--surface-2:#271B20;--border:#3A2830;--text:#F6EAEE;--text-2:#CDB2BC;--text-3:#8E7380;
+  --primary-dim:rgba(214,110,150,.16);--gold-dim:rgba(212,174,104,.16);
+  --ok-bg:#12351f;--ok:#86efac;--warn-bg:#3a2a0c;--warn:#fcd34d;--bad-bg:#3b1414;--bad:#fca5a5;--info-bg:#132546;--info:#93c5fd;--mute-bg:#232a33;--mute:#cbd5e1;
+  --be-bg:#0c2f36;--be:#67e8f9;--fe-bg:#3a1426;--fe:#f9a8d4;--ux-bg:#2a1f47;--ux:#c4b5fd;--qa-bg:#12351f;--qa:#86efac;--ops-bg:#3a2a0c;--ops:#fcd34d;--biz-bg:#232a33;--biz:#cbd5e1;
+  --shadow:0 2px 14px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#150E11;--surface:#1F1519;--surface-2:#271B20;--border:#3A2830;--text:#F6EAEE;--text-2:#CDB2BC;--text-3:#8E7380;
+  --primary-dim:rgba(214,110,150,.16);--gold-dim:rgba(212,174,104,.16);
+  --ok-bg:#12351f;--ok:#86efac;--warn-bg:#3a2a0c;--warn:#fcd34d;--bad-bg:#3b1414;--bad:#fca5a5;--info-bg:#132546;--info:#93c5fd;--mute-bg:#232a33;--mute:#cbd5e1;
+  --be-bg:#0c2f36;--be:#67e8f9;--fe-bg:#3a1426;--fe:#f9a8d4;--ux-bg:#2a1f47;--ux:#c4b5fd;--qa-bg:#12351f;--qa:#86efac;--ops-bg:#3a2a0c;--ops:#fcd34d;--biz-bg:#232a33;--biz:#cbd5e1;
+  --shadow:0 2px 14px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.75}
+code,pre{font-family:'JetBrains Mono',ui-monospace,monospace}
+:not(pre)>code{font-size:12px;background:var(--primary-dim);color:var(--primary-2);padding:1px 6px;border-radius:5px;direction:ltr;unicode-bidi:isolate;overflow-wrap:break-word}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) :not(pre)>code{color:#f9a8d4}}
+:root[data-theme="dark"] :not(pre)>code{color:#f9a8d4}
+a{color:var(--primary)}
+button{font-family:inherit}
+
+/* ── Header ── */
+.hdr{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+.hdr-top{display:flex;align-items:center;gap:14px;padding:10px 24px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--primary)}
+.brand b em{color:var(--gold);font-style:normal}
+.brand span{font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.pill.gold{background:var(--gold-dim);border-color:transparent;color:var(--gold)}
+.spacer{flex:1}
+.hbtn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;min-height:36px}
+.hbtn:hover{border-color:var(--primary);color:var(--primary)}
+.hbtn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.phasebar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border)}
+.ptab{position:relative;display:flex;flex-direction:column;gap:3px;padding:10px 18px 12px;border:none;background:transparent;cursor:pointer;text-align:right;color:var(--text-2);border-left:1px solid var(--border)}
+.ptab:last-child{border-left:none}
+.ptab .n{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--text-3)}
+.ptab .t{font-size:14.5px;font-weight:800;color:var(--text)}
+.ptab .s{font-size:11.5px}
+.ptab .bar{height:4px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin-top:4px}
+.ptab .bar i{display:block;height:100%;background:var(--gold)}
+.ptab.active{background:var(--primary-dim)}
+.ptab.active::after{content:'';position:absolute;bottom:0;right:0;left:0;height:3px;background:var(--primary)}
+.gate{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 7px;position:absolute;top:10px;left:12px}
+.gate.open{background:var(--ok-bg);color:var(--ok)}
+.gate.locked{background:var(--mute-bg);color:var(--mute)}
+.gate.closed{background:var(--gold-dim);color:var(--gold)}
+.filters{display:flex;gap:8px;align-items:center;padding:8px 24px;border-top:1px solid var(--border);flex-wrap:wrap;background:var(--surface-2)}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--text-2);min-height:30px}
+.chip.on{background:var(--text);color:var(--surface);border-color:var(--text)}
+.search{flex:1;min-width:180px;max-width:320px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:6px 12px;font-family:inherit;font-size:13px}
+
+/* ── Layout ── */
+.wrap{display:grid;grid-template-columns:230px 1fr;gap:0;max-width:1400px;margin:0 auto}
+.toc{position:sticky;top:176px;align-self:start;height:calc(100vh - 176px);overflow:auto;padding:18px 14px 30px 8px;border-left:1px solid var(--border)}
+.toc a{display:block;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--text-2);text-decoration:none;font-weight:600}
+.toc a:hover{background:var(--primary-dim);color:var(--primary)}
+.toc .lbl{font-size:10.5px;font-weight:800;color:var(--text-3);letter-spacing:1px;margin:14px 10px 4px}
+main{padding:22px 28px 80px;min-width:0}
+.hero{border-radius:18px;padding:26px 28px;color:#fff;background:linear-gradient(135deg,#2A1A1F 0%,#6B1E3A 60%,#2A1A1F 100%);position:relative;overflow:hidden;margin-bottom:18px}
+.hero::after{content:'';position:absolute;left:-70px;bottom:-90px;width:260px;height:260px;border-radius:50%;background:rgba(191,149,69,.18)}
+.hero .k{font-family:'JetBrains Mono',monospace;font-size:12px;color:#F3DDB0}
+.hero h1{margin:4px 0 8px;font-size:26px;font-weight:800}
+.hero p{margin:0;max-width:820px;color:rgba(255,255,255,.85);font-size:14.5px}
+.hero .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.hero .meta span{font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:18px;scroll-margin-top:190px;overflow:hidden}
+.sec>h2{margin:0;padding:13px 20px;font-size:16px;font-weight:800;background:var(--surface-2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sec>h2 .no{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--primary);color:#fff;border-radius:6px;padding:1px 8px}
+.sec .bd{padding:18px 20px}
+.muted{color:var(--text-2);font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.box{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface);min-width:0}
+.gates{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gates .box:last-child{grid-column:1/-1}
+.ml{display:none;font-size:11.5px;font-weight:800;color:var(--text-3);margin-bottom:2px}
+.box h3{margin:0 0 8px;font-size:14.5px;color:var(--primary)}
+.box ul{margin:0;padding-right:18px;font-size:13.5px}
+.box li{margin:3px 0}
+.check{list-style:none;padding:0!important}
+.check li{display:flex;gap:8px;align-items:flex-start}
+.check li::before{content:'☐';color:var(--text-3);font-size:15px;line-height:1.5}
+.check li.d::before{content:'☑';color:var(--ok)}
+.note{border-right:4px solid var(--gold);background:var(--gold-dim);border-radius:0 10px 10px 0;padding:10px 14px;font-size:13.5px;margin:10px 0}
+.warn{border-right:4px solid var(--bad);background:var(--bad-bg);border-radius:0 10px 10px 0;padding:10px 14px;font-size:13.5px;margin:10px 0}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.tw{overflow-x:auto}
+table.t th{background:var(--primary);color:#fff;text-align:right;padding:8px 11px;font-weight:700;white-space:nowrap}
+table.t td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t tr:nth-child(even) td{background:var(--surface-2)}
+pre.code{background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:12px 16px;overflow-x:auto;direction:ltr;text-align:left;font-size:12.3px;line-height:1.7;margin:8px 0 12px;position:relative}
+pre.code .lang{position:absolute;top:6px;right:10px;font-size:10px;color:#a78b95;text-transform:uppercase}
+.cpy{position:absolute;top:6px;left:8px;font-size:10.5px;border:1px solid #5b4450;background:#2b1f24;color:#e8d5dc;border-radius:6px;padding:1px 8px;cursor:pointer}
+
+/* track badges */
+.tr{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;border-radius:6px;padding:1px 7px;white-space:nowrap}
+.tr.BE{background:var(--be-bg);color:var(--be)}.tr.FE{background:var(--fe-bg);color:var(--fe)}.tr.UX{background:var(--ux-bg);color:var(--ux)}
+.tr.QA{background:var(--qa-bg);color:var(--qa)}.tr.OPS{background:var(--ops-bg);color:var(--ops)}.tr.BIZ{background:var(--biz-bg);color:var(--biz)}
+.st{font-size:11px;font-weight:800;border-radius:6px;padding:1px 8px;white-space:nowrap}
+.st.todo{background:var(--mute-bg);color:var(--mute)}.st.ready{background:var(--info-bg);color:var(--info)}.st.doing{background:var(--warn-bg);color:var(--warn)}
+.st.review{background:var(--ux-bg);color:var(--ux)}.st.done{background:var(--ok-bg);color:var(--ok)}.st.blocked{background:var(--bad-bg);color:var(--bad)}
+
+/* gap cards */
+.gap{border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden}
+.gap-hd{display:flex;gap:10px;align-items:center;padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.gap-hd .id{font-family:'JetBrains Mono',monospace;font-weight:600;background:var(--bad);color:#fff;border-radius:6px;padding:1px 8px;font-size:12px}
+.gap-hd h3{margin:0;font-size:15px;flex:1;min-width:200px}
+.gap-bd{padding:14px 16px}
+.gap-bd .why{font-size:13.5px;margin-bottom:10px}
+.sol{display:grid;grid-template-columns:92px 1fr 1fr;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.sol>div{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13.2px;min-width:0}
+.sol>div:nth-last-child(-n+3){border-bottom:none}
+.sol .h{background:var(--surface-2);font-weight:800;font-size:12.5px}
+.sol .side{background:var(--surface-2);font-weight:800;display:flex;align-items:flex-start;gap:6px;flex-direction:column}
+.sol ul{margin:0;padding-right:16px}
+.sol li{margin:2px 0}
+details.more{margin-top:6px}
+details.more>summary{cursor:pointer;font-weight:800;font-size:13px;color:var(--primary);list-style:none}
+details.more>summary::before{content:'＋ '}
+details.more[open]>summary::before{content:'－ '}
+
+/* work cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.card{border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
+.card-hd{display:flex;gap:6px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
+.card-hd .cid{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:var(--text-2)}
+.card-hd .sp{flex:1}
+.card h4{margin:10px 12px 4px;font-size:14px;line-height:1.5}
+.card .refs{margin:0 12px 6px;display:flex;gap:4px;flex-wrap:wrap}
+.card .refs span{font-family:'JetBrains Mono',monospace;font-size:10.5px;background:var(--gold-dim);color:var(--gold);border-radius:5px;padding:0 6px}
+.card .body{padding:0 12px 10px;font-size:13px;color:var(--text)}
+.card .body ul{margin:4px 0;padding-right:16px}
+.card .dod{margin:0 12px 10px;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:12.5px}
+.card .dod b{color:var(--ok)}
+.card .dod ul{margin:2px 0 0;padding-right:16px}
+.card .ft{margin-top:auto;display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--border);align-items:center;flex-wrap:wrap}
+.card .ft small{color:var(--text-3);font-size:11.5px;flex:1}
+.mini{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:8px;padding:3px 9px;font-size:11.5px;font-weight:700;cursor:pointer}
+.mini:hover{border-color:var(--primary);color:var(--primary)}
+.hidden{display:none!important}
+
+/* scenarios */
+.scn{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.scn>summary{cursor:pointer;list-style:none;padding:11px 14px;background:var(--surface-2);font-weight:800;font-size:14px;display:flex;gap:8px;align-items:center}
+.scn>summary::-webkit-details-marker{display:none}
+.scn>summary::after{content:'▾';margin-right:auto;color:var(--text-3)}
+.scn[open]>summary::after{content:'▴'}
+.steps{list-style:none;margin:0;padding:10px 14px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:28px 64px 1fr;gap:8px;align-items:start;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13.3px}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.actor{font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px;text-align:center;background:var(--mute-bg);color:var(--mute)}
+.alt{margin:0 14px 12px;font-size:12.8px;background:var(--warn-bg);border-radius:8px;padding:8px 12px}
+
+/* overlay */
+.ov{position:fixed;inset:0;background:rgba(20,10,14,.55);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.ov.show{display:flex}
+.ov-box{background:var(--surface);color:var(--text);border-radius:16px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.ov-hd{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.ov-hd h2{margin:0;font-size:18px;flex:1}
+.ov-bd{padding:18px 22px 26px}
+.flow{display:flex;gap:6px;flex-wrap:wrap;align-items:stretch;margin:8px 0 14px}
+.flow>div{flex:1 1 120px;border:1px solid var(--border);border-top:3px solid var(--primary);border-radius:10px;padding:8px 10px;font-size:12.5px;background:var(--surface)}
+.flow>div b{display:block;font-size:13px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;z-index:200;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.empty{padding:14px;text-align:center;color:var(--text-3);font-size:13px;border:1px dashed var(--border);border-radius:10px}
+@media (max-width:1000px){.wrap{grid-template-columns:1fr}.toc{display:none}.grid2,.grid3{grid-template-columns:1fr}.phasebar{grid-template-columns:repeat(2,1fr)}.ptab{border-bottom:1px solid var(--border)}}
+@media (max-width:640px){.hdr{position:static}.gates{grid-template-columns:1fr}.ml{display:block}main{padding:16px 16px 60px}.hdr-top,.filters{padding-inline:16px}.sol{grid-template-columns:1fr}.sol .h{display:none}.steps li{grid-template-columns:28px 1fr}.steps li .actor{grid-column:2}.steps li>span:last-child{grid-column:2}.hero{padding:20px}}
+@media print{.hdr .filters,.toc,.hbtn,.mini,.cpy{display:none!important}.wrap{display:block}.sec{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="brand"><b>Gazab<em>ella</em></b><span>PLAYBOOK · المرجع الموحد للتنفيذ</span></div>
+    <span class="pill gold" id="ver"></span>
+    <span class="pill" id="today"></span>
+    <div class="spacer"></div>
+    <button class="hbtn" onclick="openOv('ov-method')">🧭 طريقة العمل</button>
+    <button class="hbtn" onclick="openOv('ov-rules')">🛡️ القواعد الثابتة</button>
+    <button class="hbtn" onclick="openOv('ov-decisions')">📜 القرارات</button>
+    <button class="hbtn" onclick="toggleTheme()" aria-label="تبديل الوضع الليلي">◐</button>
+  </div>
+  <nav class="phasebar" id="phasebar" role="tablist"></nav>
+  <div class="filters">
+    <span class="muted" style="font-weight:800">المسار:</span>
+    <div id="trackChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    <div class="spacer"></div>
+    <input class="search" id="q" type="search" placeholder="ابحث: G-01 · checkout · Reverb · عاصم…" aria-label="بحث">
+  </div>
+</header>
+<div class="wrap">
+  <aside class="toc" id="toc"></aside>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ═════════ OVERLAY: طريقة العمل ═════════ -->
+<div class="ov" id="ov-method" role="dialog" aria-modal="true" aria-labelledby="m-t">
+ <div class="ov-box">
+  <div class="ov-hd"><h2 id="m-t">🧭 منهجية «البوابة والمسار» — Gate &amp; Track</h2><button class="hbtn" onclick="closeOv(this)">إغلاق ✕</button></div>
+  <div class="ov-bd">
+   <p>هذا الملف هو <strong>المرجع الوحيد</strong> للبرمجة والتصميم والتحليل والسيناريوهات. أي نص في ملف آخر يخالفه يُعتبر تاريخياً. العمل مقسّم إلى <strong>4 مراحل</strong>، كل مرحلة وحدة مستقلة تُفتح ببوابة وتُغلق ببوابة، وداخلها <strong>6 مسارات</strong> تعمل بالتوازي.</p>
+   <div class="flow">
+     <div><b>🚪 بوابة الدخول</b>شروط يجب تحققها قبل فتح أي بطاقة في المرحلة</div>
+     <div style="border-top-color:var(--gold)"><b>📑 العقد أولاً</b>كل ما يلمس الواجهة والباك اند يبدأ ببطاقة عقد C-xx يوقعها الطرفان</div>
+     <div style="border-top-color:#0e7490"><b>⚙️ التنفيذ المتوازي</b>BE · FE · UX · QA · OPS · BIZ</div>
+     <div style="border-top-color:#7c3aed"><b>📎 يوم الدليل</b>لا إغلاق بطاقة بدون دليل (اختبار · لقطة · رابط)</div>
+     <div style="border-top-color:#15803d"><b>🏁 بوابة الخروج</b>كل المعايير محققة ← المرحلة التالية تُفتح</div>
+   </div>
+   <div class="grid2">
+    <div class="box"><h3>المسارات والمالكون</h3><ul>
+      <li><span class="tr BE">BE</span> الباك اند ولوحات Filament — <b>عاصم</b></li>
+      <li><span class="tr FE">FE</span> واجهة العميل React — <b>أشرف</b></li>
+      <li><span class="tr UX">UX</span> التصميم، النصوص، مواصفات اللوحات — <b>أشرف</b></li>
+      <li><span class="tr QA">QA</span> الاختبارات والقبول — <b>مشترك</b> (كل طرف يختبر عمل الآخر)</li>
+      <li><span class="tr OPS">OPS</span> الاستضافة والتشغيل الميداني — <b>عاصم</b> تقنياً · <b>أشرف</b> ميدانياً</li>
+      <li><span class="tr BIZ">BIZ</span> قرارات تجارية وقيم — <b>صاحب المشروع</b></li></ul></div>
+    <div class="box"><h3>أنواع البطاقات والترقيم</h3><ul>
+      <li><code>G-01</code> فجوة موثقة في الكود — لها حل مؤقت ونهائي</li>
+      <li><code>C-P1-02</code> عقد مشترك (API · حدث · إعداد)</li>
+      <li><code>P2-BE-05</code> بطاقة عمل: المرحلة · المسار · الرقم</li>
+      <li><code>R-P3-01</code> إعادة فتح: خلل في مرحلة مغلقة يُعالج في المرحلة الحالية</li>
+      <li><code>D-06</code> قرار معتمد (زر «القرارات» أعلاه)</li></ul></div>
+    <div class="box"><h3>دورة حياة البطاقة</h3><ul>
+      <li><span class="st todo">لم تبدأ</span> ← <span class="st ready">جاهزة</span> (عقدها وتبعياتها جاهزة)</li>
+      <li>← <span class="st doing">قيد التنفيذ</span> ← <span class="st review">بانتظار الدليل</span></li>
+      <li>← <span class="st done">مُغلقة بدليل</span> · أو <span class="st blocked">متعطلة</span> مع سبب ومالك الحل</li>
+      <li><b>قاعدة:</b> لا تتجاوز بطاقتان «قيد التنفيذ» لكل شخص في نفس الوقت</li></ul></div>
+    <div class="box"><h3>الإيقاع الأسبوعي (Asia/Gaza)</h3><ul>
+      <li><b>الأحد</b> — تخطيط 20 دقيقة: اختيار بطاقات الأسبوع من المرحلة المفتوحة</li>
+      <li><b>الثلاثاء</b> — مزامنة العقود 15 دقيقة: أي عقد تغيّر؟ أي بطاقة متعطلة؟</li>
+      <li><b>الخميس</b> — <b>يوم الدليل</b>: عرض ما أُنجز على Staging، إغلاق البطاقات، تحديث هذا الملف</li>
+      <li>يومياً — رسالة واحدة: أمس · اليوم · عائق</li></ul></div>
+   </div>
+   <h3 style="margin-top:18px">قواعد البوابات</h3>
+   <ul>
+     <li><b>الحاجز:</b> بطاقات المرحلة التالية لا تبدأ قبل إغلاق بوابة الخروج، باستثناء بطاقات <span class="tr UX">UX</span> و<span class="tr BIZ">BIZ</span> التمهيدية (تصميم وقرارات).</li>
+     <li><b>إعادة الفتح:</b> خلل في مرحلة مغلقة ← بطاقة <code>R-</code> في المرحلة الحالية. البوابة القديمة لا تُعاد إلا إذا كُسر أحد معايير خروجها.</li>
+     <li><b>المؤقت ليس نهائياً:</b> كل حل مؤقت له بطاقة نهائية مسجلة في مرحلة لاحقة — لا يُنسى.</li>
+     <li><b>الدليل:</b> اسم الاختبار الناجح، أو لقطة شاشة من Staging، أو رابط PR. يُكتب في حقل <code>evidence</code>.</li>
+   </ul>
+   <h3>كيف أحدّث هذا الملف</h3>
+   <ol>
+     <li>افتح الملف في المحرر وابحث عن <code>const PLAN</code> — كل المحتوى بيانات فقط.</li>
+     <li>غيّر <code>status</code> للبطاقة (<code>todo · ready · doing · review · done · blocked</code>) وأضف <code>evidence</code>.</li>
+     <li>عند إغلاق مرحلة: <code>gate: 'closed'</code> لها و<code>gate: 'open'</code> للتالية، وأضف سطراً في <code>log</code>.</li>
+     <li>Commit برسالة: <code>docs(playbook): P1-BE-02 → done</code>. الملف يعيش في Git بجانب الكود.</li>
+     <li>زر «📋 برومبت» على كل بطاقة BE/FE ينسخ برومبت جاهزاً لـ Codex / Claude / Cursor يتضمن السياق والقواعد وتعريف الإنجاز.</li>
+   </ol>
+  </div>
+ </div>
+</div>
+
+<!-- ═════════ OVERLAY: القواعد الثابتة ═════════ -->
+<div class="ov" id="ov-rules" role="dialog" aria-modal="true" aria-labelledby="r-t">
+ <div class="ov-box">
+  <div class="ov-hd"><h2 id="r-t">🛡️ القواعد الثابتة — تسري على كل المراحل</h2><button class="hbtn" onclick="closeOv(this)">إغلاق ✕</button></div>
+  <div class="ov-bd">
+   <div class="grid2">
+    <div class="box"><h3>الهوية والخصوصية</h3><ul>
+      <li>لا <code>store_id</code> ولا <code>commission_amount</code> ولا <code>sub_orders</code> ولا اسم/شعار/SKU متجر في أي استجابة للعميل — HTTP وWebSocket والأخطاء والفواتير.</li>
+      <li>المتجر لا يرى اسم العميل ولا هاتفه ولا عنوانه ولا العمولة.</li>
+      <li>السائق يرى بيانات المستلم بعد <code>shipped</code> فقط، ولا يرى كود التسليم أبداً.</li>
+      <li>الصور بأسماء <code>{uuid}.webp</code> بلا EXIF.</li></ul></div>
+    <div class="box"><h3>المخزون والطلب</h3><ul>
+      <li>الإضافة للسلة لا تحجز. الحجز <code>POST /cart/reserve</code> 15 د + تمديد واحد بسقف 30 د.</li>
+      <li>Heartbeat للقراءة فقط.</li>
+      <li><code>order.status</code> ≠ <code>payment_status</code>. بعد التحصيل/الدفع: <code>confirmed</code>.</li>
+      <li><code>POST /orders</code> يتطلب <code>Idempotency-Key</code>.</li>
+      <li>المعرّف في الروابط <code>order_number</code> لا الرقم.</li></ul></div>
+    <div class="box"><h3>المعمارية</h3><ul>
+      <li>React لواجهة العميل فقط. الإدارة والمتجر والسائق Filament v3 داخل الباك اند.</li>
+      <li>لا REST API للوحات. لا <code>/api/v1/store/*</code> ولا <code>/api/v1/delivery/*</code>.</li>
+      <li>العزل عبر <code>getEloquentQuery()</code> + Policies — لا إخفاء أزرار.</li>
+      <li>التخزين <code>sub_orders</code>؛ «Vendor Order» مفهوم فقط.</li>
+      <li>Bearer Token فقط للـ API · <code>127.0.0.1</code> لا <code>localhost</code>.</li></ul></div>
+    <div class="box"><h3>الجودة والتوثيق</h3><ul>
+      <li><code>Docs/openapi.yaml</code> مرجع العقد — لا يتغير إلا بعقد C-xx معتمد من أشرف.</li>
+      <li>لا تُعلن endpoint جاهزاً قبل Feature Test ناجح.</li>
+      <li>لا تُعلن رقم اختبارات لم يُشغَّل.</li>
+      <li>OTP <code>test_mode</code> محلياً فقط — ممنوع في الإنتاج.</li>
+      <li>لا كود يفترض استجابة مزود (Jawwal · SMS) قبل وثائقه الرسمية.</li></ul></div>
+   </div>
+   <h3 style="margin-top:16px">البيئة المرجعية</h3>
+   <div class="tw"><table class="t"><tbody>
+     <tr><td>Backend</td><td>PHP 8.2 · Laravel 12 (lock v12.69.2) · Filament v3.3 · Sanctum · Reverb · MySQL (إنتاج) / SQLite (اختبار)</td><td><code>C:\Users\HP\Desktop\GazabellaOnlineStore\backend</code></td></tr>
+     <tr><td>Frontend</td><td>React 19 · TS · Vite 8 · Tailwind 4 · Router 7 · TanStack Query 5 · Zustand · RHF + Zod · Axios · Echo 2</td><td><code>C:\Users\HP\Desktop\Gazabella-Front</code></td></tr>
+     <tr><td>المنافذ</td><td>API <code>127.0.0.1:8000/api/v1</code> · Vite <code>127.0.0.1:5173</code> · Reverb <code>127.0.0.1:8080</code></td><td>Filament: <code>/admin · /store · /delivery</code></td></tr>
+     <tr><td>الهوية</td><td>Venetian Rose <code>#9B2D52</code> · Antique Gold <code>#BF9545</code> · Tajawal · Cormorant Garamond · RTL كامل</td><td>Tokens: <code>src/index.css</code></td></tr>
+   </tbody></table></div>
+  </div>
+ </div>
+</div>
+
+<!-- ═════════ OVERLAY: القرارات ═════════ -->
+<div class="ov" id="ov-decisions" role="dialog" aria-modal="true" aria-labelledby="d-t">
+ <div class="ov-box">
+  <div class="ov-hd"><h2 id="d-t">📜 سجل القرارات المعتمدة</h2><button class="hbtn" onclick="closeOv(this)">إغلاق ✕</button></div>
+  <div class="ov-bd" id="ov-decisions-body"></div>
+ </div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLAN — مصدر الحقيقة الوحيد لهذا الملف.
+   لتحديث الحالة: غيّر status / evidence / gate / log ثم commit.
+   status: todo · ready · doing · review · done · blocked      gate: open · locked · closed
+   ═══════════════════════════════════════════════════════════════════════════ */
+const PLAN = {
+meta:{ version:'Playbook v1.0', updated:'27 سبتمبر 2026', owner:'أشرف الصليبي' },
+tracks:{
+  BE:{short:'BE',who:'عاصم'}, FE:{short:'FE',who:'أشرف'}, UX:{short:'UX',who:'أشرف'},
+  QA:{short:'QA',who:'مشترك'}, OPS:{short:'OPS',who:'عاصم + أشرف'}, BIZ:{short:'BIZ',who:'صاحب المشروع'}
+},
+statuses:{ todo:'لم تبدأ', ready:'جاهزة', doing:'قيد التنفيذ', review:'بانتظار الدليل', done:'مُغلقة بدليل', blocked:'متعطلة' },
+promptCtx:{
+FE:`أنت مطوّر Frontend أول تعمل على واجهة عميل Gazabella (سوق تجميعي لمستحضرات التجميل في خانيونس).
+المسار: C:\\Users\\HP\\Desktop\\Gazabella-Front — React 19 + TypeScript + Vite 8 + Tailwind CSS 4 + React Router 7 + TanStack Query 5 + Zustand + React Hook Form + Zod + Axios (instance مركزية في src/lib/apiClient.ts) + Laravel Echo 2.
+عقد MVP0 في src/api/mvp0.ts ويُفعّل بـ VITE_API_CONTRACT=mvp0. المرجع الملزم للعقد: Docs/openapi.yaml ثم Docs/GAZABELLA_PLAYBOOK.html.
+حافظ على التصميم الحالي (Venetian Rose #9B2D52 · Antique Gold #BF9545 · Tajawal · RTL) وعلى كل الميزات الموجودة. نفّذ التغيير بأقل مساحة ممكنة.`,
+BE:`أنت مهندس Backend أول تعمل على Gazabella.
+المسار: C:\\Users\\HP\\Desktop\\GazabellaOnlineStore\\backend — PHP 8.2 + Laravel 12 (lock v12.69.2) + Filament v3.3 + Sanctum (Bearer فقط) + Reverb + MySQL (إنتاج) / SQLite (اختبار) + PHPUnit.
+اسم جدول حصص الموردين sub_orders (لا vendor_orders). حالة الطلب order.status منفصلة عن payment_status. لوحات الإدارة والمتجر والسائق Filament داخل الباك اند.
+قدّم الحل متكاملاً: Migration + Model + Service + Controller/Route أو Filament Resource + Feature Test.`,
+rules:`### قواعد لا تُخرق
+- لا store_id ولا commission_amount ولا sub_orders ولا أي أثر لهوية المتجر في أي استجابة أو حدث للعميل.
+- لا تغيّر Docs/openapi.yaml إلا ضمن عقد معتمد.
+- لا تحذف ميزة قائمة. لا تعلن نجاح اختبار لم تشغّله — أرفق مخرجات التشغيل.
+- استخدم 127.0.0.1 لا localhost.`
+},
+decisions:[
+ ['D-01','الإطلاق بالدفع عند الاستلام COD فقط. Jawwal Pay Sandbox محلي ومعطّل إنتاجياً حتى اعتماد المزود.','P1 · P4'],
+ ['D-02','عهدة نقدية للسائق + توريد يومي ومطابقة. الضمان يُحرَّر بعد 48 ساعة بلا نزاع <b>و</b> توريد النقد.','P3'],
+ ['D-03','Micro-Hub هجين: نقطة تجميع واحدة + موجتان يومياً (11:00 · 16:00). طلب المتجر الواحد مباشر.','P2'],
+ ['D-04','مهلة قبول المتجر 30 د: تذكير 15 · تصعيد للإدارة 30 · لا إلغاء آلي.','P2'],
+ ['D-05','تعذّر بند: استبدال مورد أو إزالة البند بموافقة العميل وإعادة حساب COD — شحنة واحدة.','P2'],
+ ['D-06','عمولة لكل متجر (commission_rate إلزامي بلا default) تُنسخ في sub_orders. تكافؤ سعري. تفاوض 10–15% · المؤسسون 5% لـ 3 أشهر.','P1 · P3'],
+ ['D-07','رسوم التوصيل يدفعها العميل وتُحصَّل مع COD — إيراد Gazabella.','P3'],
+ ['D-08','كوبونات MVP1 على Gazabella؛ snapshot <code>discount_funded_by</code>.','P3'],
+ ['D-09','مرتجعات مستحضرات التجميل: لا إرجاع لمفتوح/مستخدم؛ تالف/خاطئ/قريب الانتهاء فقط؛ المختوم استبدال فقط.','P2 · P3'],
+ ['D-10','احتياطي تلف داخلي 1% من إيراد العمولة — لا رسوم على العميل.','P3'],
+ ['D-11','منتج واحد لكل SKU؛ المكرر يُرفض <code>duplicate</code> ويُسجَّل مورداً بديلاً.','P2'],
+ ['D-12','صور <code>{uuid}.webp</code> بلا EXIF؛ الإدارة تعتمد أو تستبدل.','P2'],
+ ['D-13','كود تسليم 4 أرقام عند confirmed · hash فقط · تأكيد يدوي من الإدارة عند الانقطاع · 5 محاولات = قفل.','P2'],
+ ['D-14','إشعار المتاجر: Filament Notifications + زر واتساب <code>wa.me</code> من الإدارة.','P2'],
+ ['D-15','Asia/Gaza · تنفيذ 10:00–20:00 · التسوية الأحد 12:00.','P3'],
+ ['D-16','الحجز 15 د + تمديد واحد بسقف 30 د؛ السلة لا تحجز.','ثابت'],
+ ['D-17','Jawwal Pay · SMS · FCM مؤجلة لاعتماد المزودين.','P4'],
+ ['D-18','خانيونس فقط حتى MVP3؛ التسمية <code>sub_orders</code>.','ثابت'],
+ ['D-19','<b>جديد:</b> نافذة دفع Jawwal النهائية 15 د من إنشاء الطلب؛ الحجز يتحول إلى <code>held_for_payment</code> ولا يُخصم المخزون إلا عند الدفع.','P4'],
+ ['D-20','<b>جديد — مؤقت:</b> Pilot بلا مزود SMS: <code>OTP_DELIVERY=manual</code> لأرقام قائمة Pilot فقط؛ الإدارة ترسل الرمز يدوياً عبر واتساب ويُسجَّل كل إرسال.','P3'],
+ ['D-21','<b>جديد:</b> العميل يرى 4 حالات فقط: تم التأكيد · قيد التجهيز · خرج للتوصيل · تم التسليم (+ ملغي/مسترد). <code>pending</code> يُعرض «بانتظار التأكيد».','P1 · P2']
+],
+phases:[
+/* ═══════════════════════════ PHASE 1 ═══════════════════════════ */
+{
+id:'P1', mvp:'MVP0 → Staging', title:'التثبيت والإغلاق التشغيلي', weeks:'أسبوعان', gate:'open',
+goal:`إغلاق الفجوات الأربع G-01…G-04 في الباك اند والواجهة، وإخراج ما نجح محلياً إلى <b>Git + Staging على MySQL + Cron + CI</b>، حتى يصبح طلب COD حقيقي يصل إلى <code>confirmed</code> ويظهر للعميل. لا ميزات جديدة في هذه المرحلة.`,
+meta:['👥 عاصم + أشرف','🎯 طلب COD على Staging ← confirmed','🔓 مفتوحة الآن','📍 خانيونس'],
+gateIn:[['MVP0 مُغلق محلياً: Backend 61 ✓ · Frontend 33 ✓ · 6 سيناريوهات تزامن',true],['حزمة <code>backend-mvp0-changes-2026-09-27.zip</code> + manifest متوفرة',true],['سجل القرارات D-01…D-21 معتمد',true]],
+gateOut:[
+ ['G-01…G-04 مُغلقة بدليل (اختبار + لقطة Staging)',false],
+ ['Staging API (MySQL) + Staging Front يعملان · <code>schedule:list</code> غير فارغ · Queue يعمل',false],
+ ['CI أخضر على كل PR: <code>php artisan test</code> + <code>npm test</code> + <code>npm run build:mvp0</code>',false],
+ ['<code>openapi.yaml</code> يطابق العقود C-P1-01…04',false],
+ ['السيناريو P1-S1 ينجح على Staging دون أي تدخل في قاعدة البيانات',false],
+ ['الواجهة لا ترسل <code>jawwal_pay</code> في أي بيئة غير local',false]],
+handoff:['روابط Staging (API · Front · <code>/admin</code>)','فرع <code>main</code> محمي في المستودعين + قالب PR','<code>OrderConfirmationService</code> وحدث <code>OrderConfirmed</code> جاهزان لتعليق مستمعي P2','<code>stores.commission_rate</code> مفروض','قيم BIZ موقعة (للاستخدام في P2)'],
+gateNote:'بطاقات <span class="tr UX">UX</span> و<span class="tr BIZ">BIZ</span> الخاصة بـ P2 (مواصفات اللوحات، أسباب الرفض، توقيع الاتفاقيات) مسموح بها تمهيدياً خلال P1.',
+analysis:`<p>مراجعة الكود في 27/09 كشفت أن الفجوات ليست في الباك اند وحده. الواجهة تحتاج تعديلات صغيرة لكنها حاسمة:</p>
+<div class="tw"><table class="t"><thead><tr><th>الموضع</th><th>الواقع الحالي</th><th>الأثر</th><th>الفجوة</th></tr></thead><tbody>
+<tr><td><code>OrderService::createOrder</code></td><td>كل الطلبات تُنشأ <code>pending</code>؛ <code>confirmed</code> تُكتب فقط من <code>PaymentService</code></td><td>طلبات COD لن تصل للمتاجر</td><td>G-01</td></tr>
+<tr><td><code>src/pages/Mvp0CheckoutPage.tsx:90</code></td><td><code>payment_method: 'jawwal_pay'</code> ثابت، وواجهة الدفع تعرض جوال باي فقط</td><td>بعد تعطيل Jawwal إنتاجياً سيفشل كل طلب بـ 422 — ويخالف D-01</td><td>G-02</td></tr>
+<tr><td><code>OrderService</code> (jawwal)</td><td>خصم المخزون عند الإنشاء والطلب <code>pending</code></td><td>مخزون مصفّر لطلبات قد لا تُدفع</td><td>G-02</td></tr>
+<tr><td><code>OrderStatusChanged</code></td><td>قناة <code>orders.{userId}</code></td><td>الواجهة تستمع لـ <code>App.Models.User.{id}</code> + <code>.order.status.updated</code></td><td>G-03</td></tr>
+<tr><td><code>src/lib/echo.ts</code></td><td>لا <code>authorizer</code> ولا Bearer للقنوات الخاصة</td><td>اشتراك القناة الخاصة سيُرفض 401 حتى لو صُحّح الباك اند</td><td>G-03</td></tr>
+<tr><td><code>src/hooks/useRealtimeEvents.ts</code></td><td>يحدّث <code>['orders']</code> فقط</td><td>صفحة تفاصيل الطلب لا تتحدث لحظياً</td><td>G-03</td></tr>
+<tr><td>Git</td><td>الباك اند خارج Git (حزمة zip)، والواجهة فيها 20 ملفاً معدلاً غير ملتزم على <code>main</code></td><td>لا ضمان أن المختبَر هو المنشور</td><td>G-04</td></tr>
+<tr><td>الاستضافة</td><td>لا Staging ولا Cron ولا Queue worker</td><td>الحجوزات لا تُحرَّر، والإشعارات لا تُرسل</td><td>G-04</td></tr>
+</tbody></table></div>
+<div class="note"><b>مبدأ المرحلة:</b> كل فجوة تُغلق بحل مؤقت آمن خلال أيام، والحل النهائي إما يُنفَّذ هنا (G-01 · G-04) أو يُسجَّل كبطاقة في المرحلة التي يلزم فيها (G-02 النهائي في P4 · G-03 النهائي في P3).</div>`,
+gaps:[
+{ id:'G-01', title:'طلب COD يبقى <code>pending</code> بعد إنشائه', prio:'P0', refs:['D-01','D-21'],
+  why:'<code>OrderService::createOrder</code> ينشئ الطلب <code>pending</code> ويخصم المخزون من الحجز، لكن لا شيء يحوّل طلب COD إلى <code>confirmed</code>. لوحة المتجر (P2) تعرض الحصص عند <code>confirmed</code> فقط ← الطلب لن يصل للمتاجر أبداً.',
+  be:{ temp:'<ul><li>داخل <code>createOrder</code> بعد commit: إذا <code>cod</code> ← <code>updateStatus(confirmed)</code>.</li><li>أمر لمرة واحدة <code>gazabella:confirm-pending-cod</code> للطلبات القائمة (مع <code>--dry-run</code>).</li><li><code>payment_status</code> يبقى <code>unpaid</code> حتى تسجيل التحصيل (P3).</li></ul>',
+       final:'<ul><li><code>OrderConfirmationService::confirm()</code> نقطة دخول وحيدة، idempotent تحت قفل، يستخدمها مسار COD والـ Webhook معاً.</li><li>يطلق حدث <code>OrderConfirmed</code> — في P2 تُعلَّق عليه: توليد كود التسليم، فتح نافذة قبول المتاجر، الإشعارات.</li></ul>' },
+  fe:{ temp:'<ul><li>لا تغيير وظيفي — الواجهة تعرض حالة الخادم.</li><li>تعديل النصوص: <code>pending</code> ← «بانتظار التأكيد» بدل «استلام الطلب» في <code>OrderDetailPage</code> و<code>OrdersPage</code>.</li></ul>',
+       final:'<ul><li>رسالة نجاح COD في <code>?created=1</code>: «تم تأكيد طلبك · الدفع نقداً عند الاستلام».</li><li>توحيد التسميات في <code>src/lib/orderStatus.ts</code> واحد يُستورد في الصفحتين (D-21).</li></ul>' },
+  tests:'<code>test_cod_order_is_confirmed_after_creation</code> · <code>test_confirm_is_idempotent</code> · <code>test_webhook_uses_confirmation_service</code> · الأمر بـ <code>--dry-run</code> لا يغيّر شيئاً.',
+  code:[
+{lang:'php',title:'app/Services/OrderConfirmationService.php (جديد)',src:`<?php
+
+namespace App\\Services;
+
+use App\\Events\\OrderConfirmed;
+use App\\Models\\Order;
+use Illuminate\\Support\\Facades\\DB;
+
+class OrderConfirmationService
+{
+    public function __construct(private OrderService $orders) {}
+
+    /** نقطة الدخول الوحيدة لتحويل الطلب إلى confirmed — آمنة للتكرار */
+    public function confirm(Order $order, string $note): Order
+    {
+        return DB::transaction(function () use ($order, $note) {
+            $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->status !== 'pending') {
+                return $locked; // مؤكد سابقاً أو ملغى — لا شيء
+            }
+
+            $this->orders->updateStatus($locked, 'confirmed', $note);
+
+            DB::afterCommit(fn () => event(new OrderConfirmed($locked->fresh())));
+
+            return $locked;
+        });
+    }
+}`},
+{lang:'php',title:'app/Events/OrderConfirmed.php (جديد — بلا بث)',src:`<?php
+
+namespace App\\Events;
+
+use App\\Models\\Order;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+use Illuminate\\Queue\\SerializesModels;
+
+class OrderConfirmed
+{
+    use Dispatchable, SerializesModels;
+
+    public function __construct(public Order $order) {}
+}
+// P2 تعلّق عليه: GenerateDeliveryCode · OpenStoreAcceptanceWindow · NotifyStoresOfNewSubOrders`},
+{lang:'php',title:'app/Services/OrderService.php — داخل createOrder بعد إنشاء الطلب والحصص',src:`// بعد خصم الحجز وإنشاء order_tracking(pending) — وقبل return
+if ($order->payment_method === 'cod') {
+    DB::afterCommit(fn () => app(OrderConfirmationService::class)
+        ->confirm($order, 'تأكيد طلب الدفع عند الاستلام — الهاتف موثّق بـ OTP'));
+}`},
+{lang:'php',title:'app/Services/PaymentService.php — استبدال السطر 66',src:`// قبل:
+// app(OrderService::class)->updateStatus($order, 'confirmed', 'تم تأكيد الدفع');
+// بعد:
+app(OrderConfirmationService::class)->confirm($order, 'تم تأكيد الدفع');`},
+{lang:'php',title:'routes/console.php — أمر ترحيل لمرة واحدة',src:`use App\\Models\\Order;
+use App\\Services\\OrderConfirmationService;
+
+Artisan::command('gazabella:confirm-pending-cod {--dry-run}', function () {
+    $q = Order::where('payment_method', 'cod')->where('status', 'pending');
+    $this->info('طلبات COD المعلقة: '.$q->count());
+    if ($this->option('dry-run')) return;
+    $q->each(fn (Order $o) => app(OrderConfirmationService::class)
+        ->confirm($o, 'ترحيل: تأكيد طلب COD قائم'));
+    $this->info('تم.');
+})->purpose('تأكيد طلبات COD التي أُنشئت قبل إصلاح G-01');`},
+{lang:'php',title:'tests/Feature/CodConfirmationTest.php',src:`public function test_cod_order_is_confirmed_after_creation(): void
+{
+    Event::fake([OrderConfirmed::class]);
+    $order = $this->placeCodOrder();          // helper موجود في OrderFlowTest: login + reserve + quote + POST /orders
+
+    $this->assertSame('confirmed', $order->fresh()->status);
+    $this->assertSame('unpaid', $order->fresh()->payment_status);   // التحصيل في P3
+    $this->assertDatabaseHas('order_tracking', ['order_id' => $order->id, 'status' => 'confirmed']);
+    Event::assertDispatched(OrderConfirmed::class, 1);
+}
+
+public function test_confirm_is_idempotent(): void
+{
+    $order = $this->placeCodOrder();
+    app(OrderConfirmationService::class)->confirm($order, 'x');
+    $this->assertSame(1, $order->tracking()->where('status', 'confirmed')->count());
+}`},
+{lang:'ts',title:'src/lib/orderStatus.ts (جديد) — تسميات موحدة D-21',src:`export const ORDER_STATUS_LABEL: Record<string, string> = {
+  pending: 'بانتظار التأكيد',
+  confirmed: 'تم التأكيد',
+  processing: 'قيد التجهيز',
+  shipped: 'خرج للتوصيل',
+  delivered: 'تم التسليم',
+  cancelled: 'ملغي',
+  refunded: 'مسترد',
+}
+export const orderStatusLabel = (s?: string) => ORDER_STATUS_LABEL[s ?? ''] ?? 'قيد المعالجة'
+// OrderDetailPage.tsx و OrdersPage.tsx: احذف الكائن المحلي labels واستورد orderStatusLabel`}
+  ]},
+{ id:'G-02', title:'Jawwal Pay يخصم المخزون قبل الدفع — والواجهة مثبتة عليه', prio:'P0', refs:['D-01','D-17','D-19'],
+  why:'طلب <code>jawwal_pay</code> يخصم المخزون عند الإنشاء وهو <code>pending</code>. وفي الواجهة <code>Mvp0CheckoutPage</code> يرسل <code>jawwal_pay</code> ثابتاً ويعرض جوال باي كخيار وحيد — مخالف لـ D-01، وسيكسر كل الطلبات بمجرد تعطيل Jawwal في الإنتاج.',
+  be:{ temp:'<ul><li><code>payments.enabled_methods</code> في الإعداد: <code>[cod]</code> خارج local/testing.</li><li><code>Rule::in</code> على <code>payment_method</code> ← 422 <code>PAYMENT_METHOD_DISABLED</code>.</li><li><code>checkout/begin</code> يعيد <code>payment_methods</code>.</li><li><code>payments/init</code> يرفض 409 إذا Jawwal معطّل.</li></ul>',
+       final:'<ul><li>D-19: طلب Jawwal لا يخصم المخزون؛ الحجز يصبح <code>held_for_payment</code> حتى <code>orders.payment_expires_at</code> (15 د).</li><li>Webhook ناجح ← <code>confirm()</code> + خصم ذري للحجز.</li><li>Job <code>ExpireUnpaidOrders</code> كل دقيقة: تحرير الحجز + <code>cancelled</code> + <code>payment_status=failed</code>.</li><li>ينفذ في P4 بعد وثائق جوال بي.</li></ul>' },
+  fe:{ temp:'<ul><li>مكوّن <code>PaymentMethodPicker</code> يُبنى من <code>begin.payment_methods</code>.</li><li>إن غاب الحقل (باك اند أقدم) ← افتراضي <code>[cod]</code>.</li><li>إزالة <code>jawwal_pay</code> الثابت من السطر 90 واستبداله بالحالة المختارة.</li><li>شارة «تجريبي» لجوال باي عند <code>is_sandbox</code>.</li></ul>',
+       final:'<ul><li>عند تفعيل Jawwal (P4): شاشة «بانتظار الدفع» بعداد <code>payment_expires_at</code> + <code>JawwalReferenceForm</code> الموجود + حالة الفشل وإعادة المحاولة.</li><li>تحذف الواجهة أي افتراض لطريقة دفع — الخادم مصدر القائمة دائماً.</li></ul>' },
+  tests:'production: <code>payment_method=jawwal_pay</code> ← 422 · <code>checkout/begin</code> يعيد <code>[cod]</code> فقط · الواجهة: اختبار وحدة لـ <code>PaymentMethodPicker</code> (غياب الحقل ← COD) · <code>npm run test:mvp0</code> ينشئ طلب COD.',
+  code:[
+{lang:'php',title:'config/gazabella.php',src:`'payments' => [
+    // D-01: COD فقط خارج البيئات المحلية حتى اعتماد Jawwal Pay
+    'enabled_methods' => in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)
+        ? ['cod', 'jawwal_pay']
+        : ['cod'],
+],`},
+{lang:'php',title:'OrderController — التحقق + checkoutBegin',src:`// store(): قاعدة التحقق
+'payment_method' => ['required', Rule::in(config('gazabella.payments.enabled_methods'))],
+
+// checkoutBegin(): أضف للاستجابة
+'payment_methods' => collect(config('gazabella.payments.enabled_methods'))
+    ->map(fn (string $m) => [
+        'code'       => $m,
+        'label'      => $m === 'cod' ? 'الدفع نقداً عند الاستلام' : 'جوال باي',
+        'is_sandbox' => $m === 'jawwal_pay' && (bool) config('services.jawwal_pay.sandbox'),
+    ])->values(),`},
+{lang:'php',title:'PaymentController::init — حارس',src:`if (! in_array('jawwal_pay', config('gazabella.payments.enabled_methods'), true)) {
+    return $this->error('PAYMENT_METHOD_DISABLED', 'الدفع الإلكتروني غير متاح حالياً', 409);
+}`},
+{lang:'ts',title:'src/types/api.ts',src:`export type PaymentMethodCode = 'cod' | 'jawwal_pay'
+export interface PaymentMethodOption { code: PaymentMethodCode; label: string; is_sandbox?: boolean }
+
+export interface CheckoutBegin {
+  // ... الحقول الحالية
+  payment_methods?: PaymentMethodOption[]   // اختياري للتوافق مع باك اند أقدم
+}
+export const DEFAULT_PAYMENT_METHODS: PaymentMethodOption[] = [{ code: 'cod', label: 'الدفع نقداً عند الاستلام' }]`},
+{lang:'tsx',title:'src/components/checkout/PaymentMethodPicker.tsx (جديد)',src:`import type { PaymentMethodCode, PaymentMethodOption } from '../../types/api'
+
+type Props = { options: PaymentMethodOption[]; value: PaymentMethodCode; onChange: (v: PaymentMethodCode) => void }
+
+export function PaymentMethodPicker({ options, value, onChange }: Props) {
+  return (
+    <fieldset className="payment-picker" aria-describedby="payment-note">
+      <legend className="sr-only">طريقة الدفع</legend>
+      {options.map(o => (
+        <label key={o.code} className={'payment-picker__option' + (value === o.code ? ' is-selected' : '')}>
+          <input type="radio" name="payment_method" value={o.code} checked={value === o.code} onChange={() => onChange(o.code)} />
+          {o.code === 'jawwal_pay'
+            ? <img src="/payments/jawwal-pay.png" alt="" width="96" height="48" />
+            : <span className="payment-picker__icon" aria-hidden="true">💵</span>}
+          <span className="payment-picker__copy">
+            <strong>{o.label}</strong>
+            <span>{o.code === 'cod' ? 'ادفعي نقداً للمندوب بعد فحص طلبك' : 'ادفعي من محفظتك الإلكترونية'}</span>
+          </span>
+          {o.is_sandbox && <span className="payment-picker__badge">تجريبي</span>}
+        </label>
+      ))}
+      <p id="payment-note" className="payment-picker__note">
+        {value === 'cod' ? 'ستحصلين على كود تسليم من 4 أرقام — أعطيه للمندوب فقط بعد استلام طلبك.' : 'لا تُدخلي رمز المحفظة أو رمز التحقق هنا أبداً.'}
+      </p>
+    </fieldset>
+  )
+}`},
+{lang:'tsx',title:'src/pages/Mvp0CheckoutPage.tsx — التعديلات',src:`import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
+import { DEFAULT_PAYMENT_METHODS, type PaymentMethodCode } from '../types/api'
+
+// داخل المكوّن:
+const paymentOptions = begin?.payment_methods?.length ? begin.payment_methods : DEFAULT_PAYMENT_METHODS
+const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
+useEffect(() => {
+  if (!paymentOptions.some(o => o.code === paymentMethod)) setPaymentMethod(paymentOptions[0].code)
+}, [paymentOptions, paymentMethod])
+
+// في confirm(): السطر 90
+payment_method: paymentMethod,          // بدل 'jawwal_pay'
+
+// في JSX: استبدل <section className="jawwal-payment">…</section> (الأسطر 321–335) بـ:
+<PaymentMethodPicker options={paymentOptions} value={paymentMethod} onChange={v => { setPaymentMethod(v); invalidate() }} />`}
+  ]},
+{ id:'G-03', title:'قناة واسم حدث Reverb غير متطابقين — والواجهة بلا مصادقة للقنوات الخاصة', prio:'P1', refs:['D-21'],
+  why:'الباك اند يبث <code>OrderStatusChanged</code> على <code>orders.{userId}</code>، والواجهة تستمع لـ <code>private-App.Models.User.{id}</code> + <code>.order.status.updated</code>. وحتى بعد التوحيد، <code>echo.ts</code> لا يرسل Bearer لـ <code>/broadcasting/auth</code> فيُرفض الاشتراك. الواجهة تعمل حالياً بـ polling كل 30 ثانية.',
+  be:{ temp:'<ul><li>توحيد الحدث: <code>PrivateChannel("App.Models.User.{id}")</code> + <code>broadcastAs(order.status.updated)</code>.</li><li><code>ReservationExpired</code> ← <code>cart.reservation.updated</code> على القناة نفسها.</li><li>حمولة مختصرة بلا أي حقل متجر.</li><li>البث يبقى <code>BROADCAST_CONNECTION=log</code> على Staging المشترك.</li></ul>',
+       final:'<ul><li><code>withBroadcasting</code> بـ <code>auth:sanctum</code> + CORS لمسار <code>broadcasting/auth</code>.</li><li>Reverb يعمل تحت Supervisor على VPS (P3) خلف TLS.</li><li>اختبار يؤكد القناة والاسم وخلو الحمولة من <code>store_id</code>.</li></ul>' },
+  fe:{ temp:'<ul><li>لا تغيير سلوكي: polling 30 ث قائم، و<code>getEcho()</code> يبقى no-op ما دام <code>VITE_PUSHER_APP_KEY</code> غير مضبوط.</li><li>إضافة <code>authorizer</code> بـ Bearer جاهزة خلف المتغير.</li></ul>',
+       final:'<ul><li>عند تفعيل المتغيرات (P3): الاستماع يحدّث <code>[order, order_number]</code> و<code>[orders]</code> معاً.</li><li>قطع الاتصال عند تغيير التوكن، وإعادة الاشتراك بعد الدخول.</li><li>يبقى polling احتياطياً بـ 60 ث عند اتصال WebSocket سليم.</li></ul>' },
+  tests:'<code>Event::fake</code> + <code>assertDispatched</code> مع فحص <code>broadcastOn()</code> و<code>broadcastAs()</code> و<code>broadcastWith()</code> · <code>POST /broadcasting/auth</code> بتوكن مستخدم آخر ← 403 · يدوياً على P3: تغيير حالة من <code>/admin</code> يظهر في الواجهة &lt; 3 ث.',
+  code:[
+{lang:'php',title:'app/Events/OrderStatusChanged.php',src:`class OrderStatusChanged implements ShouldBroadcast
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public function __construct(public Order $order) {}
+
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('App.Models.User.'.$this->order->user_id)];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'order.status.updated';
+    }
+
+    public function broadcastWith(): array
+    {
+        // ممنوع: store_id · sub_orders · commission · أي بيانات متجر
+        return [
+            'order_number' => $this->order->order_number,
+            'status'       => $this->order->status,
+            'status_label' => __('orders.status.'.$this->order->status),
+            'updated_at'   => now()->toIso8601String(),
+        ];
+    }
+}`},
+{lang:'php',title:'bootstrap/app.php + routes/channels.php + config/cors.php',src:`// bootstrap/app.php
+->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['auth:sanctum']])
+
+// routes/channels.php
+Broadcast::channel('App.Models.User.{id}', fn ($user, $id) => (int) $user->id === (int) $id);
+
+// config/cors.php
+'paths' => ['api/*', 'broadcasting/auth'],`},
+{lang:'ts',title:'src/lib/echo.ts — authorizer بـ Bearer',src:`import axios from 'axios'
+import { useAuthStore } from '../stores/authStore'   // عدّل المسار حسب المشروع
+
+const apiOrigin = new URL(import.meta.env.VITE_API_BASE_URL as string).origin
+
+// داخل new Echo({...}) أضف:
+authorizer: (channel: { name: string }) => ({
+  authorize: (socketId: string, callback: (err: Error | null, data: unknown) => void) => {
+    const token = useAuthStore.getState().token
+    axios.post(apiOrigin + '/broadcasting/auth',
+      { socket_id: socketId, channel_name: channel.name },
+      { headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' } })
+      .then(r => callback(null, r.data))
+      .catch(e => callback(e as Error, null))
+  },
+}),`},
+{lang:'ts',title:'src/hooks/useRealtimeEvents.ts — تحديث التفاصيل أيضاً',src:`type OrderEvent = { order_number?: string; status?: string }
+
+ch.listen('.order.status.updated', (e: OrderEvent) => {
+  void queryClient.invalidateQueries({ queryKey: ['orders'] })
+  if (e?.order_number) void queryClient.invalidateQueries({ queryKey: ['order', e.order_number] })
+})`},
+{lang:'env',title:'.env — Staging مشترك (مؤقت) ثم VPS (نهائي)',src:`# Staging مشترك — بلا WebSocket
+BROADCAST_CONNECTION=log
+
+# VPS — P3
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=gazabella
+REVERB_APP_KEY=********
+REVERB_APP_SECRET=********
+REVERB_HOST=ws.staging.gazabella.ps
+REVERB_PORT=443
+REVERB_SCHEME=https
+
+# الواجهة (Vercel) — P3 فقط
+VITE_PUSHER_APP_KEY=********
+VITE_PUSHER_HOST=ws.staging.gazabella.ps
+VITE_PUSHER_PORT=443
+VITE_PUSHER_SCHEME=https`}
+  ]},
+{ id:'G-04', title:'لا Staging ولا Cron، والكود خارج Git', prio:'P0 تشغيلي', refs:['G-04'],
+  why:'الباك اند المعدل موجود كحزمة zip خارج Git، والواجهة فيها 20 ملفاً معدلاً غير ملتزم على <code>main</code>. لا بيئة Staging ولا Cron ولا Queue worker — أي ما اختُبر محلياً غير مضمون في النشر، والحجوزات المنتهية لن تُحرَّر.',
+  be:{ temp:'<ul><li>فرع <code>mvp0-closure</code> في مستودع الباك اند المرجعي + فك الحزمة + مطابقة SHA256 مع الـ manifest.</li><li>Staging على استضافة مشتركة (cPanel): Cron كل دقيقة لـ <code>schedule:run</code> و<code>queue:work --stop-when-empty</code>.</li><li><code>QUEUE_CONNECTION=database</code> · <code>BROADCAST_CONNECTION=log</code>.</li><li>نسخة احتياطية قبل كل <code>migrate</code>.</li></ul>',
+       final:'<ul><li>VPS (Ubuntu + Nginx + PHP-FPM 8.2 + MySQL 8 + Redis) مع Supervisor لـ <code>queue:work</code> و<code>reverb:start</code>.</li><li>GitHub Actions: اختبارات على MySQL لكل PR + نشر آلي لـ Staging عند الدمج.</li><li>حماية <code>main</code>: لا دمج دون CI أخضر ومراجعة الطرف الآخر.</li></ul>' },
+  fe:{ temp:'<ul><li>فرع <code>chore/mvp0-closure</code> يلتزم فيه التعديلات الحالية كما هي، ثم PR.</li><li>Vercel Preview لـ Staging بـ <code>.env.staging</code> يشير لـ API الـ Staging.</li><li>شريط «بيئة تجريبية» أعلى الواجهة عند <code>VITE_ENV_LABEL</code>.</li></ul>',
+       final:'<ul><li>CI للواجهة: <code>npm ci && npm run lint && npm test && npm run build:mvp0</code>.</li><li>نشر Production على Vercel من <code>main</code> فقط بعد بوابة P3.</li></ul>' },
+  tests:'<code>schedule:list</code> على Staging يعرض <code>clean-expired-reservations</code> · حجز يُترك 16 د ← <code>reserved_quantity</code> يعود · CI يفشل عمداً على اختبار مكسور ثم ينجح · تطابق manifest 100%.',
+  code:[
+{lang:'powershell',title:'الباك اند — إدخال الحزمة إلى Git ومطابقة البصمات',src:`cd C:\\Users\\HP\\Desktop\\GazabellaOnlineStore\\backend
+git checkout -b mvp0-closure
+Expand-Archive ..\\..\\Gazabella-Front\\Docs\\backend-mvp0-changes-2026-09-27.zip -DestinationPath . -Force
+
+$m = Get-Content ..\\..\\Gazabella-Front\\Docs\\backend-mvp0-manifest-2026-09-27.json -Raw | ConvertFrom-Json
+$bad = 0
+foreach ($f in $m) {
+  if ($f.status -eq 'deleted') { continue }
+  $h = (Get-FileHash $f.path -Algorithm SHA256).Hash
+  if ($h -ne $f.sha256) { Write-Host "MISMATCH  $($f.path)" -ForegroundColor Red; $bad++ }
+}
+if ($bad -eq 0) { Write-Host "manifest OK" -ForegroundColor Green }
+
+php artisan test --compact
+git add -A
+git commit -m "chore(mvp0): import local closure package 2026-09-27 (manifest verified)"
+git push -u origin mvp0-closure`},
+{lang:'powershell',title:'الواجهة — التزام التعديلات الحالية',src:`cd C:\\Users\\HP\\Desktop\\Gazabella-Front
+git checkout -b chore/mvp0-closure
+npm run lint; npm test; npm run build:mvp0
+git add -A
+git commit -m "chore(mvp0): commit local closure changes + discounts (2026-09-27)"
+git push -u origin chore/mvp0-closure`},
+{lang:'cron',title:'Staging مشترك (cPanel) — مؤقت',src:`* * * * * cd /home/USER/staging-api && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /home/USER/staging-api && php artisan queue:work --stop-when-empty --max-time=55 >> /dev/null 2>&1`},
+{lang:'ini',title:'VPS — /etc/supervisor/conf.d/gazabella.conf (نهائي)',src:`[program:gazabella-queue]
+command=php /var/www/gazabella/artisan queue:work redis --sleep=1 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+user=www-data
+numprocs=2
+process_name=%(program_name)s_%(process_num)02d
+stdout_logfile=/var/log/gazabella/queue.log
+
+[program:gazabella-reverb]
+command=php /var/www/gazabella/artisan reverb:start --host=127.0.0.1 --port=8080
+autostart=true
+autorestart=true
+user=www-data
+stdout_logfile=/var/log/gazabella/reverb.log`},
+{lang:'yaml',title:'.github/workflows/backend.yml',src:`name: backend
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env: { MYSQL_DATABASE: gazabella_test, MYSQL_ROOT_PASSWORD: root }
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.2', extensions: 'pdo_mysql, redis' }
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test --compact
+        env: { DB_CONNECTION: mysql, DB_HOST: 127.0.0.1, DB_DATABASE: gazabella_test, DB_USERNAME: root, DB_PASSWORD: root, CACHE_STORE: array, QUEUE_CONNECTION: sync, BROADCAST_CONNECTION: log }`},
+{lang:'yaml',title:'.github/workflows/frontend.yml',src:`name: frontend
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build:mvp0`}
+  ]}
+],
+contracts:[
+ {id:'C-P1-01',title:'<code>POST /orders/checkout/begin</code> يعيد <code>payment_methods</code>',status:'ready',
+  body:'حقل جديد اختياري للتوافق. المصدر الوحيد لخيارات الدفع في الواجهة. في الإنتاج يحتوي <code>cod</code> فقط.',
+  code:[{lang:'json',src:`{
+  "expires_at": "2026-10-01T10:45:00+03:00",
+  "seconds_remaining": 812,
+  "delivery_options": [ { "id": 1, "name": "داخل خانيونس", "fee": 5 } ],
+  "active_cities": ["خانيونس"],
+  "payment_methods": [ { "code": "cod", "label": "الدفع نقداً عند الاستلام", "is_sandbox": false } ]
+}`}]},
+ {id:'C-P1-02',title:'<code>POST /orders</code> بـ COD يعيد طلباً مؤكداً',status:'ready',
+  body:'بعد G-01: <code>status=confirmed</code> و<code>payment_status=pending</code> (الواجهة تحوّل <code>unpaid</code> إلى <code>pending</code>). <code>payment_method</code> خارج القائمة ← <code>422 PAYMENT_METHOD_DISABLED</code>.',
+  code:[{lang:'json',src:`{ "data": { "order_number": "GAZ-2026-0042", "status": "confirmed", "payment_status": "unpaid",
+  "payment_method": "cod", "total": 155.00, "currency": "ILS", "items": [ ... ] } }`}]},
+ {id:'C-P1-03',title:'عقد البث — قناة وحدث وحمولة',status:'ready',
+  body:'القناة <code>private-App.Models.User.{id}</code> · الأحداث <code>order.status.updated</code> و<code>cart.reservation.updated</code> · المصادقة <code>POST /broadcasting/auth</code> بـ Bearer. الحمولة: <code>order_number · status · status_label · updated_at</code> فقط.'},
+ {id:'C-P1-04',title:'مزامنة <code>openapi.yaml</code> مع ملحق عقد MVP0',status:'todo',
+  body:'دمج <code>Docs/MVP0_CONTRACT_DELTA.md</code>: <code>POST /auth/guest/init</code> · <code>X-Guest-UUID</code> · <code>POST /orders/checkout/quote</code> · <code>POST /orders</code> + <code>Idempotency-Key</code> · <code>compare_at_price</code> · تعليم <code>POST /checkout</code> كـ <code>deprecated</code> · إضافة C-P1-01…03.'}
+],
+scenarios:[
+ {title:'P1-S1 — طلب COD على Staging حتى «تم التأكيد»',steps:[
+  ['عميل','يتصفح كضيف ويضيف منتجين من متجرين مختلفين للسلة'],
+  ['عميل','«إتمام الطلب» ← يدخل برقمه ورمز OTP (Staging: test_mode) ← تُدمج سلته'],
+  ['النظام','<code>POST /cart/reserve</code> ← 15 د · يظهر العداد'],
+  ['النظام','<code>checkout/begin</code> يعيد <code>payment_methods=[cod]</code> ← الواجهة تعرض خيار COD وحده محدداً'],
+  ['عميل','يُدخل العنوان الهجين (خانيونس · الحي · الوصف · المعلم) ← مراجعة السعر'],
+  ['النظام','<code>POST /orders</code> + <code>Idempotency-Key</code> ← خصم المخزون ذرياً ← <code>OrderConfirmationService</code> ← <code>confirmed</code>'],
+  ['عميل','يرى صفحة الطلب «تم التأكيد · الدفع نقداً عند الاستلام»'],
+  ['الإدارة','ترى الطلب في <code>/admin</code> بحالة <code>confirmed</code> وسجل تتبع من خطوتين']],
+  alt:'انقطاع الشبكة عند الضغط على «تأكيد» ← إعادة المحاولة بنفس المفتاح تعيد الطلب نفسه، ولا يتكرر الخصم.'},
+ {title:'P1-S2 — محاولة دفع إلكتروني في Staging/Production',steps:[
+  ['عميل','لا يرى جوال باي أصلاً لأن <code>payment_methods</code> لا تتضمنه'],
+  ['مهاجم','يرسل <code>payment_method=jawwal_pay</code> يدوياً'],
+  ['النظام','<code>422 PAYMENT_METHOD_DISABLED</code> — لا طلب، لا خصم مخزون، الحجز يبقى صالحاً']]},
+ {title:'P1-S3 — تحديث حالة يصل للعميل',steps:[
+  ['الإدارة','تغيّر حالة الطلب إلى <code>processing</code> من <code>/admin</code>'],
+  ['النظام','يطلق <code>OrderStatusChanged</code> (على Staging المشترك يُسجَّل في log فقط)'],
+  ['عميل','صفحة الطلب تتحدث خلال ≤ 30 ث عبر polling']],
+  alt:'في P3 على VPS: التحديث لحظي عبر Reverb &lt; 3 ث، وpolling يبقى احتياطاً.'},
+ {title:'P1-S4 — دورة إصدار آمنة',steps:[
+  ['مطوّر','فرع ← PR بعنوان <code>P1-BE-03: …</code>'],
+  ['CI','اختبارات MySQL + بناء الواجهة'],
+  ['الطرف الآخر','مراجعة قصيرة: هل يلمس عقداً؟ هل العقد محدَّث؟'],
+  ['OPS','دمج ← نسخة احتياطية ← <code>migrate --force</code> على Staging ← فحص دخان 5 دقائق'],
+  ['الفريق','يوم الخميس: عرض الدليل وإغلاق البطاقة في هذا الملف']]}
+],
+design:[
+ {title:'محدد طريقة الدفع — الحالات',body:`<ul><li><b>COD وحده (الإنتاج):</b> بطاقة واحدة محددة مسبقاً، نص مساعد عن كود التسليم.</li><li><b>COD + جوال باي (local):</b> بطاقتان، جوال باي بشارة «تجريبي» ذهبية.</li><li><b>أثناء التحميل:</b> هيكل رمادي بارتفاع البطاقة (لا قفز في التخطيط).</li><li><b>بعد تغيير الطريقة:</b> يُلغى عرض السعر الحالي ويُطلب مراجعة جديدة (<code>invalidate()</code>).</li><li>هدف لمس ≥ 44px · تركيز مرئي · <code>fieldset/legend</code> لقارئ الشاشة.</li></ul>`},
+ {title:'نصوص معتمدة (UX Copy)',body:`<ul><li>عنوان الدفع: «طريقة الدفع»</li><li>COD: «الدفع نقداً عند الاستلام» — «ادفعي نقداً للمندوب بعد فحص طلبك»</li><li>نجاح الطلب: «تم تأكيد طلبك 🎉 رقم الطلب GAZ-… · الدفع نقداً عند الاستلام»</li><li>خطأ 422: «طريقة الدفع هذه غير متاحة حالياً — اختاري الدفع عند الاستلام»</li><li>شريط Staging: «بيئة تجريبية — لا تُنفَّذ طلبات حقيقية»</li></ul>`},
+ {title:'تسميات الحالة للعميل (D-21)',body:`<div class="tw"><table class="t"><tbody><tr><td><code>pending</code></td><td>بانتظار التأكيد</td></tr><tr><td><code>confirmed</code></td><td>تم التأكيد</td></tr><tr><td><code>processing</code></td><td>قيد التجهيز</td></tr><tr><td><code>shipped</code></td><td>خرج للتوصيل</td></tr><tr><td><code>delivered</code></td><td>تم التسليم</td></tr><tr><td><code>cancelled · refunded</code></td><td>ملغي · مسترد</td></tr></tbody></table></div>`},
+ {title:'ما لا يتغير في P1',body:`<ul><li>تصميم الكتالوج والسلة والشراء السريع كما هو.</li><li>لوحات Filament بلا تغيير سوى ظهور <code>confirmed</code> لطلبات COD.</li><li>شاشات <code>/merchant</code> و<code>/delivery</code> التجريبية في React تبقى محجوبة في وضع API — تُحذف في P2.</li></ul>`}
+],
+cards:[
+ {id:'P1-BE-01',track:'BE',title:'إدخال حزمة MVP0 إلى Git ومطابقة البصمات',refs:['G-04'],status:'todo',
+  spec:'فرع <code>mvp0-closure</code> في المستودع المرجعي، فك <code>backend-mvp0-changes-2026-09-27.zip</code>، مطابقة SHA256 مع الـ manifest (سكربت PowerShell في G-04)، تشغيل الاختبارات، PR.',
+  dod:['manifest OK بلا أي MISMATCH','<code>php artisan test --compact</code> ≥ 61 ✓','PR مدموج في <code>main</code>']},
+ {id:'P1-BE-02',track:'BE',title:'بيئة Staging على MySQL + Cron + Queue',refs:['G-04'],status:'todo',dep:['P1-BE-01'],
+  spec:'نشر <code>main</code> على Staging (مشترك مؤقتاً)، <code>.env</code> Staging (<code>APP_ENV=staging</code> · <code>OTP_TEST_MODE</code> مسموح هنا فقط كاستثناء موثق)، <code>migrate</code> بعد نسخة احتياطية، Cron لـ <code>schedule:run</code> و<code>queue:work</code>.',
+  dod:['<code>schedule:list</code> يعرض <code>clean-expired-reservations</code>','حجز متروك 16 د يتحرر تلقائياً','رابط Staging API مسجَّل في Meta هذا الملف']},
+ {id:'P1-BE-03',track:'BE',title:'OrderConfirmationService + تأكيد COD + أمر الترحيل',refs:['G-01','D-01'],status:'todo',dep:['P1-BE-01'],
+  spec:'إنشاء الخدمة والحدث <code>OrderConfirmed</code>، ربطها في <code>createOrder</code> (COD) و<code>PaymentService</code> (Webhook)، أمر <code>gazabella:confirm-pending-cod</code>.',
+  dod:['3 اختبارات G-01 ناجحة','الأمر بـ <code>--dry-run</code> لا يغيّر شيئاً','على Staging: طلب COD جديد ← <code>confirmed</code>']},
+ {id:'P1-BE-04',track:'BE',title:'تعطيل Jawwal إنتاجياً + <code>payment_methods</code>',refs:['G-02','C-P1-01','C-P1-02'],status:'todo',
+  spec:'إعداد <code>payments.enabled_methods</code>، <code>Rule::in</code>، حارس <code>payments/init</code>، إضافة الحقل لـ <code>checkout/begin</code>.',
+  dod:['production: 422 لـ <code>jawwal_pay</code>','local: القائمة تحتوي الطريقتين','اختبار لكل حالة']},
+ {id:'P1-BE-05',track:'BE',title:'توحيد عقد البث + مصادقة القنوات',refs:['G-03','C-P1-03'],status:'todo',
+  spec:'تعديل <code>OrderStatusChanged</code> و<code>ReservationExpired</code>، <code>withBroadcasting</code> بـ <code>auth:sanctum</code>، <code>channels.php</code>، CORS.',
+  dod:['اختبار القناة والاسم والحمولة','<code>/broadcasting/auth</code>: مالك ← 200 · غيره ← 403','لا <code>store_id</code> في الحمولة']},
+ {id:'P1-BE-06',track:'BE',title:'فرض <code>stores.commission_rate</code>',refs:['G-07','D-06'],status:'todo',
+  spec:'Migration: إزالة أي default · Model hook: لا <code>is_active=true</code> بدون نسبة · Filament StoreResource: الحقل إلزامي 0–50 · <code>sub_orders.commission_rate_snapshot</code> إن لم يكن موجوداً.',
+  dod:['تفعيل متجر بلا نسبة يفشل برسالة واضحة','الطلب الجديد يحفظ snapshot النسبة']},
+ {id:'P1-BE-07',track:'BE',title:'CI للباك اند + حماية <code>main</code>',refs:['G-04'],status:'todo',
+  spec:'<code>.github/workflows/backend.yml</code> على MySQL 8، Branch protection: CI إلزامي + مراجعة واحدة.',
+  dod:['PR تجريبي باختبار مكسور يُمنع من الدمج','الشارة خضراء على <code>main</code>']},
+ {id:'P1-FE-01',track:'FE',title:'التزام تعديلات الواجهة + Vercel Staging',refs:['G-04'],status:'todo',
+  spec:'فرع <code>chore/mvp0-closure</code>، PR، <code>.env.staging</code> (<code>VITE_API_CONTRACT=mvp0</code> · API الـ Staging · <code>VITE_ENV_LABEL=بيئة تجريبية</code>)، ربط Vercel Preview، شريط البيئة.',
+  dod:['<code>git status</code> نظيف على <code>main</code> بعد الدمج','رابط Staging Front يعمل على API الـ Staging','الشريط يظهر في Staging ولا يظهر في Production']},
+ {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'todo',
+  spec:'المكوّن الجديد، تعديل <code>Mvp0CheckoutPage</code> (السطر 90 والأسطر 321–335)، النوع <code>PaymentMethodOption</code>، الافتراضي COD عند غياب الحقل. <code>CheckoutPage</code> القديم (عقد legacy) لا يُلمس.',
+  dod:['اختبار وحدة: غياب الحقل ← COD','<code>npm run test:mvp0</code> ينشئ طلب COD','لقطة Staging: خيار COD وحده']},
+ {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'todo',
+  spec:'<code>src/lib/orderStatus.ts</code>، استبدال الكائنات المحلية في <code>OrderDetailPage</code> و<code>OrdersPage</code>، رسالة نجاح عند <code>?created=1</code> حسب <code>payment_method</code>.',
+  dod:['لا تكرار لتعريف التسميات في المشروع','لقطة لرسالة النجاح']},
+ {id:'P1-FE-04',track:'FE',title:'Echo authorizer + تحديث تفاصيل الطلب',refs:['G-03','C-P1-03'],status:'todo',
+  spec:'إضافة <code>authorizer</code> في <code>echo.ts</code> وتحديث <code>useRealtimeEvents</code>. يبقى معطلاً حتى تُضبط متغيرات <code>VITE_PUSHER_*</code> في P3.',
+  dod:['البناء ينجح بدون المتغيرات (no-op)','محلياً مع Reverb: الحدث يحدّث صفحة التفاصيل']},
+ {id:'P1-FE-05',track:'FE',title:'مزامنة <code>openapi.yaml</code>',refs:['C-P1-04','G-05'],status:'todo',
+  spec:'نقل ملحق عقد MVP0 وعقود C-P1-01…03 إلى <code>Docs/openapi.yaml</code>، وتعليم <code>POST /checkout</code> deprecated. التحقق بـ Bruno collection.',
+  dod:['<code>openapi.yaml</code> يمر بمدقق Swagger بلا أخطاء','Bruno: كل طلبات MVP0 تنجح على Staging']},
+ {id:'P1-UX-01',track:'UX',title:'نصوص الدفع والحالات وشريط البيئة',refs:['D-21'],status:'todo',
+  spec:'اعتماد نصوص قسم «التصميم» أعلاه، وصياغة رسائل الخطأ 409/422 في <code>getApiErrorMessage</code>.',
+  dod:['قائمة النصوص معتمدة في هذا الملف']},
+ {id:'P1-QA-01',track:'QA',title:'تشغيل سيناريوهات P1-S1…S4 على Staging',status:'todo',dep:['P1-BE-02','P1-FE-01'],
+  spec:'كل طرف يشغّل سيناريوهات الطرف الآخر. لقطات + رقم الطلب كدليل.',
+  dod:['4 سيناريوهات ناجحة بأدلة','أي خلل ← بطاقة جديدة لا تعديل صامت']},
+ {id:'P1-QA-02',track:'QA',title:'فحص آلي لتسريب هوية المتجر',status:'todo',
+  spec:'سكربت Node في <code>tests/</code> يمر على استجابات Staging (<code>/products</code> · <code>/cart</code> · <code>/orders</code> · <code>/orders/{n}</code>) ويفشل عند ظهور <code>store</code> أو <code>commission</code> أو <code>sub_order</code>.',
+  dod:['السكربت في CI الواجهة (ليلياً)','نتيجة صفر مخالفات']},
+ {id:'P1-OPS-01',track:'OPS',title:'سياسة النسخ الاحتياطي والترحيل',status:'todo',
+  spec:'<code>mysqldump</code> قبل كل <code>migrate</code>، احتفاظ 14 يوماً، اختبار استعادة مرة واحدة.',
+  dod:['استعادة ناجحة موثقة على Staging']},
+ {id:'P1-BIZ-01',track:'BIZ',title:'توقيع القيم التشغيلية (تمهيد P2)',refs:['D-03','D-06','D-02'],status:'todo',
+  spec:'موقع نقطة التجميع ومسؤولها · نسبة عمولة كل متجر · سقف عهدة السائق · أوقات الموجات · رسوم التوصيل.',
+  dod:['القيم مكتوبة في <code>config/gazabella.php</code> و<code>delivery_options</code>']}
+],
+tests:[
+ ['T1-01','طلب COD جديد','<code>status=confirmed</code> · <code>payment_status=unpaid</code> · تتبع خطوتين','BE'],
+ ['T1-02','<code>confirm()</code> مرتين','سجل <code>confirmed</code> واحد','BE'],
+ ['T1-03','<code>payment_method=jawwal_pay</code> في staging/production','422 <code>PAYMENT_METHOD_DISABLED</code> بلا خصم مخزون','BE'],
+ ['T1-04','<code>checkout/begin</code> بدون الحقل (باك اند قديم)','الواجهة تعرض COD وتنجح','FE'],
+ ['T1-05','<code>broadcastWith()</code>','لا مفاتيح غير الأربعة المسموحة','BE'],
+ ['T1-06','<code>/broadcasting/auth</code> لمستخدم آخر','403','BE'],
+ ['T1-07','حجز متروك على Staging','يتحرر خلال ≤ 16 د','QA'],
+ ['T1-08','PR باختبار مكسور','CI أحمر والدمج ممنوع','OPS'],
+ ['T1-09','فحص التسريب الآلي','0 مخالفات','QA'],
+ ['T1-10','صفحة الطلب بعد تغيير الحالة','تتحدث ≤ 30 ث','FE']
+],
+risks:[
+ ['نسخة الباك اند المرجعية عند عاصم تختلف عن المحلية','MISMATCH في المطابقة','توقف ومراجعة ملف بملف — لا دمج أعمى'],
+ ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
+ ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
+],
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude']]
+},
+
+/* ═══════════════════════════ PHASE 2 ═══════════════════════════ */
+{
+id:'P2', mvp:'MVP1 · أ', title:'لوحات التشغيل والكتالوج المعتمد', weeks:'3 أسابيع', gate:'locked',
+goal:`بناء التشغيل الحقيقي خلف الطلب: <b>بوابة موافقة المنتجات</b>، لوحات <code>/admin</code> و<code>/store</code> و<code>/delivery</code> على Filament، دورة حياة <code>sub_orders</code> مع مهلة القبول، <b>نقطة التجميع</b>، و<b>كود التسليم</b>. في نهايتها يمشي الطلب من المتجر إلى باب العميل على Staging دون تدخل يدوي في قاعدة البيانات.`,
+meta:['👥 عاصم: Filament + منطق · أشرف: واجهة + مواصفات','🎯 الطلب من المتجر إلى الباب','🔒 تُفتح بعد إغلاق P1'],
+gateIn:[['بوابة P1 مُغلقة',false],['<code>OrderConfirmed</code> متاح',false],['مواصفات UX للوحات الثلاث معتمدة (P1 تمهيدي)',false],['القيم التشغيلية موقعة: الموجات · النقطة · مهلة القبول',false]],
+gateOut:[
+ ['منتج من المتجر لا يظهر للعميل قبل الاعتماد (اختبار + لقطة)',false],
+ ['السيناريوهات P2-S1…S6 تنجح يدوياً على Staging',false],
+ ['اختبارات العزل: <code>store_id</code> في <code>/store</code> و<code>driver_id</code> في <code>/delivery</code>',false],
+ ['كود التسليم لا يظهر في أي Resource أو Action للسائق أو المتجر',false],
+ ['واجهة العميل تعرض كود التسليم والموعد المتوقع و4 حالات تتبع',false],
+ ['شاشات React التجريبية للمتجر والسائق محذوفة من بناء الإنتاج',false]],
+handoff:['طلب يصل إلى <code>delivered</code> بكود — جاهز لتعليق التحصيل والضمان في P3','لوحة «الطلبات العالقة» كأداة تشغيل يومية','3 متاجر مفعّلة مع KYC ومنتجات معتمدة'],
+analysis:`<div class="grid2">
+<div class="box"><h3>قرارات حاكمة</h3><ul><li><b>D-03</b> نقطة تجميع هجينة: <code>fulfillment_route = direct | hub</code> يُحسب عند التأكيد (عدد المتاجر في الطلب).</li><li><b>D-04</b> مهلة قبول 30 د مع تذكير عند 15 وتصعيد عند 30.</li><li><b>D-05</b> تعذّر بند ← استبدال مورد أو إزالة بموافقة العميل.</li><li><b>D-11/D-12</b> المكرر يُرفض · صور مجهولة الهوية.</li><li><b>D-13</b> كود التسليم hash فقط.</li><li><b>D-14</b> واتساب المتجر من الإدارة.</li></ul></div>
+<div class="box"><h3>بنية Filament</h3><ul><li><code>app/Filament/Admin</code> · <code>app/Filament/Store</code> · <code>app/Filament/Delivery</code> — PanelProvider وGuard وجدول مستخدمين لكل لوحة.</li><li><code>ProductModerationService</code>: submit · approve · reject · applyChangeRequest.</li><li><code>FulfillmentService</code>: accept · markReady · pickup · receiveAtHub · pack · assignDriver.</li><li><code>DeliveryCodeService</code>: generate · verify · manualConfirm.</li><li>Policies في <code>app/Policies</code> + <code>getEloquentQuery()</code> في كل Resource.</li></ul></div></div>
+<pre class="code"><code>sub_orders.status
+pending ─OrderConfirmed─▶ awaiting_acceptance ─accept─▶ accepted ─ready─▶ ready ─pickup─▶ picked_up ─hub scan─▶ at_hub
+any ─admin (D-05)─▶ cancelled
+
+orders.status
+confirmed ─first accept─▶ processing ─(all at_hub | direct picked_up) + driver─▶ shipped ─code─▶ delivered</code></pre>`,
+contracts:[
+ {id:'C-P2-01',title:'<code>GET /orders/{order_number}</code> — حقول التسليم والتتبع',status:'todo',
+  body:'إضافات لمالك الطلب فقط. <code>delivery_code</code> يظهر من <code>confirmed</code> حتى <code>shipped</code> ثم <code>null</code>. <code>timeline</code> ثابت الطول 4 خطوات. لا يظهر <code>fulfillment_route</code> ولا أي أثر للنقطة أو المتاجر.',
+  code:[{lang:'json',src:`{
+  "order_number": "GAZ-2026-0042",
+  "status": "processing",
+  "status_label": "قيد التجهيز",
+  "delivery_code": "4821",
+  "expected_delivery_at": "2026-10-02T17:30:00+03:00",
+  "timeline": [
+    { "key": "confirmed",  "label": "تم التأكيد",   "at": "2026-10-02T10:12:00+03:00", "done": true },
+    { "key": "processing", "label": "قيد التجهيز",  "at": "2026-10-02T10:31:00+03:00", "done": true },
+    { "key": "shipped",    "label": "خرج للتوصيل",  "at": null, "done": false },
+    { "key": "delivered",  "label": "تم التسليم",   "at": null, "done": false }
+  ],
+  "adjustments": []
+}`}]},
+ {id:'C-P2-02',title:'<code>POST /orders/checkout/quote</code> يعيد <code>expected_delivery_at</code>',status:'todo',
+  body:'يُحسب من موجة التجميع التالية + ساعات الخدمة (D-03 · D-15). تقدير يُعرض قبل التأكيد، وليس التزاماً.'},
+ {id:'C-P2-03',title:'تعديلات الطلب (D-05) — <code>adjustments[]</code>',status:'todo',
+  body:'عند إزالة بند: <code>{ type: "item_removed", item_name, quantity, amount, reason_label, at }</code> ويُعاد حساب <code>total</code>. يُبث <code>order.status.updated</code> بنفس الحالة لتحديث الواجهة.'},
+ {id:'C-P2-04',title:'رؤية الكتالوج',status:'todo',
+  body:'لا تغيير في الشكل. <code>/products/{slug}</code> لمنتج غير معتمد ← 404. السلة تُعلِّم البند <code>unavailable</code> ويُرفض في <code>checkout</code> بـ 409 <code>OUT_OF_STOCK</code>.'}
+],
+scenarios:[
+ {title:'P2-S1 — إدخال منتج واعتماده',steps:[
+  ['الإدارة','تنشئ المتجر و<code>StoreUser</code> وتسجل العمولة الموقعة ← المتجر غير نشط'],
+  ['المتجر','يدخل <code>/store</code> ويرفع KYC ← الإدارة تعتمد ← المتجر نشط'],
+  ['المتجر','يضيف منتجاً بمتغيراته وصوره بلا شعار ← <code>draft</code> ← «إرسال للمراجعة»'],
+  ['الإدارة','عدّاد «بانتظار المراجعة» ← اعتماد (تثبيت الاسم والوصف والتصنيف والسعر) ← <code>approved</code>'],
+  ['عميل','يرى المنتج بهوية Gazabella فقط']],
+  alt:'رفض: كود + سبب ≥ 10 أحرف يظهر للمتجر · <code>duplicate</code> مع تسجيله مورداً بديلاً · تعديل منتج معتمد ← <code>product_change_requests</code> والنسخة الحية تستمر.'},
+ {title:'P2-S2 — المتجر يقبل ويجهّز',steps:[
+  ['النظام','<code>OrderConfirmed</code> ← كل حصة <code>awaiting_acceptance</code> + <code>acceptance_deadline_at</code> = +30 د + إشعار Filament'],
+  ['المتجر','يرى: الصنف · المتغير · الكمية · رقم الحصة · موعد الموجة — بلا أي بيانات للعميل'],
+  ['المتجر','«قبول» ← الطلب <code>processing</code> ← «جاهز»'],
+  ['النظام','عند 15 د بلا قبول: تذكير · عند 30 د: يظهر في «الطلبات العالقة» مع زر واتساب']]},
+ {title:'P2-S3 — موجة التجميع',steps:[
+  ['النظام','طلب متعدد المتاجر ← <code>fulfillment_route=hub</code> ← يدخل الموجة التالية'],
+  ['مندوب التجميع','يرى قائمة الحصص الجاهزة لكل متجر ← «تم الاستلام» ← <code>picked_up</code>'],
+  ['النقطة','مسح/تأكيد كل حصة ← <code>at_hub</code> ← عند اكتمال الحصص: فحص + تغليف + فاتورة ← «جاهز للتوصيل»'],
+  ['الإدارة','تكلّف سائقاً ← <code>shipped</code>']],
+  alt:'طلب من متجر واحد: <code>direct</code> — السائق يستلم من المتجر مباشرة ويغلّف بغلاف Gazabella المحمول.'},
+ {title:'P2-S4 — التسليم بالكود',steps:[
+  ['السائق','يرى المهمة: اسم المستلم · الهاتف · العنوان · المبلغ المطلوب'],
+  ['عميل','يفحص الطرد ← يعطي الكود المكوّن من 4 أرقام'],
+  ['السائق','يُدخل الكود ← <code>delivered</code> + <code>delivered_at</code>']],
+  alt:'5 محاولات خاطئة ← قفل وتصعيد · انقطاع شبكة السائق ← يتصل بالإدارة ← «تأكيد يدوي» بسبب إلزامي (D-13).'},
+ {title:'P2-S5 — محاولة تسليم فاشلة',steps:[
+  ['السائق','«محاولة فاشلة» + السبب (لا يجيب · عنوان غير دقيق · تأجيل) + موعد المحاولة التالية'],
+  ['النظام','بعد 3 محاولات ← الطلب يعود للنقطة ← تنبيه الإدارة'],
+  ['الإدارة','تتواصل مع العميل ← إعادة جدولة أو إلغاء بعد 48 ساعة وإعادة المخزون']]},
+ {title:'P2-S6 — بند تعذّر (D-05)',steps:[
+  ['النظام','حصة متجر تجاوزت 30 د أو رُفضت'],
+  ['الإدارة','«استبدال المورد» لمنتج مطابق من متجر بديل — أو «إزالة البند»'],
+  ['الإدارة','اتصال بالعميل وتسجيل موافقته ← إعادة حساب المبلغ ← <code>adjustments[]</code>'],
+  ['عميل','يرى البند المزال والمبلغ الجديد في صفحة الطلب']]}
+],
+design:[
+ {title:'بطاقة كود التسليم — واجهة العميل',body:`<ul><li>أعلى صفحة الطلب من <code>confirmed</code> إلى <code>shipped</code>: 4 أرقام كبيرة (JetBrains Mono 32px) بتباعد، زر «نسخ».</li><li>النص: «أعطِ هذا الكود لمندوب التوصيل فقط بعد استلام طلبك وفحصه».</li><li>تحذير صغير: «فريق Gazabella لن يطلب منك الكود هاتفياً».</li><li>بعد <code>delivered</code>: تختفي البطاقة ويظهر «تم التسليم في …».</li></ul>`},
+ {title:'خط التتبع — 4 حالات',body:`<ul><li>4 نقاط أفقية على الشاشات الكبيرة، عمودية على الجوال.</li><li>النقطة المكتملة ذهبية، الحالية وردية نابضة، القادمة رمادية.</li><li>تحت «قيد التجهيز»: «الموعد المتوقع: اليوم 5:30 م» من <code>expected_delivery_at</code>.</li><li>لا ذكر للمتاجر أو النقطة أو الموجة.</li></ul>`},
+ {title:'لوحة المتجر <code>/store</code>',body:`<ul><li><b>الرئيسية:</b> حصص بانتظار القبول (عداد تنازلي) · جاهزة للاستلام · منتجات مرفوضة.</li><li><b>الحصص:</b> جدول: الرقم · البنود · موعد الموجة · المتبقي للقبول · إجراءات «قبول / جاهز / تعذّر».</li><li><b>منتجاتي:</b> تبويبات حسب <code>approval_status</code>، سبب الرفض بصندوق أحمر.</li><li><b>المخزون:</b> جدول متغيرات بحقل كمية قابل للتحرير فوراً.</li><li><b>KYC</b> · <b>الملف</b>. لا اسم عميل في أي مكان.</li></ul>`},
+ {title:'لوحة السائق <code>/delivery</code> — الجوال أولاً',body:`<ul><li>قائمة «مهام اليوم» ببطاقات كبيرة: الحالة · الحي · المبلغ المطلوب.</li><li>المهمة: زر اتصال مباشر · خريطة من <code>lat/lng</code> إن وجدت · المعلم البارز بخط كبير.</li><li>أزرار كاملة العرض ≥ 48px: «تم الاستلام» · «أدخل كود التسليم» · «محاولة فاشلة» · «رفض بند».</li><li>لوحة أرقام للكود بدل لوحة المفاتيح الكاملة.</li></ul>`},
+ {title:'لوحة الإدارة — إضافات P2',body:`<ul><li><b>بانتظار المراجعة</b> مع Badge · Modal رفض: قائمة أسباب + نص إلزامي.</li><li><b>الطلبات العالقة</b>: حصة غير مقبولة بعد 30 د · جاهزة لم تُستلم · <code>shipped</code> &gt; 4 ساعات.</li><li><b>النقطة</b>: موجة اليوم بحصصها وحالة كل منها.</li><li>زر «واتساب المتجر» برسالة جاهزة.</li></ul>`},
+ {title:'قوالب رسائل واتساب (D-14)',body:`<ul><li>للمتجر: «مرحباً، لديكم حصة جديدة GAZ-0042-S2 بانتظار القبول في لوحة Gazabella — الموجة القادمة 11:00».</li><li>تذكير: «الحصة GAZ-0042-S2 لم تُقبل بعد، تبقّى 15 دقيقة».</li><li>للعميل (يدوي عند D-05): «نعتذر، الصنف … غير متوفر حالياً. هل توافقين على إزالته وتعديل المبلغ إلى … ₪؟»</li></ul>`}
+],
+cards:[
+ {id:'P2-BE-01',track:'BE',title:'Guards + Models + PanelProviders للمتجر والسائق',refs:['D-18'],status:'todo',
+  spec:'جداول <code>store_users</code> و<code>drivers</code> + <code>orders.driver_id</code>، Guards <code>store</code> و<code>delivery</code>، <code>StorePanelProvider</code> و<code>DeliveryPanelProvider</code>، Seeders لحساب تجريبي لكل لوحة.',
+  dod:['تسجيل الدخول في اللوحتين يعمل','مستخدم لوحة لا يدخل الأخرى']},
+ {id:'P2-BE-02',track:'BE',title:'Migration الموافقة + <code>visibleToCustomers()</code>',refs:['C-P2-04','D-11'],status:'todo',
+  spec:'حقول <code>approval_status · source · submitted_at · reviewed_at/by · rejection_reason_code · rejection_reason · deleted_at</code>، ترحيل المنتجات الحالية إلى <code>approved + admin</code>، تطبيق الـ scope على <code>/products</code> و<code>/products/{slug}</code> والسلة وإعادة التحقق في checkout.',
+  dod:['منتج <code>pending_review</code> ← 404 للعميل','الكتالوج الحالي لم يتغير بعد الترحيل']},
+ {id:'P2-BE-03',track:'BE',title:'ProductModerationService + طابور المراجعة + سجل التدقيق',refs:['D-11','D-12'],status:'todo',dep:['P2-BE-02'],
+  spec:'Service + <code>product_moderation_logs</code> (لا تعديل ولا حذف) + صفحة «بانتظار المراجعة» + Badge + Modal الرفض + إشعارات Filament للمتجر.',
+  dod:['رفض بدون سبب يفشل','كل إجراء له سطر في السجل']},
+ {id:'P2-BE-04',track:'BE',title:'طلبات تعديل المنتجات المعتمدة',refs:['D-11'],status:'todo',dep:['P2-BE-03'],
+  spec:'<code>product_change_requests</code> (pending واحد لكل منتج)، المخزون و<code>is_active</code> فوريان دون طلب.',
+  dod:['النسخة الحية لا تتغير قبل الاعتماد']},
+ {id:'P2-BE-05',track:'BE',title:'لوحة <code>/store</code> كاملة',refs:['D-04'],status:'todo',dep:['P2-BE-01','P2-BE-03'],
+  spec:'Resources: منتجاتي · طلبات التعديل · المخزون · الحصص · KYC. كل Resource بـ <code>getEloquentQuery()</code> على <code>store_id</code> وPolicy. الفورم بلا <code>store_id</code> ولا <code>approval_status</code>.',
+  dod:['اختبار عزل: متجر لا يرى حصة متجر آخر حتى بتغيير الـ URL','لا حقل عميل في أي شاشة']},
+ {id:'P2-BE-06',track:'BE',title:'دورة حياة <code>sub_orders</code> + مهلة القبول',refs:['D-04','G-01'],status:'todo',dep:['P2-BE-05'],
+  spec:'Migration الحالات والطوابع، مستمع <code>OpenStoreAcceptanceWindow</code> على <code>OrderConfirmed</code>، مهمة Scheduler كل دقيقة للتذكير (15) والتصعيد (30)، تحديث <code>orders.status</code> إلى <code>processing</code> عند أول قبول.',
+  dod:['اختبار زمني بـ <code>travel()</code> للتذكير والتصعيد','لا إلغاء آلي']},
+ {id:'P2-BE-07',track:'BE',title:'التوجيه ونقطة التجميع والموجات',refs:['D-03','C-P2-02'],status:'todo',dep:['P2-BE-06'],
+  spec:'<code>fulfillment_route</code>، إعداد <code>hub.waves</code>، صفحة «موجة اليوم» في <code>/admin</code>، إجراءات <code>pickup · receiveAtHub · pack</code>، حساب <code>expected_delivery_at</code> في quote.',
+  dod:['طلب متجر واحد = direct','طلب متعدد لا يصبح shipped قبل اكتمال at_hub']},
+ {id:'P2-BE-08',track:'BE',title:'لوحة <code>/delivery</code>',refs:['D-13'],status:'todo',dep:['P2-BE-01','P2-BE-09'],
+  spec:'«مهام اليوم» مقيدة بـ <code>driver_id</code>، إجراءات: استلام · إدخال الكود · محاولة فاشلة (<code>delivery_attempts</code>) · رفض بند. بيانات المستلم تظهر من <code>shipped</code> فقط.',
+  dod:['اختبار عزل السائق','الكود غير موجود في أي Resource/Action/Response']},
+ {id:'P2-BE-09',track:'BE',title:'DeliveryCodeService',refs:['D-13','C-P2-01'],status:'todo',
+  spec:'مستمع على <code>OrderConfirmed</code>: توليد 4 أرقام، تخزين <code>delivery_code_hash</code> + تشفير قابل للعرض للعميل فقط (<code>encrypted</code> cast)، <code>verify()</code> بعدّاد محاولات، <code>manualConfirm()</code> للإدارة بسبب.',
+  dod:['5 محاولات خاطئة ← قفل','التأكيد اليدوي يُسجَّل في التتبع باسم المسؤول']},
+ {id:'P2-BE-10',track:'BE',title:'الطلبات العالقة + D-05 + واتساب',refs:['D-05','D-14','C-P2-03'],status:'todo',dep:['P2-BE-06'],
+  spec:'صفحة Filament للطلبات العالقة، إجراء «استبدال المورد» و«إزالة البند» مع إعادة الحساب و<code>adjustments</code>، زر <code>wa.me</code> برسالة جاهزة.',
+  dod:['إزالة بند تعيد الحساب وتبث التحديث','لا يمكن إزالة كل البنود — الإلغاء إجراء منفصل']},
+ {id:'P2-BE-11',track:'BE',title:'<code>GET /orders/{n}</code> حسب C-P2-01',refs:['C-P2-01'],status:'todo',dep:['P2-BE-09'],
+  spec:'<code>delivery_code</code> · <code>expected_delivery_at</code> · <code>status_label</code> · <code>timeline</code> · <code>adjustments</code> — لمالك الطلب فقط.',
+  dod:['Feature Test للشكل','مستخدم آخر ← 404']},
+ {id:'P2-FE-01',track:'FE',title:'بطاقة كود التسليم',refs:['C-P2-01','D-13'],status:'todo',dep:['P2-BE-11'],
+  spec:'مكوّن <code>DeliveryCodeCard</code> في <code>OrderDetailPage</code> حسب مواصفة التصميم، زر نسخ، يختفي عند <code>null</code>.',
+  dod:['لقطة جوال + سطح مكتب','قارئ الشاشة يقرأ الأرقام منفصلة']},
+ {id:'P2-FE-02',track:'FE',title:'خط التتبع بأربع حالات + الموعد المتوقع',refs:['C-P2-01','C-P2-02','D-21'],status:'todo',dep:['P2-BE-11'],
+  spec:'مكوّن <code>OrderTimeline</code> من <code>timeline[]</code>، عرض <code>expected_delivery_at</code> في المراجعة وصفحة الطلب بصيغة «اليوم 5:30 م».',
+  dod:['لا منطق حالات في الواجهة — تعرض ما يرسله الخادم']},
+ {id:'P2-FE-03',track:'FE',title:'عرض تعديلات الطلب',refs:['C-P2-03'],status:'todo',
+  spec:'قسم «تعديلات على طلبك» يعرض البنود المزالة والمبلغ الجديد بوضوح.',
+  dod:['الإجمالي المعروض = إجمالي الخادم']},
+ {id:'P2-FE-04',track:'FE',title:'ملخص سياسة الإرجاع',refs:['D-09'],status:'todo',
+  spec:'سطران في صفحة المنتج وفي مراجعة الطلب + رابط لصفحة السياسة الكاملة (نص P3-UX-01).',
+  dod:['النص معتمد من أشرف']},
+ {id:'P2-FE-05',track:'FE',title:'حذف شاشات React للمتجر والسائق من بناء الإنتاج',refs:['D-18'],status:'todo',
+  spec:'إزالة مسارات <code>/merchant</code> و<code>/delivery</code> و<code>OperationalPreview</code> من <code>App.tsx</code> عند <code>VITE_DATA_SOURCE=api</code>؛ تبقى في وضع mock للعرض فقط أو تُحذف نهائياً بعد تشغيل Filament.',
+  dod:['<code>npm run build:mvp0</code> لا يحتوي الشاشتين','لا تعارض مع Filament']},
+ {id:'P2-FE-06',track:'FE',title:'تدقيق هوية المتجر في الواجهة',refs:['D-12'],status:'todo',
+  spec:'بحث في <code>src/</code> عن أي عرض لـ store/vendor/merchant في البطاقة والتفاصيل والسلة والفاتورة والتتبع وإزالته.',
+  dod:['تقرير البحث مرفق كدليل']},
+ {id:'P2-UX-01',track:'UX',title:'مواصفات لوحات Filament الثلاث',status:'todo',
+  spec:'لكل شاشة: الحقول · الأعمدة · الإجراءات · الحالات الفارغة · النصوص — بناءً على قسم التصميم. تسليم قبل بدء P2-BE-05.',
+  dod:['موافقة عاصم على الجدوى']},
+ {id:'P2-UX-02',track:'UX',title:'أسباب الرفض ونصوص الإشعارات وقوالب واتساب',refs:['D-14'],status:'todo',
+  spec:'قائمة أكواد الرفض ونصها، نصوص إشعارات Filament، قوالب واتساب.',
+  dod:['مدخلة كـ enum/ترجمات في الباك اند']},
+ {id:'P2-QA-01',track:'QA',title:'اختبارات العزل والتسريب',status:'todo',
+  spec:'متجر يحاول فتح حصة متجر آخر · سائق يحاول فتح طلب غير مكلف به · بحث عن الكود في كل استجابات السائق · فحص P1-QA-02 على الاستجابات الجديدة.',
+  dod:['كل المحاولات ← 403/404','0 مخالفات']},
+ {id:'P2-QA-02',track:'QA',title:'تشغيل P2-S1…S6 على Staging',status:'todo',
+  spec:'متجران تجريبيان + سائق + مندوب تجميع. تسجيل فيديو قصير لكل سيناريو.',
+  dod:['6 سيناريوهات بأدلة']},
+ {id:'P2-OPS-01',track:'OPS',title:'تجهيز نقطة التجميع',refs:['D-03'],status:'todo',
+  spec:'رفوف مرقمة بالموجة، أغلفة Gazabella، طابعة فواتير أو قالب PDF، مسؤول مدرّب.',
+  dod:['تجربة موجة كاملة بطلبات وهمية']},
+ {id:'P2-BIZ-01',track:'BIZ',title:'اتفاقيات المتاجر الثلاثة',refs:['D-06','D-09'],status:'todo',
+  spec:'العمولة · ضمان الأصالة · حد الصلاحية 6 أشهر · تحمّل التلف المصنعي · سياسة الإرجاع.',
+  dod:['3 اتفاقيات موقعة']}
+],
+tests:[
+ ['T2-01','منتج <code>pending_review</code> في <code>/products</code>','غير موجود · <code>/products/{slug}</code> ← 404','BE'],
+ ['T2-02','رفض بلا سبب','خطأ تحقق','BE'],
+ ['T2-03','متجر يفتح <code>/store/sub-orders/{id}</code> لمتجر آخر','403/404','QA'],
+ ['T2-04','30 د بلا قبول','يظهر في الطلبات العالقة؛ الطلب لم يُلغَ','BE'],
+ ['T2-05','طلب hub بحصة ناقصة','لا يمكن تكليف سائق','BE'],
+ ['T2-06','5 أكواد خاطئة','قفل + تصعيد','BE'],
+ ['T2-07','استجابات <code>/delivery</code>','لا <code>delivery_code</code> ولا hash','QA'],
+ ['T2-08','صفحة الطلب في <code>confirmed</code>','بطاقة الكود + خط التتبع + الموعد','FE'],
+ ['T2-09','إزالة بند','الإجمالي في الواجهة = الخادم + قسم التعديلات','FE'],
+ ['T2-10','بناء الإنتاج','لا مسارات <code>/merchant</code> <code>/delivery</code> في React','FE']
+],
+risks:[
+ ['تأخر مواصفات UX يعطّل Filament','بطاقة P2-UX-01 غير مغلقة عند بدء P2-BE-05','عاصم يبدأ بالمنطق والاختبارات، والشاشات بعد المواصفات'],
+ ['المتاجر لا تستخدم اللوحة','حصص عالقة متكررة','واتساب + تدريب 30 د لكل متجر + مراجعة أسبوعية'],
+ ['تعقيد النقطة في البداية','طلبات hub متأخرة','بدء Pilot بموجة واحدة ثم إضافة الثانية']
+],
+log:[['27-09-2026','تعريف المرحلة وبطاقاتها — مقفلة حتى إغلاق P1','أشرف + Claude']]
+},
+/* ═══════════════════════════ PHASE 3 ═══════════════════════════ */
+{
+id:'P3', mvp:'MVP1 · ب', title:'المال والإطلاق المقيد (Pilot)', weeks:'أسبوعان + Pilot', gate:'locked',
+goal:`ربط المال بالتشغيل: <b>عهدة السائق والتوريد</b>، <b>الضمان 48 ساعة</b>، <b>النزاعات</b>، <b>التسوية الأسبوعية</b>، والتقييم؛ ثم تشغيل <b>Reverb</b> على VPS وإطلاق Pilot مغلق في خانيونس حتى تحقيق معيار الخروج من MVP1.`,
+meta:['👥 عاصم: المال + البنية · أشرف: النزاع + التقييم + الميدان','🎯 30 طلب COD ناجح · فرق نقدي 0 ₪','🔒 تُفتح بعد إغلاق P2'],
+gateIn:[['بوابة P2 مُغلقة',false],['VPS جاهز (أو قرار استمرار المشترك مع Reverb معطل)',false],['قائمة أرقام Pilot + القيم المالية موقعة',false]],
+gateOut:[
+ ['<b>معيار الخروج من MVP1:</b> 3 متاجر نشطة · 50–100 منتج معتمد · 30 طلب COD ناجح في خانيونس',false],
+ ['صفر حوادث كشف هوية متجر',false],
+ ['كشف تسوية أسبوعي واحد على الأقل مطابق للنقد المورَّد بفارق 0 ₪',false],
+ ['التحديث اللحظي يعمل &lt; 3 ث مع polling احتياطي',false],
+ ['نزاع واحد على الأقل عولج من الفتح إلى القرار',false]],
+handoff:['منصة تشغيلية مثبتة في خانيونس','بيانات أداء: زمن القبول · زمن التسليم · نسبة النزاعات · تكلفة التوصيل','قائمة أولويات MVP2 مبنية على بيانات Pilot'],
+analysis:`<pre class="code"><code>delivered (كود) ─▶ driver_cash_collections: collected · payment_status = paid
+─▶ توريد نهاية الوردية ─▶ cash_remittances + مطابقة ─▶ remitted        (فرق ─▶ variance)
+─▶ 48h بلا نزاع AND remitted ─▶ escrow_holds: released
+─▶ الأحد 12:00 SettlementJob ─▶ settlements لكل متجر ─▶ تحويل ─▶ transfer_ref
+
+payout(sub_order) = gross − gross × commission_rate_snapshot − refunds_attributable_to_store</code></pre>
+<div class="note"><b>G-03 النهائي هنا:</b> Reverb تحت Supervisor + TLS، وضبط <code>VITE_PUSHER_*</code> في Vercel. <b>D-20 المؤقت:</b> بلا مزود SMS يعمل Pilot بقائمة أرقام وإرسال يدوي للرمز — يُلغى فور تفعيل SMS في P4.</div>`,
+contracts:[
+ {id:'C-P3-01',title:'<code>POST /orders/{order_number}/disputes</code>',status:'todo',
+  body:'<code>multipart/form-data</code>: <code>reason_code</code> (damaged · wrong_item · missing_item · expired · other) · <code>description</code> ≥ 10 · <code>items[]</code> · <code>photos[]</code> ≤ 3 × 5MB. متاح من <code>shipped</code> حتى 48 ساعة بعد <code>delivered_at</code>. خارج النافذة ← 422 <code>DISPUTE_WINDOW_CLOSED</code>. <code>GET</code> على المسار نفسه يعيد النزاعات وحالتها.'},
+ {id:'C-P3-02',title:'<code>POST /orders/{order_number}/rating</code>',status:'todo',
+  body:'<code>{ order_rating: 1–5, driver_rating: 1–5, comment? }</code> بعد <code>delivered</code> مرة واحدة. لا تقييم متجر.'},
+ {id:'C-P3-03',title:'OTP في وضع Pilot (D-20)',status:'todo',
+  body:'<code>POST /auth/otp/send</code> لرقم خارج القائمة ← 403 <code>PILOT_ONLY</code> برسالة «الخدمة متاحة حالياً لمجموعة تجريبية». داخل القائمة ← 200 كالمعتاد؛ الرمز يُسلَّم يدوياً.'},
+ {id:'C-P3-04',title:'تفعيل Reverb',status:'todo',body:'تنفيذ C-P1-03 على VPS. لا تغيير في العقد.'}
+],
+scenarios:[
+ {title:'P3-S1 — وردية سائق ونقد',steps:[
+  ['السائق','يسلّم 6 طلبات ويسجل المبلغ المحصل لكل طلب'],
+  ['السائق','«عهدتي اليوم»: المجموع المتوقع 840 ₪'],
+  ['الإدارة','تستلم النقد ← «توريد» ← إيصال برقم ← <code>remitted</code>']],
+  alt:'المحصَّل 830 ₪ ← <code>variance</code> ← لا تُغلق الوردية حتى تسوية إدارية بسبب مكتوب · تجاوز السقف ← لا تكليف جديد.'},
+ {title:'P3-S2 — نزاع صنف تالف',steps:[
+  ['عميل','خلال 48 ساعة: «لدي مشكلة» ← يختار البند والسبب ويرفع صورتين'],
+  ['النظام','تجميد ضمان الحصة المعنية فقط'],
+  ['الإدارة','تراجع الأدلة ← استرداد جزئي 45 ₪ عبر السائق أو استبدال ← القرار خلال 48 ساعة عمل'],
+  ['النظام','الاسترداد يُحمَّل على المتجر أو الاحتياطي (D-10) حسب القرار']]},
+ {title:'P3-S3 — التسوية الأسبوعية',steps:[
+  ['النظام','الأحد 12:00: <code>SettlementJob</code> يجمع الحصص <code>released</code> حتى السبت 23:59'],
+  ['الإدارة','تراجع الكشوف ← تحويل ← تسجيل <code>transfer_ref</code>'],
+  ['المتجر','يرى الكشف في <code>/store</code>: الإجمالي · العمولة · الاستردادات · الصافي']]},
+ {title:'P3-S4 — يوم Pilot',steps:[
+  ['العميل التجريبي','يطلب الرمز ← الإدارة ترسله عبر واتساب خلال دقيقتين (D-20)'],
+  ['الفريق','موجتان · 5–10 طلبات · مراجعة مسائية 15 د لكل الأعطال'],
+  ['أشرف','تحديث هذا الملف: بطاقات R- لأي خلل']]}
+],
+design:[
+ {title:'نموذج النزاع — العميل',body:`<ul><li>زر «لدي مشكلة في طلبي» يظهر فقط داخل النافذة مع عداد «متبقٍ 31 ساعة».</li><li>خطوات: اختيار البند ← السبب (أيقونات) ← وصف ← صور (معاينة وحذف) ← إرسال.</li><li>بعد الإرسال: حالة النزاع وموعد الرد المتوقع.</li><li>ملخص السياسة ظاهر قبل الإرسال (D-09).</li></ul>`},
+ {title:'التقييم',body:`<ul><li>بعد التسليم: بطاقة واحدة بنجمتين «تجربة الطلب» و«المندوب» + تعليق اختياري.</li><li>إرسال بخطوة واحدة، شكر ثم تختفي.</li></ul>`},
+ {title:'عهدة السائق — <code>/delivery</code>',body:`<ul><li>شريط علوي: «معك الآن 840 ₪ من 6 طلبات · السقف 1,000 ₪».</li><li>عند 80% من السقف: تنبيه برتقالي «ورّد قبل استلام مهام جديدة».</li></ul>`},
+ {title:'كشف المتجر — <code>/store</code>',body:`<ul><li>بطاقات: محجوز في الضمان · جاهز للتسوية · آخر تحويل.</li><li>جدول الكشوف مع تنزيل PDF.</li></ul>`},
+ {title:'صفحة سياسة الإرجاع',body:`<div class="tw"><table class="t"><tbody><tr><td>تلف عند الاستلام</td><td>ارفضي البند قبل إعطاء الكود</td></tr><tr><td>تلف/خطأ/منتهي بعد الفتح</td><td>خلال 48 ساعة مع صور</td></tr><tr><td>مختوم — تغيير رأي</td><td>استبدال فقط خلال 48 ساعة</td></tr><tr><td>مفتوح أو مجرَّب</td><td>غير قابل للإرجاع</td></tr></tbody></table></div>`},
+ {title:'واجهة Pilot',body:`<ul><li>رسالة لرقم خارج القائمة: «Gazabella في مرحلة تجريبية محدودة — سجّلي اهتمامك وسنبلغك عند الإطلاق» + زر واتساب.</li><li>بعد إرسال الرمز: «سيصلك الرمز عبر واتساب خلال دقائق».</li></ul>`}
+],
+cards:[
+ {id:'P3-BE-01',track:'BE',title:'عهدة السائق والتوريد',refs:['D-02'],status:'todo',
+  spec:'<code>driver_cash_collections</code> + <code>cash_remittances</code>، إجراء التحصيل في <code>/delivery</code>، صفحة التوريد والمطابقة في <code>/admin</code>، سقف العهدة، <code>payment_status=paid</code> عند التحصيل.',
+  dod:['فرق ← variance يمنع الإغلاق','تجاوز السقف يمنع التكليف']},
+ {id:'P3-BE-02',track:'BE',title:'الضمان وتحريره',refs:['D-02'],status:'todo',dep:['P3-BE-01'],
+  spec:'<code>escrow_holds</code> لكل حصة عند <code>delivered</code>، Job كل ساعة للتحرير بالشرطين، التجميد عند النزاع.',
+  dod:['اختبار زمني للتحرير','لا تحرير قبل التوريد']},
+ {id:'P3-BE-03',track:'BE',title:'النزاعات',refs:['C-P3-01','D-09','D-10'],status:'todo',
+  spec:'Model + API + رفع صور إلى التخزين بأسماء UUID + Resource في <code>/admin</code> بقرار (كلي/جزئي/رفض) + <code>damage_reserve_entries</code>.',
+  dod:['خارج النافذة ← 422','القرار يُحدّث الضمان والمستحق']},
+ {id:'P3-BE-04',track:'BE',title:'التسوية الأسبوعية',refs:['D-15','D-06','D-08'],status:'todo',dep:['P3-BE-02'],
+  spec:'<code>SettlementJob</code> الأحد 12:00 Asia/Gaza، <code>settlements</code>، صفحة في <code>/store</code> و<code>/admin</code>، PDF.',
+  dod:['المعادلة مختبرة بحالات: كوبون · استرداد · إزالة بند']},
+ {id:'P3-BE-05',track:'BE',title:'التقييم',refs:['C-P3-02'],status:'todo',
+  spec:'Model + API + عرض في <code>/admin</code>.',dod:['مرة واحدة لكل طلب']},
+ {id:'P3-BE-06',track:'BE',title:'Reverb على VPS (G-03 نهائي)',refs:['G-03','C-P3-04'],status:'todo',
+  spec:'Supervisor + Nginx proxy لـ WSS + <code>BROADCAST_CONNECTION=reverb</code>.',
+  dod:['حدث من <code>/admin</code> يصل للواجهة &lt; 3 ث']},
+ {id:'P3-BE-07',track:'BE',title:'OTP وضع Pilot (D-20)',refs:['C-P3-03','D-20'],status:'todo',
+  spec:'<code>OTP_DELIVERY=manual</code> + <code>OTP_PILOT_ALLOWLIST</code>، صفحة «رموز بانتظار الإرسال» للمشرف العام فقط تعرض الرمز مرة واحدة وتنتهي بانتهاء TTL، سجل من أرسل ومتى.',
+  dod:['رقم خارج القائمة ← 403','الرمز لا يُكتب في logs','الإعداد يُحذف عند تفعيل SMS']},
+ {id:'P3-FE-01',track:'FE',title:'واجهة النزاع',refs:['C-P3-01'],status:'todo',
+  spec:'مكوّن متعدد الخطوات حسب التصميم، رفع صور مع ضغط قبل الإرسال (≤ 5MB)، عرض الحالة.',dod:['يعمل على 320px','رسائل الأخطاء معرّبة']},
+ {id:'P3-FE-02',track:'FE',title:'التقييم',refs:['C-P3-02'],status:'todo',spec:'بطاقة التقييم بعد التسليم.',dod:['لا تظهر بعد الإرسال']},
+ {id:'P3-FE-03',track:'FE',title:'تفعيل التحديث اللحظي',refs:['G-03','C-P3-04'],status:'todo',dep:['P3-BE-06'],
+  spec:'ضبط <code>VITE_PUSHER_*</code> في Vercel، رفع polling إلى 60 ث عند اتصال سليم.',dod:['اختبار يدوي بالدليل']},
+ {id:'P3-FE-04',track:'FE',title:'شاشات Pilot وسياسة الإرجاع',refs:['C-P3-03','D-09'],status:'todo',
+  spec:'معالجة <code>PILOT_ONLY</code> في <code>AuthPage</code>، صفحة السياسة.',dod:['نصوص معتمدة']},
+ {id:'P3-UX-01',track:'UX',title:'نصوص النزاع والسياسة والتقييم وPilot',status:'todo',spec:'كتابة ومراجعة كل النصوص.',dod:['معتمدة في الملف']},
+ {id:'P3-QA-01',track:'QA',title:'مطابقة مالية شاملة',status:'todo',
+  spec:'10 طلبات بسيناريوهات مختلفة (كوبون · إزالة بند · نزاع جزئي) ← مقارنة الكشف بالحساب اليدوي.',dod:['فارق 0 ₪']},
+ {id:'P3-OPS-01',track:'OPS',title:'إجراءات النقد وتدريب الفريق',refs:['D-02'],status:'todo',
+  spec:'SOP مكتوب للتوريد والإيصالات، تدريب السائق ومسؤول النقطة والمتاجر.',dod:['توقيع كل مشارك على الإجراء']},
+ {id:'P3-OPS-02',track:'OPS',title:'تشغيل Pilot',status:'todo',spec:'10 طلبات ثم 30، مراجعة يومية، بطاقات R- لكل خلل.',dod:['30 طلباً ناجحاً']},
+ {id:'P3-BIZ-01',track:'BIZ',title:'قائمة Pilot والتعاقد مع مزود SMS',refs:['D-17','D-20'],status:'todo',
+  spec:'20–40 عميلة تجريبية، والبدء بإجراءات التعاقد (NeelSMS / Eky) بالتوازي.',dod:['القائمة مدخلة','عقد SMS قيد التوقيع']}
+],
+tests:[
+ ['T3-01','تحرير ضمان قبل التوريد','ممنوع','BE'],
+ ['T3-02','نزاع بعد 49 ساعة','422','BE'],
+ ['T3-03','كشف تسوية لطلب بكوبون Gazabella','مستحق المتجر على سعر ما قبل الكوبون','BE'],
+ ['T3-04','OTP لرقم خارج القائمة','403 + رسالة Pilot في الواجهة','FE'],
+ ['T3-05','صورة نزاع 12MB','ضغط في الواجهة أو رفض واضح','FE'],
+ ['T3-06','حدث حالة عبر Reverb','&lt; 3 ث','QA'],
+ ['T3-07','الكشف الأسبوعي مقابل النقد','0 ₪ فرق','QA']
+],
+risks:[
+ ['تأخر مزود SMS','Pilot يطول','D-20 يكفي للـ Pilot فقط؛ الإطلاق العام ينتظر P4-BE-01'],
+ ['أخطاء نقدية','variance متكرر لنفس السائق','إيصالات + مراجعة يومية + خفض السقف'],
+ ['ضغط النزاعات','&gt; 3% من الطلبات','فحص أدق في النقطة + تحسين التغليف']
+],
+log:[['27-09-2026','تعريف المرحلة — مقفلة حتى إغلاق P2','أشرف + Claude']]
+},
+/* ═══════════════════════════ PHASE 4 ═══════════════════════════ */
+{
+id:'P4', mvp:'MVP2 → MVP3', title:'التفعيل الخارجي والنمو والتوسع', weeks:'متدرجة بموجات 4A · 4B · 4C', gate:'locked',
+goal:`بعد إثبات التشغيل: <b>4A</b> تفعيل الاعتمادات الخارجية (SMS · Jawwal Pay بحل G-02 النهائي · FCM)، ثم <b>4B</b> ميزات النمو (MVP2)، ثم <b>4C</b> التوسع المضبوط (MVP3). كل موجة لها بوابة فرعية، وكل ميزة تُختار بناءً على بيانات Pilot.`,
+meta:['👥 الفريق كاملاً','🎯 إطلاق عام ثم نمو مدروس','🔒 تُفتح بعد معيار الخروج من MVP1'],
+gateIn:[['معيار الخروج من MVP1 محقق (بوابة P3)',false],['<b>4A-SMS:</b> عقد مزود SMS موقّع',false],['<b>4A-Jawwal:</b> وثائق API رسمية + مفاتيح Sandbox من جوال بي',false],['<b>4B:</b> 100 طلب ناجح بعد الإطلاق العام',false],['<b>4C:</b> ربحية تشغيلية في خانيونس لشهرين',false]],
+gateOut:[['4A: OTP إنتاجي عبر SMS · حذف D-20',false],['4A: Jawwal Pay يعمل بـ D-19 مع اختبار نجاح/فشل/انتهاء',false],['4B: ميزات MVP2 المختارة مغلقة بأدلة',false],['4C: كل توسع له مؤشر نجاح محدد مسبقاً',false]],
+handoff:['منصة قابلة للتوسع جغرافياً ومؤسسياً'],
+analysis:`<div class="grid3">
+<div class="box"><h3>4A — الاعتمادات الخارجية</h3><ul><li>SMS: driver حقيقي خلف <code>SmsChannel</code>، إلغاء D-20.</li><li>Jawwal Pay: <b>G-02 النهائي</b> (D-19) — <code>held_for_payment</code> + <code>payment_expires_at</code> + <code>ExpireUnpaidOrders</code>.</li><li>FCM: إشعارات الجوال (خرج للتوصيل · تم التسليم · عودة المخزون).</li></ul></div>
+<div class="box"><h3>4B — النمو (MVP2)</h3><ul><li>المفضلة (اختيار المتغير عند النقل للسلة).</li><li>مراجعات المنتجات المشتراة.</li><li>تطوير الكوبونات (استهداف + حدود) دون جدول جديد.</li><li>تقارير المتجر المتقدمة وصلاحيات owner/staff.</li><li>استيراد CSV — كل صف <code>pending_review</code>.</li><li>قرار الشحن الجزئي بناءً على بيانات D-05.</li></ul></div>
+<div class="box"><h3>4C — التوسع (MVP3)</h3><ul><li>مدينة ثانية (رفح أو الوسطى) + <code>delivery_zones</code> + نقطة تجميع ثانية.</li><li>تذاكر دعم مرتبطة بالنزاعات.</li><li>AR/EN (<code>name_en</code>).</li><li>برنامج ولاء بدفتر حركات.</li><li>Partner API عبر طابور الموافقة نفسه.</li></ul></div></div>`,
+contracts:[
+ {id:'C-P4-01',title:'دورة Jawwal Pay النهائية',status:'todo',
+  body:'<code>POST /orders</code> بـ <code>jawwal_pay</code> ← <code>status=pending</code> + <code>payment_expires_at</code> (15 د). <code>POST /payments/init</code> (Idempotency) ← رابط/مرجع. Webhook موقّع يطابق amount/currency/reference ← <code>confirmed</code>. الانتهاء ← <code>cancelled</code> + <code>payment_status=failed</code>. الشكل النهائي يُكتب بعد وثائق المزود فقط.'},
+ {id:'C-P4-02',title:'المفضلة',status:'todo',body:'<code>GET/POST/DELETE /wishlist</code> على الجدول الموجود؛ النقل للسلة يتطلب <code>product_variant_id</code>.'},
+ {id:'C-P4-03',title:'المراجعات',status:'todo',body:'<code>POST /orders/{n}/items/{item}/review</code> بعد <code>delivered</code>؛ العرض في <code>/products/{slug}</code> بلا هوية المتجر.'}
+],
+scenarios:[
+ {title:'P4-S1 — دفع Jawwal ناجح',steps:[['عميل','يختار جوال باي ← الطلب pending + عداد 15 د'],['عميل','يدفع من المحفظة'],['النظام','Webhook موقّع ← <code>confirm()</code> + خصم الحجز ذرياً ← نفس مسار COD من هنا']],
+  alt:'فشل أو انتهاء المهلة ← تحرير الحجز · الطلب ملغى · رسالة «لم يكتمل الدفع — يمكنك إعادة الطلب بالدفع عند الاستلام».'},
+ {title:'P4-S2 — OTP إنتاجي',steps:[['عميل','يطلب الرمز'],['النظام','يرسل SMS عبر المزود · TTL 300 ث · استعمال واحد · حد محاولات'],['النظام','فشل المزود ← رسالة «تعذّر الإرسال، أعيدي المحاولة» + تنبيه للإدارة']]}
+],
+design:[
+ {title:'شاشة بانتظار الدفع',body:'عداد <code>payment_expires_at</code> · تعليمات المحفظة · <code>JawwalReferenceForm</code> الموجود · زر «التحويل للدفع عند الاستلام».'},
+ {title:'المفضلة والمراجعات',body:'استخدام مكوّنات Design System الحالية (زر ♡، بطاقة المنتج)؛ المراجعة تعرض اسم العميلة مختصراً فقط.'}
+],
+cards:[
+ {id:'P4-BE-01',track:'BE',title:'مزود SMS حقيقي + إلغاء D-20',refs:['D-17','D-20'],status:'todo',spec:'driver خلف <code>SmsChannel</code>، مراقبة معدل التسليم، حذف وضع manual.',dod:['OTP إنتاجي على جوال وأوريدو']},
+ {id:'P4-BE-02',track:'BE',title:'Jawwal Pay — G-02 النهائي',refs:['G-02','D-19','C-P4-01'],status:'todo',spec:'<code>held_for_payment</code> · <code>payment_expires_at</code> · <code>ExpireUnpaidOrders</code> · Webhook عبر <code>OrderConfirmationService</code> · إزالة الخصم عند الإنشاء لـ jawwal.',dod:['اختبارات نجاح/فشل/انتهاء/تكرار Webhook','تفعيل <code>enabled_methods</code> في الإنتاج']},
+ {id:'P4-BE-03',track:'BE',title:'FCM',status:'todo',spec:'تسجيل الأجهزة + إشعارات الحالات الرئيسية.',dod:['إشعار «خرج للتوصيل» يصل']},
+ {id:'P4-BE-04',track:'BE',title:'MVP2 — المفضلة والمراجعات والكوبونات والتقارير وCSV',status:'todo',spec:'حسب C-P4-02/03 وقائمة 4B.',dod:['كل ميزة بعقد وFeature Test']},
+ {id:'P4-FE-01',track:'FE',title:'واجهة Jawwal النهائية',refs:['G-02','C-P4-01'],status:'todo',spec:'شاشة بانتظار الدفع + معالجة الفشل والانتهاء.',dod:['السيناريو P4-S1 كاملاً']},
+ {id:'P4-FE-02',track:'FE',title:'واجهات MVP2',status:'todo',spec:'المفضلة · المراجعات · الكوبونات المستهدفة.',dod:['كل شاشة بلقطات وحالات فارغة']},
+ {id:'P4-UX-01',track:'UX',title:'اختيار ميزات 4B من بيانات Pilot',status:'todo',spec:'تحليل: أين تسرّب التحويل؟ ما أكثر طلبات العملاء؟',dod:['قائمة مرتبة بالأثر']},
+ {id:'P4-BIZ-01',track:'BIZ',title:'قرار المدينة الثانية',refs:['D-18'],status:'todo',spec:'معايير: ربحية خانيونس · شريك توصيل · متاجر متاحة.',dod:['قرار موثق D-xx']}
+],
+tests:[
+ ['T4-01','Webhook بمبلغ مختلف','رفض بلا تأكيد','BE'],
+ ['T4-02','انتهاء نافذة الدفع','تحرير الحجز + إلغاء','BE'],
+ ['T4-03','Webhook مكرر بعد confirmed','لا تكرار ولا ارتداد','BE'],
+ ['T4-04','SMS فشل المزود','رسالة واضحة + تنبيه','FE']
+],
+risks:[['تأخر جوال بي','لا وثائق خلال شهر','الاستمرار بـ COD — لا ضغط على الإطلاق'],['توسع قبل النضج','مؤشرات خانيونس غير مستقرة','بوابة 4C صارمة: ربحية شهرين']],
+log:[['27-09-2026','تعريف المرحلة — مقفلة حتى معيار الخروج من MVP1','أشرف + Claude']]
+}
+]};
+</script>
+
+<script>
+/* ═════════════ RENDERER — لا تعدّل هنا لتحديث الحالة؛ عدّل كتلة PLAN أعلاه ═════════════ */
+(function(){
+const TR = PLAN.tracks, ST = PLAN.statuses;
+let cur = 0, track = 'ALL', query = '';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const strip = h => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/\s+\n/g,'\n').trim(); };
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+function copy(txt){ (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(()=>toast('تم النسخ ✓')).catch(()=>{ const a=document.createElement('textarea'); a.value=txt; document.body.appendChild(a); a.select(); try{document.execCommand('copy'); toast('تم النسخ ✓');}catch(e){} a.remove(); }); }
+window.__copy = copy;
+function codeBlock(c){ const id='c'+Math.random().toString(36).slice(2,8); CODES[id]=c.src; return `<pre class="code" data-code="${id}"><span class="lang">${esc(c.lang||'')}${c.title?' · '+esc(c.title):''}</span><button class="cpy" onclick="__copy(CODES['${id}'])">نسخ</button><code>${esc(c.src)}</code></pre>`; }
+window.CODES = {};
+const trb = k => `<span class="tr ${k}">${esc(TR[k].short)}</span>`;
+const stb = k => `<span class="st ${k}">${esc(ST[k])}</span>`;
+const pct = p => { const n=p.cards.length; if(!n) return 0; return Math.round(p.cards.filter(c=>c.status==='done').length*100/n); };
+
+function phasebar(){
+  $('#phasebar').innerHTML = PLAN.phases.map((p,i)=>`
+    <button class="ptab ${i===cur?'active':''}" role="tab" aria-selected="${i===cur}" onclick="__go(${i})">
+      <span class="gate ${p.gate}">${{open:'🟢 مفتوحة',locked:'🔒 مقفلة',closed:'✅ مُغلقة'}[p.gate]}</span>
+      <span class="n">${p.id} · ${esc(p.mvp)}</span>
+      <span class="t">${esc(p.title)}</span>
+      <span class="s">${esc(p.weeks)} · ${p.cards.length} بطاقة · ${pct(p)}%</span>
+      <span class="bar"><i style="width:${pct(p)}%"></i></span>
+    </button>`).join('');
+}
+function chips(){
+  const keys=['ALL',...Object.keys(TR)];
+  $('#trackChips').innerHTML = keys.map(k=>`<button class="chip ${k===track?'on':''}" onclick="__track('${k}')">${k==='ALL'?'الكل':esc(TR[k].short+' · '+TR[k].who)}</button>`).join('');
+}
+function sec(id,no,title,body){ return `<section class="sec" id="${id}"><h2><span class="no">${no}</span>${title}</h2><div class="bd">${body}</div></section>`; }
+
+function render(){
+  const p = PLAN.phases[cur]; const S=[]; const toc=[]; let n=0;
+  const add=(id,title,body,grp)=>{ n++; const no=String(n).padStart(2,'0'); S.push(sec(id,no,title,body)); toc.push({id,title,grp}); };
+  // hero
+  let h = `<div class="hero"><div class="k">${p.id} · ${esc(p.mvp)} · ${esc(p.weeks)}</div><h1>${esc(p.title)}</h1><p>${p.goal}</p><div class="meta">${p.meta.map(m=>`<span>${m}</span>`).join('')}</div></div>`;
+  // gates
+  add('gates','البوابات — متى نفتح ومتى نغلق', `<div class="gates">
+    <div class="box"><h3>🚪 بوابة الدخول (Gate-In)</h3><ul class="check">${p.gateIn.map(g=>`<li class="${g[1]?'d':''}">${g[0]}</li>`).join('')}</ul></div>
+    <div class="box"><h3>🏁 بوابة الخروج (Gate-Out)</h3><ul class="check">${p.gateOut.map(g=>`<li class="${g[1]?'d':''}">${g[0]}</li>`).join('')}</ul></div>
+    <div class="box"><h3>📦 ما يُسلَّم للمرحلة التالية</h3><ul>${p.handoff.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>
+    ${p.gateNote?`<div class="note">${p.gateNote}</div>`:''}`,'التخطيط');
+  // analysis
+  if(p.analysis) add('analysis','التحليل والقرارات الحاكمة', p.analysis,'التخطيط');
+  // gaps
+  if(p.gaps&&p.gaps.length){
+    const g = p.gaps.map(x=>`<article class="gap" data-search="${esc(strip(x.id+' '+x.title+' '+x.why))}" data-tracks="BE FE">
+      <div class="gap-hd"><span class="id">${x.id}</span><h3>${x.title}</h3>${x.prio?`<span class="st blocked">${x.prio}</span>`:''}${(x.refs||[]).map(r=>`<span class="pill">${r}</span>`).join('')}</div>
+      <div class="gap-bd"><div class="why">${x.why}</div>
+      <div class="sol"><div class="h">الطبقة</div><div class="h">⏱️ الحل المؤقت (الآن)</div><div class="h">🏗️ الحل النهائي</div>
+        <div class="side">${trb('BE')}<small class="muted">عاصم</small></div><div><span class="ml">⏱️ مؤقت</span>${x.be.temp}</div><div><span class="ml">🏗️ نهائي</span>${x.be.final}</div>
+        <div class="side">${trb('FE')}<small class="muted">أشرف</small></div><div><span class="ml">⏱️ مؤقت</span>${x.fe.temp}</div><div><span class="ml">🏗️ نهائي</span>${x.fe.final}</div>
+      </div>
+      ${x.code&&x.code.length?`<details class="more"><summary>الكود الجاهز (${x.code.length})</summary>${x.code.map(codeBlock).join('')}</details>`:''}
+      ${x.tests?`<div class="note"><b>اختبارات الإغلاق:</b> ${x.tests}</div>`:''}
+      </div></article>`).join('');
+    add('gaps','الفجوات — حل مؤقت ونهائي لكل طبقة', `<p class="muted">كل فجوة لها مسار مؤقت يفتح العمل فوراً دون كسر، ومسار نهائي يُغلقها بشكل دائم. البطاقات في قسم «بطاقات العمل» تنفّذ هذه الحلول.</p>${g}`,'التنفيذ');
+  }
+  // contracts
+  if(p.contracts&&p.contracts.length){
+    add('contracts','العقود المشتركة (Contract-First)', `<p class="muted">لا يبدأ أي طرف ببطاقة مرتبطة بعقد قبل أن تصبح حالة العقد «جاهز». العقد يُنقل إلى <code>Docs/openapi.yaml</code> حرفياً.</p>`+
+      p.contracts.map(c=>`<div class="box" style="margin-bottom:12px" data-search="${esc(strip(c.id+' '+c.title+' '+c.body))}"><h3 style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><code>${c.id}</code> ${c.title} ${stb(c.status)}</h3><div style="font-size:13.4px">${c.body}</div>${(c.code||[]).map(codeBlock).join('')}</div>`).join(''),'التنفيذ');
+  }
+  // scenarios
+  if(p.scenarios&&p.scenarios.length){
+    add('scenarios','السيناريوهات', p.scenarios.map((s,i)=>`<details class="scn" ${i===0?'open':''} data-search="${esc(strip(s.title+' '+s.steps.map(x=>x[1]).join(' ')))}"><summary>🎬 ${s.title}</summary><ol class="steps">${s.steps.map(x=>`<li><span class="actor">${x[0]}</span><span>${x[1]}</span></li>`).join('')}</ol>${s.alt?`<div class="alt">↪️ ${s.alt}</div>`:''}</details>`).join(''),'التحليل');
+  }
+  // design
+  if(p.design&&p.design.length){
+    add('design','التصميم وتجربة الاستخدام', `<div class="grid2">${p.design.map(d=>`<div class="box" data-search="${esc(strip(d.title+' '+d.body))}"><h3>${d.title}</h3><div style="font-size:13.3px">${d.body}</div></div>`).join('')}</div>`,'التحليل');
+  }
+  // cards
+  add('cards','بطاقات العمل', `<div id="cardsGrid" class="cards">${p.cards.map(cardHtml).join('')}</div><div id="cardsEmpty" class="empty hidden">لا بطاقات تطابق المسار أو البحث.</div>`,'التنفيذ');
+  // tests
+  if(p.tests&&p.tests.length){
+    add('tests','مصفوفة الاختبار والقبول', `<div class="tw"><table class="t"><thead><tr><th>#</th><th>الحالة المختبرة</th><th>النتيجة المتوقعة</th><th>المسار</th></tr></thead><tbody>${p.tests.map(t=>`<tr data-track="${t[3]}"><td><code>${t[0]}</code></td><td>${t[1]}</td><td>${t[2]}</td><td>${trb(t[3])}</td></tr>`).join('')}</tbody></table></div>`,'الجودة');
+  }
+  if(p.risks&&p.risks.length){
+    add('risks','مخاطر المرحلة', `<div class="tw"><table class="t"><thead><tr><th>الخطر</th><th>الإشارة المبكرة</th><th>التصرف</th></tr></thead><tbody>${p.risks.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></div>`,'الجودة');
+  }
+  add('log','سجل المرحلة', `<div class="tw"><table class="t"><thead><tr><th>التاريخ</th><th>التغيير</th><th>بواسطة</th></tr></thead><tbody>${p.log.map(l=>`<tr><td>${l[0]}</td><td>${l[1]}</td><td>${l[2]}</td></tr>`).join('')}</tbody></table></div>`,'الجودة');
+
+  $('#main').innerHTML = h + S.join('');
+  let g=''; $('#toc').innerHTML = toc.map(t=>{ let s=''; if(t.grp!==g){g=t.grp; s=`<div class="lbl">${g}</div>`;} return s+`<a href="#${t.id}" onclick="event.preventDefault();document.getElementById('${t.id}').scrollIntoView({behavior:'smooth'})">${t.title}</a>`; }).join('');
+  applyFilter();
+}
+function cardHtml(c){
+  const search = strip([c.id,c.title,c.spec,(c.refs||[]).join(' '),TR[c.track].who].join(' '));
+  return `<article class="card" data-track="${c.track}" data-search="${esc(search)}">
+    <div class="card-hd"><span class="cid">${c.id}</span>${trb(c.track)}<span class="sp"></span>${stb(c.status)}</div>
+    <h4>${c.title}</h4>
+    ${c.refs&&c.refs.length?`<div class="refs">${c.refs.map(r=>`<span>${r}</span>`).join('')}</div>`:''}
+    <div class="body">${c.spec}</div>
+    <div class="dod"><b>✔ تعريف الإنجاز:</b><ul>${c.dod.map(d=>`<li>${d}</li>`).join('')}</ul></div>
+    <div class="ft"><small>👤 ${esc(c.owner||TR[c.track].who)}${c.dep?' · يعتمد على: '+c.dep.join('، '):''}${c.evidence?' · 📎 '+c.evidence:''}</small>
+    ${['BE','FE'].includes(c.track)?`<button class="mini" onclick="__prompt('${c.id}')">📋 برومبت ${c.track==='FE'?'Codex':'Claude/Cursor'}</button>`:''}</div>
+  </article>`;
+}
+function applyFilter(){
+  const q=query.trim().toLowerCase();
+  document.querySelectorAll('#main [data-search]').forEach(el=>{
+    const okQ = !q || el.dataset.search.toLowerCase().includes(q);
+    const okT = track==='ALL' || !el.dataset.track || (el.dataset.tracks? el.dataset.tracks.split(' ').includes(track) : el.dataset.track===track);
+    el.classList.toggle('hidden', !(okQ&&okT));
+  });
+  document.querySelectorAll('#main tr[data-track]').forEach(el=>el.classList.toggle('hidden', !(track==='ALL'||el.dataset.track===track)));
+  const grid=$('#cardsGrid'); if(grid){ const vis=[...grid.children].some(c=>!c.classList.contains('hidden')); $('#cardsEmpty').classList.toggle('hidden',vis); }
+}
+window.__prompt = id => {
+  const p=PLAN.phases[cur]; const c=p.cards.find(x=>x.id===id);
+  const ctx = c.track==='FE' ? PLAN.promptCtx.FE : PLAN.promptCtx.BE;
+  const txt = [ctx, '', '## المهمة: '+c.id+' — '+strip(c.title), 'المرحلة: '+p.id+' — '+p.title, c.refs&&c.refs.length?'المراجع: '+c.refs.join('، ')+' (من Docs/GAZABELLA_PLAYBOOK.html)':'',
+    '', '### المطلوب', strip(c.spec), '', '### تعريف الإنجاز', ...c.dod.map(d=>'- '+strip(d)), '', PLAN.promptCtx.rules].filter(x=>x!==undefined).join('\n');
+  copy(txt);
+};
+window.__go = i => { cur=i; try{localStorage.setItem('gz-pb-phase',i);}catch(e){} history.replaceState(null,'','#'+PLAN.phases[i].id); phasebar(); render(); window.scrollTo({top:0}); };
+window.__track = k => { track=k; chips(); applyFilter(); };
+window.openOv = id => document.getElementById(id).classList.add('show');
+window.closeOv = el => el.closest('.ov').classList.remove('show');
+window.toggleTheme = () => { const r=document.documentElement; const dark = r.dataset.theme ? r.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme = dark?'light':'dark'; try{localStorage.setItem('gz-pb-theme',r.dataset.theme);}catch(e){} };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.ov.show').forEach(o=>o.classList.remove('show')); });
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
+$('#q').addEventListener('input',e=>{ query=e.target.value; applyFilter(); });
+try{ const t=localStorage.getItem('gz-pb-theme'); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+const fromHash = PLAN.phases.findIndex(p=>'#'+p.id===location.hash);
+let saved=0; try{ saved=+localStorage.getItem('gz-pb-phase')||0; }catch(e){}
+cur = fromHash>=0 ? fromHash : (PLAN.phases[saved]?saved:0);
+$('#ver').textContent = PLAN.meta.version; $('#today').textContent = 'آخر تحديث: '+PLAN.meta.updated;
+$('#ov-decisions-body').innerHTML = `<div class="tw"><table class="t"><thead><tr><th>#</th><th>القرار</th><th>المرحلة</th></tr></thead><tbody>${PLAN.decisions.map(d=>`<tr><td><code>${d[0]}</code></td><td>${d[1]}</td><td>${d[2]}</td></tr>`).join('')}</tbody></table></div>`;
+phasebar(); chips(); render();
+})();
+</script>
+</body>
+</html>

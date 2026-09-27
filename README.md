@@ -1,5 +1,7 @@
 # Gazabella Frontend
 
+> 🧭 **المرجع الوحيد للعمل:** [Docs/GAZABELLA_PLAYBOOK.html](Docs/GAZABELLA_PLAYBOOK.html)
+
 واجهة React/TypeScript/Vite. مصدر البيانات الافتراضي API؛ المحاكاة تعمل فقط عند `VITE_DATA_SOURCE=mock`.
 
 ## التشغيل
@@ -21,11 +23,11 @@ npm run dev
 
 **العقد الافتراضي السابق عبر dev:remote:** تأكيد الطلب موقوف حتى يوفر الخادم عرض الإجمالي وعدم التكرار. **عقد MVP0 المحلي عبر dev أو dev:mvp0:** يدعم الحجز والكوبونات ومراجعة الإجمالي وإنشاء طلب COD مع منع التكرار. استخدم `npm run build:mvp0` لبناء الواجهة لهذا العقد. لا توجد عودة تلقائية إلى mock.
 
-راجع [تقرير التنفيذ واختبار UX](Docs/MVP0_IMPLEMENTATION_2026-09-26_AR.md) لتشغيل الخلفية والمهاجرات وحدود الدفع التجريبي، و[ملحق العقد](Docs/MVP0_CONTRACT_DELTA.md). الشراء السريع متاح من بطاقات المنتجات دون فتح التفاصيل.
+راجع [تقرير التنفيذ واختبار UX](Docs/Backup/02-mvp0-reports/MVP0_IMPLEMENTATION_2026-09-26_AR.md) لتشغيل الخلفية والمهاجرات وحدود الدفع التجريبي، و[ملحق العقد](Docs/MVP0_CONTRACT_DELTA.md). الشراء السريع متاح من بطاقات المنتجات دون فتح التفاصيل.
 
-اكتمل [اختبار الإغلاق المحلي](Docs/MVP0_LOCAL_CLOSURE_2026-09-26_AR.md) على SQLite وMariaDB مع اختبارات تزامن فعلية. OTP المحلي يستخدم `123456` دون SMS أو Redis. لا توجد بيئة Staging ضمن النطاق المعتمد حاليًا.
+اكتمل [اختبار الإغلاق المحلي](Docs/Backup/02-mvp0-reports/MVP0_LOCAL_CLOSURE_2026-09-26_AR.md) على SQLite وMariaDB مع اختبارات تزامن فعلية. OTP المحلي يستخدم `123456` دون SMS أو Redis. لا توجد بيئة Staging ضمن النطاق المعتمد حاليًا.
 
-راجع [تقرير المراجعة ومتطلبات الباك إند](Docs/API_REVIEW_AR.md) و[جرد العمليات الـ25](Docs/API_ENDPOINT_INVENTORY.json). مستندات MVP السابقة في Docs تاريخية وليست وصفًا للعقد الحالي.
+راجع [تقرير المراجعة ومتطلبات الباك إند](Docs/Backup/03-api-review-and-guides/API_REVIEW_AR.md) و[جرد العمليات الـ25](Docs/Backup/03-api-review-and-guides/API_ENDPOINT_INVENTORY.json). مستندات MVP السابقة في Docs تاريخية وليست وصفًا للعقد الحالي.
 
 ## التحقق
 
