@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { resolvePaymentMethods } from '../lib/paymentMethods'
+import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
 import { DeliveryFeeRow } from '../components/checkout/DeliveryFee'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
@@ -10,7 +12,7 @@ import { money } from '../lib/format'
 import { useAuthStore } from '../stores/authStore'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
-import type { CheckoutBegin, CheckoutQuote, Mvp0Address, Mvp0CheckoutPayload } from '../types/api'
+import type { CheckoutBegin, CheckoutQuote, Mvp0Address, Mvp0CheckoutPayload, PaymentMethodCode } from '../types/api'
 
 type Attempt = { key: string; payload: Mvp0CheckoutPayload }
 
@@ -29,10 +31,13 @@ export function Mvp0CheckoutPage() {
   })
   const [deliveryId, setDeliveryId] = useState(0)
   const [coupon, setCoupon] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [now, setNow] = useState(Date.now)
   const formRef = useRef<HTMLFormElement>(null)
+  const paymentOptions = resolvePaymentMethods(begin?.payment_methods)
+  const activePayment = paymentOptions.some(o => o.code === paymentMethod) ? paymentMethod : paymentOptions[0].code
 
   const cart = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
 
@@ -88,7 +93,7 @@ export function Mvp0CheckoutPage() {
         payload: {
           address: { ...address, phone: normalizePhone(address.phone) },
           delivery_option_id: deliveryId,
-          payment_method: 'jawwal_pay',
+          payment_method: activePayment,
           quote_token: quote.quote_token,
           ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
           ...(notes.trim() ? { notes: notes.trim() } : {}),
@@ -319,21 +324,7 @@ export function Mvp0CheckoutPage() {
                   <span className="flex size-8 items-center justify-center rounded-full bg-[var(--primary)] text-white text-sm font-bold">٣</span>
                   <h2 className="text-lg font-bold">طريقة الدفع</h2>
                 </div>
-                <section className="jawwal-payment" aria-labelledby="payment-heading">
-                  <div className="jawwal-payment__heading">
-                    <h2 id="payment-heading">الدفع الإلكتروني</h2>
-                    <span>الخيار المتاح حاليًا</span>
-                  </div>
-                  <label className="jawwal-payment__option">
-                    <input type="radio" name="payment_method" value="jawwal_pay" checked readOnly aria-describedby="jawwal-payment-note" />
-                    <span className="jawwal-payment__logo"><img src="/payments/jawwal-pay.png" alt="Jawwal Pay" width="130" height="64" /></span>
-                    <span className="jawwal-payment__copy"><strong>جوال باي</strong><span>ادفعي باستخدام محفظتكِ الإلكترونية</span></span>
-                    <span className="jawwal-payment__selected" aria-hidden="true">✓</span>
-                  </label>
-                  <p id="jawwal-payment-note" className="jawwal-payment__note">
-                    <span>نسخة تجريبية</span> الدفع حاليًا في وضع الاختبار، ولا تُخصم أموال حقيقية.
-                  </p>
-                </section>
+                <PaymentMethodPicker options={paymentOptions} value={activePayment} disabled={busy} onChange={v => { setPaymentMethod(v); invalidate() }} />
               </div>
             </form>
           </div>

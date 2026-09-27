@@ -1007,3 +1007,29 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
 .delivery-fee__free { color: var(--success); }
 .delivery-waiver { display: inline-block; font-size: 11px; font-weight: 700; line-height: 1.6; padding: 1px 8px; border-radius: 999px; background: var(--success-bg); color: var(--success); }
 .delivery-waiver--compensation { background: rgba(191, 149, 69, .16); color: #8a6a2c; }
+
+/* ── P1-FE-02 محدد طريقة الدفع ── */
+.payment-picker { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.payment-picker__option { position: relative; display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 16px; background: var(--surface, #fff); cursor: pointer; transition: border-color .15s, box-shadow .15s, background .15s; }
+.payment-picker__option:hover { border-color: var(--primary-light, #B5456B); }
+.payment-picker__option.is-selected { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); background: linear-gradient(115deg, var(--primary-dim), transparent 70%); }
+.payment-picker__option:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
+.payment-picker__option input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.payment-picker__icon { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 12px; background: var(--gold-dim, rgba(191,149,69,.15)); font-size: 24px; }
+.payment-picker__logo { display: grid; place-items: center; flex: 0 0 72px; height: 48px; border-radius: 12px; background: #153c4b; padding: 4px; }
+.payment-picker__logo img { width: 64px; height: 40px; object-fit: contain; }
+.payment-picker__copy { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.payment-picker__copy strong { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 16px; }
+.payment-picker__copy > span { font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+.payment-picker__badge { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: rgba(191,149,69,.18); color: #8a6a2c; }
+.payment-picker__check { display: grid; place-items: center; flex: 0 0 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border); color: transparent; font-weight: 800; font-size: 13px; }
+.payment-picker__option.is-selected .payment-picker__check { background: var(--primary); border-color: var(--primary); color: #fff; }
+.payment-picker__note { margin: 2px 2px 0; font-size: 12px; line-height: 1.9; color: var(--text-2); }
+.payment-picker:disabled { opacity: .6; }
+@media (max-width: 480px) {
+  .payment-picker__option { gap: 10px; padding: 12px; }
+  .payment-picker__icon { flex-basis: 40px; height: 40px; font-size: 20px; }
+  .payment-picker__logo { flex-basis: 58px; height: 40px; }
+  .payment-picker__logo img { width: 50px; height: 32px; }
+  .payment-picker__copy strong { font-size: 15px; }
+}

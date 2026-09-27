@@ -80,6 +80,13 @@ test('delivery fee: unknown waiver reason is ignored and original is dropped (D-
   const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'hack',label:'x'},status:'confirmed',payment_status:'pending'})
   assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
 })
+test('payment methods: missing server list falls back to COD only (D-01, P1-FE-02)',async()=>{
+  const pm=await server.ssrLoadModule('/src/lib/paymentMethods.ts')
+  assert.deepEqual(pm.resolvePaymentMethods(undefined).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([]).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y',is_sandbox:true}]).map(m=>m.code),['cod','jawwal_pay'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'bitcoin',label:'z'}]).map(m=>m.code),['cod'])
+})
 test('invalid authentication payload does not establish a session',async()=>{
   client.apiClient.defaults.adapter=async config=>respond({data:{user:{id:1}}},config)
   await assert.rejects(api.otpVerify('0591234567','123456'),/غير مكتملة/)

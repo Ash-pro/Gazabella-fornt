@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
-import { JawwalPaymentOption } from '../components/checkout/JawwalPaymentOption'
+import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
+import { DEFAULT_PAYMENT_METHODS, MOCK_PAYMENT_METHODS } from '../lib/paymentMethods'
+import type { PaymentMethodCode } from '../types/api'
 import { isMvp0Api } from '../lib/apiContract'
 import { Mvp0CheckoutPage } from './Mvp0CheckoutPage'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -98,6 +100,8 @@ function LegacyCheckoutPage() {
   const navigate = useNavigate()
   const submitting = useRef(false)
   const [uncertain, setUncertain] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
+  const paymentOptions = isMockMode() ? MOCK_PAYMENT_METHODS : DEFAULT_PAYMENT_METHODS
   const user = useAuthStore((s) => s.user)
 
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
@@ -124,7 +128,7 @@ function LegacyCheckoutPage() {
       return gazabellaApi.checkout({
         ...rest,
         address: `${city}، ${neighborhood}، ${street}`,
-        payment_method: 'jawwal_pay',
+        payment_method: paymentMethod,
       })
     },
     onSuccess: (order) => {
@@ -306,7 +310,7 @@ function LegacyCheckoutPage() {
             {/* Section 3 — Payment */}
             <div className="checkout-card">
               <SectionHeader step={3} title="طريقة الدفع" />
-              <JawwalPaymentOption sandbox={isMockMode()} />
+              <PaymentMethodPicker options={paymentOptions} value={paymentMethod} onChange={setPaymentMethod} />
             </div>
 
           </div>

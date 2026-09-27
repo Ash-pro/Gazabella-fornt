@@ -841,7 +841,7 @@ cards:[
  {id:'P1-FE-01',track:'FE',title:'التزام تعديلات الواجهة + Vercel Staging',refs:['G-04'],status:'todo',
   spec:'فرع <code>chore/mvp0-closure</code>، PR، <code>.env.staging</code> (<code>VITE_API_CONTRACT=mvp0</code> · API الـ Staging · <code>VITE_ENV_LABEL=بيئة تجريبية</code>)، ربط Vercel Preview، شريط البيئة.',
   dod:['<code>git status</code> نظيف على <code>main</code> بعد الدمج','رابط Staging Front يعمل على API الـ Staging','الشريط يظهر في Staging ولا يظهر في Production']},
- {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'todo',
+ {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'review',evidence:'37/37 · build:mvp0 ✓ · لقطة Mock',
   spec:'المكوّن الجديد، تعديل <code>Mvp0CheckoutPage</code> (السطر 90 والأسطر 321–335)، النوع <code>PaymentMethodOption</code>، الافتراضي COD عند غياب الحقل. <code>CheckoutPage</code> القديم (عقد legacy) لا يُلمس.',
   dod:['اختبار وحدة: غياب الحقل ← COD','<code>npm run test:mvp0</code> ينشئ طلب COD','لقطة Staging: خيار COD وحده']},
  {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'todo',
@@ -889,7 +889,7 @@ risks:[
  ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
  ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
 ],
-log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude']]
 },
 
 /* ═══════════════════════════ PHASE 2 ═══════════════════════════ */

@@ -99,7 +99,16 @@ export interface Mvp0Address {
   lng?: number
 }
 
+export type PaymentMethodCode = 'cod' | 'jawwal_pay'
+export interface PaymentMethodOption {
+  code: PaymentMethodCode
+  label: string
+  is_sandbox?: boolean
+}
+
 export interface CheckoutBegin {
+  /** C-P1-01 — اختياري للتوافق مع باك اند أقدم؛ غيابه ⇒ COD فقط (D-01) */
+  payment_methods?: PaymentMethodOption[]
   expires_at: string
   seconds_remaining: number
   reservation_extended: boolean
