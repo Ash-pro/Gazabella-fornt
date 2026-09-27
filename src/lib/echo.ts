@@ -6,6 +6,10 @@
  * so the app builds and runs without a WebSocket backend.
  */
 
+import axios from 'axios'
+import { useAuthStore } from '../stores/authStore'
+import { broadcastAuthUrl } from './realtime'
+
 type EchoInstance = {
   disconnect(): void
   private(channel: string): { listen(event: string, cb: (data: unknown) => void): void }
@@ -13,6 +17,28 @@ type EchoInstance = {
 }
 
 let echo: EchoInstance | null = null
+
+type ChannelAuthData = { auth: string; channel_data?: string; shared_secret?: string }
+
+/** يرسل Bearer الحالي لمصادقة القنوات الخاصة (G-03) — يُقرأ التوكن لحظة الاشتراك */
+function bearerAuthorizer(channel: { name: string }) {
+  return {
+    authorize: (socketId: string, callback: (error: Error | null, data: ChannelAuthData | null) => void) => {
+      const token = useAuthStore.getState().token
+      const url = broadcastAuthUrl(
+        import.meta.env.VITE_API_BASE_URL as string | undefined,
+        import.meta.env.VITE_BROADCAST_AUTH_URL as string | undefined,
+        window.location.origin,
+      )
+      axios
+        .post(url, { socket_id: socketId, channel_name: channel.name }, {
+          headers: { Accept: 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+        })
+        .then((response) => callback(null, response.data as ChannelAuthData))
+        .catch((error: unknown) => callback(error instanceof Error ? error : new Error('broadcast auth failed'), null))
+    },
+  }
+}
 
 export async function getEcho(): Promise<EchoInstance | null> {
   if (echo) return echo
@@ -40,6 +66,7 @@ export async function getEcho(): Promise<EchoInstance | null> {
       forceTLS: import.meta.env.VITE_PUSHER_SCHEME === 'https',
       disableStats: true,
       enabledTransports: ['ws', 'wss'],
+      authorizer: bearerAuthorizer,
     }) as unknown as EchoInstance
   } catch (err) {
     console.warn('[echo] Failed to initialise WebSocket connection:', err)

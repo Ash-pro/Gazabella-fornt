@@ -10,6 +10,7 @@ import { useEffect } from 'react'
 import { getEcho } from '../lib/echo'
 import { useAuthStore } from '../stores/authStore'
 import { queryClient } from '../lib/queryClient'
+import { REALTIME_EVENTS, orderEventQueryKeys, userChannel, type OrderStatusEvent } from '../lib/realtime'
 
 export function useRealtimeEvents(): void {
   const token = useAuthStore((s) => s.token)
@@ -24,15 +25,17 @@ export function useRealtimeEvents(): void {
       if (!echo || cancelled) return
 
       // Use a single channel reference to avoid duplicate Pusher subscriptions
-      const ch = echo.private(`App.Models.User.${user.id}`)
+      const ch = echo.private(userChannel(user.id))
 
-      // Invalidate the orders list whenever an order status changes
-      ch.listen('.order.status.updated', () => {
-        void queryClient.invalidateQueries({ queryKey: ['orders'] })
+      // G-03 — تحديث القائمة وصفحة تفاصيل الطلب معاً (C-P1-03)
+      ch.listen(REALTIME_EVENTS.orderStatus, (payload: unknown) => {
+        for (const queryKey of orderEventQueryKeys(payload as OrderStatusEvent)) {
+          void queryClient.invalidateQueries({ queryKey })
+        }
       })
 
       // Invalidate cart when a reservation changes server-side
-      ch.listen('.cart.reservation.updated', () => {
+      ch.listen(REALTIME_EVENTS.cartReservation, () => {
         void queryClient.invalidateQueries({ queryKey: ['cart'] })
       })
     })
