@@ -392,7 +392,7 @@ export const INITIAL_DELIVERY_MISSIONS: DeliveryMission[] = [
     items_count: 2,
     total_amount: '355.00',
     delivery_fee: '15.00',
-    payment_status: 'unpaid',
+    payment_status: 'pending',
     payment_method: 'cash_on_delivery',
     delivery_status: 'pending_pickup',
     pickup_stores: ['لافندر كوزمتكس وباقات العروس'],
@@ -519,10 +519,14 @@ export function saveStoredCart(cart: Cart): void {
   localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart))
 }
 
+const legacyPaymentStatusMap: Record<string, Order['payment_status']> = {
+  unpaid: 'pending', pending: 'pending', paid: 'paid', failed: 'failed', refunded: 'refunded', unknown: 'pending',
+}
+
 export function getStoredOrders(): Order[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.ORDERS)
-    if (raw) return JSON.parse(raw)
+    if (raw) return (JSON.parse(raw) as Order[]).map((order) => ({ ...order, payment_status: legacyPaymentStatusMap[order.payment_status] ?? 'pending' }))
   } catch (e) {
     console.error('Error reading mock orders', e)
   }
@@ -580,7 +584,7 @@ export function getStoredOrders(): Order[] {
       items:[{id:150+index,product_name:product.name,variant_name:variant.name,unit_price:variant.price,quantity:1,subtotal:variant.price,image_url:product.images[0]?.url || null}],
       subtotal:variant.price,delivery_fee:mission.delivery_fee,total:(Number(variant.price)+Number(mission.delivery_fee)).toFixed(2),
       name:mission.customer_name,email:'customer@example.com',phone:mission.customer_phone,address:`${mission.city}، ${mission.area}، ${mission.address_details}`,
-      payment_status:mission.payment_status,tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],notes:mission.delivery_notes,delivery_pin:String(4830+index),
+      payment_status:legacyPaymentStatusMap[mission.payment_status] ?? 'pending',tracking:[{status,note:'طلب تجريبي للعرض',created_at:created}],notes:mission.delivery_notes,delivery_pin:String(4830+index),
       escrow_expires_at:delivered ? new Date(Date.now()+47*3600_000).toISOString() : undefined,created_at:created})
   }
   saveStoredOrders(samples)

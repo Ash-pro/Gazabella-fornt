@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+.jawwal-payment { padding-top: 8px; }
+.jawwal-payment__heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.jawwal-payment__heading h2 { font-size: 17px; font-weight: 800; }
+.jawwal-payment__heading > span { color: #50622c; background: #edf5df; border-radius: 99px; padding: 5px 10px; font-size: 12px; }
+.jawwal-payment__option { display: flex; align-items: center; gap: 16px; padding: 20px; border: 2px solid #8aad42; border-radius: 18px; background: linear-gradient(115deg, #f3f8e9, #fff 70%); box-shadow: 0 7px 22px #5267290a; cursor: pointer; }
+.jawwal-payment__option:focus-within { outline: 3px solid var(--primary); outline-offset: 3px; }
+.jawwal-payment__option input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.jawwal-payment__logo { display: flex; align-items: center; justify-content: center; flex: 0 0 130px; padding: 10px; border-radius: 12px; background: #153c4b; }
+.jawwal-payment__logo img { width: 110px; height: 54px; object-fit: contain; }
+.jawwal-payment__copy { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.jawwal-payment__copy strong { font-size: 20px; color: #26391d; }
+.jawwal-payment__copy > span { font-size: 13px; color: var(--text-2); line-height: 1.7; }
+.jawwal-payment__selected { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: 50%; background: #557929; color: white; font-weight: 800; }
+.jawwal-payment__note { margin: 12px 2px 0; font-size: 12px; line-height: 1.9; color: var(--text-2); }
+.jawwal-payment__note > span { font-weight: 700; margin-inline-end: 6px; }
+@media (max-width: 480px) {
+  .jawwal-payment__option { gap: 10px; padding: 14px 10px; }
+  .jawwal-payment__logo { flex-basis: 86px; padding: 6px; }
+  .jawwal-payment__logo img { width: 74px; height: 48px; }
+  .jawwal-payment__copy strong { font-size: 18px; }
+}
+
 :root {
   font-family: "Tajawal", system-ui, sans-serif;
   color: #1A0A10;
@@ -968,3 +990,12 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
 .auth-editorial p { font-size: 13px; line-height: 1.8; opacity: .9; }
 .auth-page :is(button,a,summary):focus-visible { outline: 2px solid #912b50; outline-offset: 4px; }
 @media(max-width:767px) { .auth-page { padding-block: 20px 32px; } .auth-layout--refined { display: block; border-radius: 18px; } .auth-layout--refined .auth-editorial { display: none; } .auth-layout--refined .auth-form { padding: 28px 22px; } .auth-switch { margin-block: 22px; } }
+.quick-buy-content { padding: 20px; display: grid; gap: 18px; }
+.app-dialog--bottom .quick-buy-content { overflow-y: auto; min-height: 0; }
+.quick-add { min-height: 44px; }
+.quick-buy-preview { display: flex; align-items: center; gap: 14px; }
+.quick-buy-preview > :first-child { width: 76px; height: 76px; flex: 0 0 76px; border-radius: 12px; overflow: hidden; }
+.quick-buy-preview p { margin-top: 6px; color: var(--primary); }
+.quick-buy-quantity, .quick-buy-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.quick-buy-total { border-top: 1px solid var(--border); padding-top: 14px; }
+.quick-buy-content .quantity-control button { min-width: 44px; min-height: 44px; }

@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
-import { gazabellaApi, isMockMode } from '../../api/gazabella'
+import { gazabellaApi } from '../../api/gazabella'
 import { syncCart, useProceedToCheckout } from '../../hooks/useCartActions'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { money } from '../../lib/format'
@@ -31,7 +31,7 @@ export function CartDrawer() {
           <h3 className="text-sm font-bold leading-6">{item.product_name}</h3>
           <p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name}</p>
           <div className="cart-item-price my-2">{item.compare_at_price && Number(item.compare_at_price) > Number(item.unit_price) && <del className="line-through text-gray-400 text-sm"><span className="num">{money(Number(item.compare_at_price) * item.quantity)}</span></del>}<b className="block text-sm"><span className="num">{money(item.subtotal)}</span></b></div>
-          <div className="flex items-center justify-between"><div className="quantity-control quantity-control--small"><button disabled={busy || item.quantity <= 1} aria-label={`تقليل كمية ${item.product_name}`} onClick={() => update.mutate({ id: item.id, quantity: item.quantity - 1 })}>−</button><span className="num">{item.quantity}</span><button disabled={busy || item.quantity >= (isMockMode() ? Math.min(10, item.stock) : item.stock)} aria-label={`زيادة كمية ${item.product_name}`} onClick={() => update.mutate({ id: item.id, quantity: item.quantity + 1 })}>+</button></div><button className="icon-button" disabled={busy} aria-label={`حذف ${item.product_name}`} onClick={() => remove.mutate(item.id)}><Icon name="trash" className="size-4" /></button></div>
+          <div className="flex items-center justify-between"><div className="quantity-control quantity-control--small"><button disabled={busy || item.quantity <= 1} aria-label={`تقليل كمية ${item.product_name}`} onClick={() => update.mutate({ id: item.id, quantity: item.quantity - 1 })}>−</button><span className="num">{item.quantity}</span><button disabled={busy || item.quantity >= Math.min(10, item.stock)} aria-label={`زيادة كمية ${item.product_name}`} onClick={() => update.mutate({ id: item.id, quantity: item.quantity + 1 })}>+</button></div><button className="icon-button" disabled={busy} aria-label={`حذف ${item.product_name}`} onClick={() => remove.mutate(item.id)}><Icon name="trash" className="size-4" /></button></div>
         </div>
       </article>)}
       {!!cart.data?.items.length && (update.isError || remove.isError) && <p className="field-error mt-3" role="alert">تعذّر تحديث السلة. تحققي من اتصالك وحاولي مجدداً.</p>}

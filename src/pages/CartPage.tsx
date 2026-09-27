@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { gazabellaApi, isMockMode } from '../api/gazabella'
+import { gazabellaApi } from '../api/gazabella'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
@@ -60,7 +60,7 @@ export function CartPage() {
                     <div className="quantity-control quantity-control--small">
                       <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
                       <span className="num">{item.quantity}</span>
-                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= (isMockMode() ? Math.min(10, item.stock) : item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
                     </div>
                     <p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p>
                   </div>

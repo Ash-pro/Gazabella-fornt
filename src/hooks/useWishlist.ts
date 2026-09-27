@@ -1,3 +1,4 @@
+import { isMvp0Api } from '../lib/apiContract'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -7,7 +8,7 @@ import { queryClient } from '../lib/queryClient'
 export function useWishlist() {
   const token = useAuthStore((s) => s.token)
   const navigate = useNavigate()
-  const query = useQuery({ queryKey: ['wishlist'], queryFn: gazabellaApi.getWishlist, enabled: !!token })
+  const query = useQuery({ queryKey: ['wishlist'], queryFn: gazabellaApi.getWishlist, enabled: !!token && !isMvp0Api() })
   const toggle = useMutation({
     mutationKey: ['wishlist-toggle'],
     scope: { id: 'wishlist' },

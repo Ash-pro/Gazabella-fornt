@@ -1,6 +1,9 @@
 import { useAuthStore } from '../stores/authStore'
-import { apiClient, getCartToken, setCartToken } from '../lib/apiClient'
+import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
+import { queryClient } from '../lib/queryClient'
 import { mockServices } from '../mock/mockServices'
+import { isMvp0Api } from '../lib/apiContract'
+import { mvp0Api } from './mvp0'
 import type {
   ApiData,
   ApiList,
@@ -155,7 +158,8 @@ interface RawOrder {
   address?: string | Record<string, unknown>
   notes?: string | null
   payment_method?: string
-  payment_status?: string
+  payment_status: Order['payment_status']
+  payment_reference?: string | null
   escrow_expires_at?: string
   delivery_pin?: string
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
@@ -164,8 +168,14 @@ interface RawOrder {
 
 export function normalizeOrder(raw: RawOrder): Order {
   if (!raw || !Array.isArray(raw.items)) throw new Error('تفاصيل الطلب الواردة من الخادم غير مكتملة.')
-  const amount = (value: unknown): string => {
-    if ((typeof value !== 'number' && typeof value !== 'string') || value === '' || !Number.isFinite(Number(value)) || Number(value) < 0) {
+  // يحوّل القيم المالية لنص — يدعم null/undefined بقيمة افتراضية
+  const amount = (value: unknown, fallback?: string): string => {
+    if (value === null || value === undefined || value === '') {
+      if (fallback !== undefined) return fallback
+      throw new Error('مبالغ الطلب الواردة من الخادم غير مكتملة.')
+    }
+    if ((typeof value !== 'number' && typeof value !== 'string') || !Number.isFinite(Number(value)) || Number(value) < 0) {
+      if (fallback !== undefined) return fallback
       throw new Error('مبالغ الطلب الواردة من الخادم غير مكتملة.')
     }
     return String(value)
@@ -187,16 +197,17 @@ export function normalizeOrder(raw: RawOrder): Order {
         image_url: item.image_url ?? img?.url ?? null,
       }
     }),
-    subtotal: amount(raw.subtotal),
-    delivery_fee: amount(raw.delivery_fee ?? raw.shipping_fee),
-    total: amount(raw.total),
+    subtotal: amount(raw.subtotal, '0.00'),
+    delivery_fee: amount(raw.delivery_fee ?? raw.shipping_fee, '0.00'),
+    total: amount(raw.total, '0.00'),
     name: raw.name ?? raw.customer?.name ?? '',
     email: raw.email ?? raw.customer?.email ?? '',
     phone: raw.phone ?? raw.customer?.phone ?? '',
     address: typeof raw.address === 'string' ? raw.address : '',
     notes: raw.notes ?? null,
     payment_method: raw.payment_method as Order['payment_method'],
-    payment_status: (raw.payment_status ?? 'unknown') as Order['payment_status'],
+    payment_status: raw.payment_status,
+    payment_reference: raw.payment_reference,
     escrow_expires_at: raw.escrow_expires_at,
     delivery_pin: raw.delivery_pin,
     tracking: raw.tracking ?? [],
@@ -260,22 +271,46 @@ async function ensureCartIdentity() {
   if (!useAuthStore.getState().token && !getCartToken()) throw new Error('تعذر حفظ هوية السلة. يرجى السماح بالتخزين في المتصفح.')
 }
 
-export const gazabellaApi = {
+const legacyGazabellaApi = {
   // ── المصادقة ─────────────────────────────────────────────────────────
-  register: (payload: { name: string; email: string; password: string; password_confirmation: string }): Promise<AuthResponse> =>
-    isMockMode()
-      ? mockServices.register(payload)
-      : apiClient.post<AuthResponse | ApiData<AuthResponse>>('/auth/register', payload).then((r) => normalizeAuth(r.data)),
+  async otpSend(phone: string): Promise<{ message: string }> {
+    if (isMockMode()) return { message: 'OTP sent' }
+    const { data } = await apiClient.post<ApiData<{ message: string }>>('/auth/otp/send', { phone })
+    return data.data
+  },
 
-  login: (email: string, password: string): Promise<AuthResponse> =>
-    isMockMode()
-      ? mockServices.login(email, password)
-      : apiClient.post<AuthResponse | ApiData<AuthResponse>>('/auth/login', { email, password }).then((r) => normalizeAuth(r.data)),
+  async otpVerify(phone: string, code: string, name?: string): Promise<AuthResponse> {
+    if (isMockMode()) {
+      return {
+        token: 'mock-token',
+        token_type: 'Bearer',
+        user: { id: 1, name: name ?? 'مستخدم تجريبي', phone, role: 'customer', created_at: new Date().toISOString() },
+      }
+    }
+    const cartToken = getCartToken()
+    const headers: Record<string, string> = {}
+    if (cartToken) headers['X-Cart-Token'] = cartToken
+    const { data } = await apiClient.post<ApiData<AuthResponse>>(
+      '/auth/otp/verify', { phone, code, ...(name ? { name } : {}) }, { headers },
+    )
+    const result = normalizeAuth(data.data)
+    clearCartToken()
+    return result
+  },
 
   getMe: (): Promise<User> =>
     isMockMode()
-      ? mockServices.getMe()
+      ? Promise.resolve(useAuthStore.getState().user ?? mockServices.getMe())
       : apiClient.get<ApiData<User>>('/auth/me').then((r) => r.data.data),
+
+  async updateProfile(payload: import('../types/api').ProfileUpdate): Promise<User> {
+    if (isMockMode() || isMvp0Api()) return unavailable()
+    if (!Number.isFinite(payload.latitude) || !Number.isFinite(payload.longitude) || Math.abs(payload.latitude) > 90 || Math.abs(payload.longitude) > 180) throw new Error('يرجى السماح بالوصول إلى موقعكِ الحالي لتحديث الملف.')
+    // Explicit fields prevent accidentally sending the immutable login phone.
+    const { name, email, gender, birth_date, city, address, latitude, longitude } = payload
+    const { data } = await apiClient.patch<ApiData<User>>('/auth/me', { name, email, gender, birth_date, city, address, latitude, longitude })
+    return data.data
+  },
 
   logout: () =>
     isMockMode()
@@ -365,10 +400,29 @@ export const gazabellaApi = {
       : apiClient.delete<ApiData<RawCart>>('/cart').then((r) => normalizeCart(r.data.data)),
 
   // ── الطلبات ──────────────────────────────────────────────────────────
-  checkout: (payload: CheckoutPayload): Promise<Order> =>
-    isMockMode()
-      ? mockServices.checkout(payload)
-      : Promise.reject(new Error('إتمام الطلب ينتظر خدمة احتساب الإجمالي ورسوم التوصيل.')),
+  async checkout(payload: CheckoutPayload): Promise<Order> {
+    if (isMockMode()) return mockServices.checkout(payload)
+    const { data } = await apiClient.post<ApiData<RawOrder>>('/checkout', payload)
+    return normalizeOrder(data.data)
+  },
+
+  async confirmJawwalPayment(orderNumber: string, reference: string): Promise<Order> {
+    if (isMockMode()) {
+      const cached = queryClient.getQueryData<Order>(['order', orderNumber])
+      if (cached) return { ...cached, payment_status: 'paid', payment_reference: reference }
+      throw new Error('Order not found in mock')
+    }
+    const { data } = await apiClient.post<ApiData<RawOrder>>('/payments/jawwal/confirm', {
+      order_number: orderNumber, reference,
+    })
+    return normalizeOrder(data.data)
+  },
+
+  async lookupOrderByReference(reference: string): Promise<Order> {
+    if (isMockMode()) throw new Error('غير متاح في الوضع التجريبي')
+    const { data } = await apiClient.get<ApiData<RawOrder>>('/orders/lookup-by-reference', { params: { reference } })
+    return normalizeOrder(data.data)
+  },
 
   // API ما بدعم فلتر status — بنجيب كل الطلبات
   getOrders: (page = 1): Promise<ApiList<Order>> =>
@@ -418,3 +472,5 @@ export const gazabellaApi = {
   initPayment: (orderNumber: string): Promise<{ payment_url: string }> =>
     isMockMode() ? mockServices.initPayment(orderNumber) : unavailable(),
 }
+
+export const gazabellaApi: typeof legacyGazabellaApi = isMvp0Api() ? { ...legacyGazabellaApi, ...mvp0Api } : legacyGazabellaApi

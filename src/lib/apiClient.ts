@@ -1,6 +1,8 @@
 import axios, { AxiosError } from 'axios'
 import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
+import { isMvp0Api } from './apiContract'
+import { getGuestUuid } from './guest'
 
 // ── Cart Token (للمستخدم الضيف) ──────────────────────────────────────────
 const CART_TOKEN_KEY = `gz_cart_token:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
@@ -31,6 +33,8 @@ apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`)
+  } else if (isMvp0Api()) {
+    config.headers.set('X-Guest-UUID', getGuestUuid())
   } else {
     const cartToken = getCartToken()
     if (cartToken) config.headers.set('X-Cart-Token', cartToken)

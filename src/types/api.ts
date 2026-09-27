@@ -29,6 +29,7 @@ export interface ProductImage {
 }
 
 export interface ProductBrief {
+  variants?: ProductVariant[]
   store?: { name: string }
   id: number
   name: string
@@ -43,6 +44,7 @@ export interface ProductBrief {
 }
 
 export interface ProductDetail {
+  variants?: ProductVariant[]
   store?: { name: string }
   id: number
   name: string
@@ -57,6 +59,7 @@ export interface ProductDetail {
   images: ProductImage[]
 }
 export interface CartItem {
+  product_variant_id?: number
   id: number
   product_id: number
   product_name: string
@@ -71,19 +74,82 @@ export interface CartItem {
 }
 
 export interface Cart {
+  has_active_reservation?: boolean
   items: CartItem[]
   total_items: number
   subtotal: string
 }
 
+export interface ProductVariant {
+  id: number
+  name: string
+  price: number
+  compare_at_price?: number | null
+  available_quantity: number
+}
+
+export interface Mvp0Address {
+  full_name: string
+  phone: string
+  city: string
+  area: string
+  details: string
+  landmark?: string
+  lat?: number
+  lng?: number
+}
+
+export interface CheckoutBegin {
+  expires_at: string
+  seconds_remaining: number
+  reservation_extended: boolean
+  active_cities: string[]
+  delivery_options: Array<{ id: number; name: string; fee: string; estimated_days: string }>
+}
+
+export interface CheckoutQuote {
+  quote_token: string
+  expires_at: string
+  subtotal: string
+  delivery_fee: string
+  discount_amount: string
+  total: string
+  currency: string
+}
+
+export interface Mvp0CheckoutPayload {
+  delivery_option_id: number
+  address: Mvp0Address
+  payment_method: 'cod' | 'jawwal_pay'
+  coupon_code?: string
+  notes?: string
+  quote_token: string
+}
+
 export type UserRole = 'customer' | 'merchant' | 'delivery' | 'admin'
 
 export interface User {
+  gender?: 'male' | 'female' | null
+  birth_date?: string | null
+  city?: string | null
+  address?: string | null
   id: number
   name: string
-  email: string
+  phone: string
+  email?: string
   role: UserRole
   created_at: string
+}
+
+export interface ProfileUpdate {
+  name?: string
+  email?: string | null
+  gender?: 'male' | 'female' | null
+  birth_date?: string | null
+  city?: string | null
+  address?: string | null
+  latitude: number
+  longitude: number
 }
 
 export interface AuthResponse {
@@ -94,12 +160,17 @@ export interface AuthResponse {
 
 export interface CheckoutPayload {
   name: string
-  email: string
   phone: string
   address: string
+  payment_method: 'cod' | 'jawwal_pay'
+  email?: string
   notes?: string
-  payment_method: 'jawwal_pay' | 'cash_on_delivery'
-  payment_reference?: string
+  coupon_code?: string
+}
+
+export interface JawwalConfirmPayload {
+  order_number: string
+  reference: string
 }
 
 export type OrderStatus =
@@ -112,6 +183,7 @@ export type OrderStatus =
   | 'refunded'
 
 export interface Order {
+  discount_amount?: string
   id: number
   order_number: string
   status: OrderStatus
@@ -135,7 +207,8 @@ export interface Order {
   payment_method?: 'cash_on_delivery' | 'jawwal_pay' | string
   escrow_expires_at?: string
   delivery_pin?: string
-  payment_status: 'unpaid' | 'pending' | 'paid' | 'failed' | 'refunded' | 'unknown'
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
+  payment_reference?: string | null
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
   created_at: string
 }

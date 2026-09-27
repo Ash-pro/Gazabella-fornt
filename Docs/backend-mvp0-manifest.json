@@ -1,0 +1,162 @@
+[
+  {
+    "path": "app/Http/Controllers/Api/AuthController.php",
+    "sha256": "5876963DD7342347594D1431182F8735F83783D03ECE9ABD11505E9A78E78166",
+    "status": "modified"
+  },
+  {
+    "path": "app/Http/Controllers/Api/BaseApiController.php",
+    "sha256": "5AF33F1B289A5BB0D73A513333CAD1F356E96D11C0683E80CF4305B7FDEF7601",
+    "status": "modified"
+  },
+  {
+    "path": "app/Http/Controllers/Api/CartController.php",
+    "sha256": "058B7FB61751640BFCB0961AA0A39B9F4EED43B7447B37C986F53D9AA5E62AFF",
+    "status": "modified"
+  },
+  {
+    "path": "app/Http/Controllers/Api/OrderController.php",
+    "sha256": "961CBC513B5065FCA6965482201DA8F2165DC055D42AE730910CFCA31527DE6A",
+    "status": "modified"
+  },
+  {
+    "path": "app/Http/Controllers/Api/PaymentController.php",
+    "sha256": "E809D9933FC4244039D6B3CDDAFBD1579110AD3953FB7F9B130A4E8F4C854CCA",
+    "status": "modified"
+  },
+  {
+    "path": "app/Http/Controllers/Api/ProductController.php",
+    "sha256": "1C0DDEDFF042C63782B200936955D5055C8ABC1BA45BEFF783210305023029BE",
+    "status": "modified"
+  },
+  {
+    "path": "app/Models/CartItem.php",
+    "sha256": "79B709E966B3CA1E48DD0638828DAF13D57A82125C155166BE7681FEB7C7B07D",
+    "status": "modified"
+  },
+  {
+    "path": "app/Models/CartReservation.php",
+    "sha256": "2B50909FDEF51771CD16D209B32486B0AF9DF2F894A3EA13C4D44B4AB019EE85",
+    "status": "modified"
+  },
+  {
+    "path": "app/Models/Order.php",
+    "sha256": "8584ED91378D3EEE474996B685A32C3F48E2F3CAF6D45C9BA48163C92F8EEA4E",
+    "status": "modified"
+  },
+  {
+    "path": "app/Models/OrderTracking.php",
+    "sha256": "A96640B1512AF212B4908AB79A06B71DE9755D621F8BC5DBF9931D0C4C6B8656",
+    "status": "modified"
+  },
+  {
+    "path": "app/Models/Payment.php",
+    "sha256": "3C9246A7DCB5E93BBE23E42462620CB7910715E9D46EA835B4DE97AB22CD854B",
+    "status": "modified"
+  },
+  {
+    "path": "app/Services/CartService.php",
+    "sha256": "FE1EE80406B20FF69533ED918A32484043E053B9E313303BA4BA8F548620CC4C",
+    "status": "modified"
+  },
+  {
+    "path": "app/Services/CheckoutQuoteService.php",
+    "sha256": "CA1DDCD557F8E060195FC3C1200BA29AA5B0F72F3F7901BB25F7852258916BCB",
+    "status": "added"
+  },
+  {
+    "path": "app/Services/OrderService.php",
+    "sha256": "03BCFC62AC9C7CD372E1758FC6E54AAE689E9D9D944918885A4965C246468756",
+    "status": "modified"
+  },
+  {
+    "path": "app/Services/OtpService.php",
+    "sha256": "04EEC7426B94C2087874E4372E722A17A76E5F0210D82AB80BE71083625D4FE4",
+    "status": "modified"
+  },
+  {
+    "path": "app/Services/PaymentService.php",
+    "sha256": "BEFD292A07EEC7A4496A19DCEC60F4671FD5B10519736513E92DD64CA3FE0FA4",
+    "status": "modified"
+  },
+  {
+    "path": "app/Services/ReservationService.php",
+    "sha256": "4F2F20FCE144BB81D9AEC264A0C36EA163B82AF3DD74A956387D756A6BDF41F6",
+    "status": "modified"
+  },
+  {
+    "path": "routes/api.php",
+    "sha256": "12972B939C84BFEA550254DDBEA782E790531EBCA166A9E74FD740A35800D494",
+    "status": "modified"
+  },
+  {
+    "path": "routes/console.php",
+    "sha256": "EE8F09ABFFC182B5BA35AD361E0892743C4FFE1280ACF7D64A2FEB3BA4BDE691",
+    "status": "modified"
+  },
+  {
+    "path": "config/cors.php",
+    "sha256": "9A6EE3454E0E51FEB4B0A2F95D28407DC6879786A6608C0AF83BDA239039493B",
+    "status": "modified"
+  },
+  {
+    "path": "config/gazabella.php",
+    "sha256": "21171AC6D9EF36FAB397F4BC48D36CA94BEDFC79A12A708F1AD3698929C55479",
+    "status": "modified"
+  },
+  {
+    "path": "database/migrations/2026_09_20_110000_fix_orders_status_enum.php",
+    "sha256": "DEA19917884F96AF52E9AE1CAE613A61D57BB052C765CA74835D3D3B40F0E91F",
+    "status": "modified"
+  },
+  {
+    "path": "database/migrations/2026_09_25_000000_align_order_statuses.php",
+    "sha256": "F3BA7A1849A63FE8FD71FD5A9D545ACEC6C1A527A9A72B039AFDE8B5B96FAAC7",
+    "status": "added"
+  },
+  {
+    "path": "database/migrations/2026_09_25_000001_add_checkout_safety_to_orders.php",
+    "sha256": "5F107D9E30926B8CE0DC432023D30C58EA84261FDDB63C887890F2773530F356",
+    "status": "added"
+  },
+  {
+    "path": "tests/Feature/AuthTest.php",
+    "sha256": "0162B97C692668EDE8AF8F77337E5A76BF3ED30B0A5CDCF7F617D918D12CA465",
+    "status": "modified"
+  },
+  {
+    "path": "tests/Feature/CartTest.php",
+    "sha256": "12242967870202A99C53C7F551437948C00D754E9F101015131F26CBF05557ED",
+    "status": "modified"
+  },
+  {
+    "path": "tests/Feature/Mvp0SafetyTest.php",
+    "sha256": "03EA5A2B1102F186534FC950CA4A02C68A97E89EA1E3691100F5DBE7794A6DD0",
+    "status": "added"
+  },
+  {
+    "path": "tests/Feature/OrderFlowTest.php",
+    "sha256": "AA60797A866B8748A7E783DF712FB8955CEE707535848819744664D79661E417",
+    "status": "modified"
+  },
+  {
+    "path": "tests/Feature/SecurityTest.php",
+    "sha256": "44327E20A0C9A853D412C20A93905823EBB6D6A41CDDAE4AA0AA206AD756DC18",
+    "status": "modified"
+  },
+  {
+    "path": "bootstrap/app.php",
+    "sha256": "119896911E92619A8543597DA32F867DCB25045C7378ACD86BE46B2177D61D71",
+    "status": "modified"
+  },
+  {
+    "path": "phpunit.xml",
+    "sha256": "FD6FCEEB11EDEE8F834F613AEC15258C4333568991E847B9FDA1F9A5C94E0763",
+    "status": "modified"
+  },
+  {
+    "path": "tests/closing-concurrency.php",
+    "sha256": "FCA62783BDC3357B70BCA1408B19CD9E4B94EDB239AC5DE7902ECBE02671BD8E",
+    "status": "added"
+  }
+]

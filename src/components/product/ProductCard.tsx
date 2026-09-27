@@ -1,12 +1,10 @@
-import { useMutation } from '@tanstack/react-query'
-import { gazabellaApi } from '../../api/gazabella'
-import { queryClient } from '../../lib/queryClient'
-import { useCartStore } from '../../stores/cartStore'
-// import { useRef } from 'react'
+import { isMvp0Api } from '../../lib/apiContract'
+import { QuickBuy } from './QuickBuy'
 import { Link } from 'react-router-dom'
 import { ProductVisual } from './ProductVisual'
 import { Icon } from '../ui/Icon'
 import { formatPrice } from '../../lib/format'
+import { productPricing } from '../../lib/productPricing'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { useWishlist } from '../../hooks/useWishlist'
 import type { ProductBrief } from '../../types/api'
@@ -21,22 +19,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
   const wishlist = useWishlist()
   const saved = wishlist.authenticated && !!wishlist.query.data?.some((item) => item.id === product.id)
   const imageUrl = getPrimaryImage(product)
-  const price = product.price
-  const previous = product.discount_price ?? null
-  const discount = previous && previous < price ? Math.round(((price - previous) / price) * 100) : 0
-
-  const add = useMutation({
-    mutationFn: () => gazabellaApi.addToCart(product.id, 1),
-    onSuccess: () => {
-      // invalidate حتى السلة تجيب بيانات كاملة ومحدثة من الـ backend
-      void queryClient.invalidateQueries({ queryKey: ['cart'] })
-      useCartStore.getState().showCartToast({
-        productName: product.name,
-        thumbnailUrl: imageUrl,
-        price: previous ?? price,
-      })
-    },
-  })
+  const { current, original, percent: discount } = productPricing(product)
 
   return (
     <article className="catalog-card">
@@ -47,7 +30,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
         {discount > 0 && (
           <span className="catalog-discount">−<span className="num">{discount}%</span></span>
         )}
-        <button
+        {!isMvp0Api() && <button
           className={`wishlist-button ${saved ? 'is-saved' : ''}`}
           aria-label={saved ? 'إزالة من المفضلة' : 'حفظ في المفضلة'}
           aria-pressed={saved}
@@ -55,35 +38,26 @@ export function ProductCard({ product }: { product: ProductBrief }) {
           onClick={() => wishlist.toggleProduct(product.slug)}
         >
           <Icon name="heart" className="size-4" />
-        </button>
+        </button>}
         {!product.in_stock && <span className="sold-out-label">غير متوفر حاليًا</span>}
       </div>
       <div className="catalog-card__body">
         <span className="catalog-category">{product.category?.name}</span>
         <Link className="catalog-name" to={`/products/${product.slug}`}>{product.name}</Link>
         <div className="catalog-price">
-          {discount > 0 && previous && (
-            <del className="line-through text-gray-400 text-sm">
-              <span className="num">{formatPrice(price)}</span>
+          {original !== null && (
+            <del aria-label="السعر السابق" className="line-through text-gray-400 text-sm">
+              <span className="num">{formatPrice(original)}</span>
             </del>
           )}
-          <b><span className="num">{formatPrice(previous ?? price)}</span></b>
+          <b aria-label="السعر الحالي"><span className="num">{formatPrice(current)}</span></b>
         </div>
         <Link className="catalog-action" to={`/products/${product.slug}`}>
           {product.in_stock ? 'اكتشفي المنتج' : 'عرض التفاصيل'}
           <Icon name="arrow" className="size-4 rotate-180" />
         </Link>
-        <button
-          className="btn-primary quick-add"
-          disabled={!product.in_stock || add.isPending}
-          onClick={() => add.mutate()}
-        >
-          {add.isPending ? 'جارٍ الإضافة…' : 'أضيفي للسلة +'}
-        </button>
+        <QuickBuy product={product} />
         {wishlist.toggle.isError && <p role="alert" className="field-error">{getApiErrorMessage(wishlist.toggle.error)}</p>}
-        {add.isError && (
-          <p role="alert" className="field-error">{getApiErrorMessage(add.error)}</p>
-        )}
       </div>
     </article>
   )

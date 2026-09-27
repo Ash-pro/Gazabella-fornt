@@ -65,16 +65,81 @@ test('product slugs are escaped as one path segment',async()=>{
 
 test('missing order totals are rejected instead of displaying free shipping',()=>{
   assert.throws(()=>module.normalizeOrder({id:1,items:[],subtotal:10,total:10}),/مبالغ/)
-  const order=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,status:'pending'})
-  assert.equal(order.delivery_fee,'0');assert.equal(order.payment_status,'unknown')
+  const order=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,status:'pending',payment_status:'pending'})
+  assert.equal(order.delivery_fee,'0');assert.equal(order.payment_status,'pending')
 })
 test('invalid authentication payload does not establish a session',async()=>{
   client.apiClient.defaults.adapter=async config=>respond({data:{user:{id:1}}},config)
-  await assert.rejects(api.login('test@example.test','test'),/غير مكتملة/)
+  await assert.rejects(api.otpVerify('0591234567','123456'),/غير مكتملة/)
   assert.equal(auth.getState().token,null)
 })
 test('guest cart bootstrap is shared by concurrent callers',async()=>{
   let count=0
   client.apiClient.defaults.adapter=async config=>{count++;await new Promise(resolve=>setTimeout(resolve,10));return respond({data:{id:1,token:'one-cart',items:[],items_count:0,subtotal:0}},config)}
   await Promise.all([api.getCart(),api.getCart()]);assert.equal(count,1)
+})
+
+const otpUser = {id:1,name:'Customer',phone:'0591234567',role:'customer',created_at:'2026-09-25'}
+const rawOrder = {id:1,order_number:'GAZ-2026-0001',status:'pending',items:[],subtotal:10,delivery_fee:5,total:15,payment_status:'pending',payment_method:'cod'}
+
+test('OTP verify merges guest cart and clears token only after valid success',async()=>{
+  client.setCartToken('guest')
+  client.apiClient.defaults.adapter=async config=>{
+    assert.equal(config.url,'/auth/otp/verify')
+    assert.equal(config.headers.get('X-Cart-Token'),'guest')
+    assert.deepEqual(JSON.parse(config.data),{phone:otpUser.phone,code:'123456',name:'Customer'})
+    return respond({data:{token:'session',token_type:'Bearer',user:otpUser}},config)
+  }
+  const result=await api.otpVerify(otpUser.phone,'123456','Customer')
+  assert.equal(result.user.phone,otpUser.phone);assert.equal(result.user.email,undefined)
+  assert.equal(client.getCartToken(),null)
+})
+
+test('failed or malformed OTP verification preserves guest cart',async()=>{
+  client.setCartToken('guest')
+  client.apiClient.defaults.adapter=async()=>{throw Error('Invalid OTP')}
+  await assert.rejects(api.otpVerify(otpUser.phone,'000000'))
+  assert.equal(client.getCartToken(),'guest')
+  client.apiClient.defaults.adapter=async config=>respond({data:{user:otpUser}},config)
+  await assert.rejects(api.otpVerify(otpUser.phone,'123456'))
+  assert.equal(client.getCartToken(),'guest')
+})
+
+test('OTP send contains only phone',async()=>{
+  client.apiClient.defaults.adapter=async config=>{
+    assert.equal(config.url,'/auth/otp/send')
+    assert.deepEqual(JSON.parse(config.data),{phone:otpUser.phone})
+    return respond({data:{message:'OTP sent'}},config)
+  }
+  assert.equal((await api.otpSend(otpUser.phone)).message,'OTP sent')
+})
+
+test('checkout posts cod with optional email omitted and normalizes totals',async()=>{
+  const payload={name:'Customer',phone:otpUser.phone,address:'Test address',payment_method:'cod'}
+  client.apiClient.defaults.adapter=async config=>{
+    assert.equal(config.url,'/checkout');assert.equal(config.method,'post')
+    assert.deepEqual(JSON.parse(config.data),payload)
+    return respond({data:rawOrder},config)
+  }
+  const order=await api.checkout(payload)
+  assert.equal(order.order_number,rawOrder.order_number);assert.equal(order.total,'15')
+  assert.equal(order.payment_status,'pending')
+})
+
+test('Jawwal confirmation and reference lookup use the new contracts',async()=>{
+  client.apiClient.defaults.adapter=async config=>{
+    if(config.method==='post') {
+      assert.equal(config.url,'/payments/jawwal/confirm')
+      assert.deepEqual(JSON.parse(config.data),{order_number:rawOrder.order_number,reference:'ref-123'})
+    } else {
+      assert.equal(config.url,'/orders/lookup-by-reference')
+      assert.deepEqual(config.params,{reference:'ref-123'})
+    }
+    return respond({data:{...rawOrder,payment_status:'paid',payment_reference:'ref-123',store_id:2,commission_amount:3}},config)
+  }
+  for(const order of [await api.confirmJawwalPayment(rawOrder.order_number,'ref-123'),await api.lookupOrderByReference('ref-123')]) {
+    assert.equal(order.payment_status,'paid');assert.equal(order.payment_reference,'ref-123')
+    assert(!('store_id' in order));assert(!('commission_amount' in order))
+  }
+  for(const status of ['pending','paid','failed','refunded']) assert.equal(module.normalizeOrder({...rawOrder,payment_status:status}).payment_status,status)
 })

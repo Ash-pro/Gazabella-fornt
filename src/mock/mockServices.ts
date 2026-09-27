@@ -70,6 +70,7 @@ export const mockServices = {
         id: 101,
         name: 'أمل النجار',
         email: 'amal@example.com',
+        phone: '0591234567',
         role: 'customer' as const,
         created_at: new Date().toISOString(),
       },
@@ -86,6 +87,7 @@ export const mockServices = {
         id: 101,
         name: payload.name,
         email: payload.email,
+        phone: '0591234567',
         role: 'customer' as const,
         created_at: new Date().toISOString(),
       },
@@ -99,6 +101,7 @@ export const mockServices = {
         id: 101,
         name: 'أمل النجار',
         email,
+        phone: '0591234567',
         role: 'customer' as const,
         created_at: new Date().toISOString(),
       },
@@ -109,6 +112,7 @@ export const mockServices = {
       id: 101,
       name: 'أمل النجار',
       email: 'amal@example.com',
+      phone: '0591234567',
       role: 'customer' as const,
       created_at: new Date().toISOString(),
     }),
@@ -359,12 +363,12 @@ export const mockServices = {
       delivery_fee: deliveryFeeNum.toFixed(2),
       total: totalNum.toFixed(2),
       name: payload.name,
-      email: payload.email,
+      email: payload.email ?? '',
       phone: payload.phone,
       address: payload.address,
       notes: payload.notes || null,
-      payment_status: 'unpaid',
-      payment_method: 'cash_on_delivery',
+      payment_status: 'pending',
+      payment_method: payload.payment_method,
       tracking: [
         { status: 'confirmed', note: 'تم تأكيد الطلب التجريبي — الدفع عند الاستلام', created_at: new Date().toISOString() },
       ],
@@ -472,7 +476,7 @@ export const mockServices = {
   },
 
   getMerchantOrders: async (storeId = 1): Promise<MerchantOrderItem[]> => {
-    const orders = getStoredOrders().filter((o) => (o.payment_status === 'paid' || (o as any).payment_method === 'cash_on_delivery') && !['cancelled', 'refunded'].includes(o.status))
+    const orders = getStoredOrders().filter((o) => (o.payment_status === 'paid' || ['cod', 'cash_on_delivery'].includes(o.payment_method ?? '')) && !['cancelled', 'refunded'].includes(o.status))
     const items: MerchantOrderItem[] = []
 
     orders.forEach((o) => {

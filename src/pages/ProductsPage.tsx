@@ -1,3 +1,4 @@
+import { isMvp0Api } from '../lib/apiContract'
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -19,7 +20,7 @@ export function ProductsPage() {
   const category = params.get('category') || ''
   const sub = params.get('sub') || ''
   const search = params.get('search') || ''
-  const savedOnly = params.get('saved') === 'true'
+  const savedOnly = !isMvp0Api() && params.get('saved') === 'true'
   const validSort = ['-created_at', 'created_at', 'price', '-price'].includes(params.get('sort') || '') ? params.get('sort') as ProductFilters['sort'] : undefined
   const numberParam = (name: string) => { const raw = params.get(name); const n = Number(raw); return raw && Number.isFinite(n) && n >= 0 ? n : undefined }
   const page = Math.max(1, Math.floor(numberParam('page') || 1))
@@ -64,8 +65,8 @@ export function ProductsPage() {
   const unknownCategory = !isMockMode() && !!resolvedCategorySlug && categoriesData.isSuccess && resolvedCategoryId === undefined
   const list = unknownCategory ? [] : savedOnly ? wishlist.query.data ?? [] : products.data?.data ?? []
   return <>
-    {!active && !isMockMode() && <ApiHome />}
-    {!active && isMockMode() && <section className="container-page editorial-hero">
+    {!active && !isMockMode() && !isMvp0Api() && <ApiHome />}
+    {!active && (isMockMode() || isMvp0Api()) && <section className="container-page editorial-hero">
       <div className="editorial-hero__copy"><span className="eyebrow">اختيارات تشبهكِ</span><h1>تفاصيل صغيرة.<br /><em>جمال كل يوم.</em></h1><p>عناية، عطور وهدايا من متاجر مختارة.<br /><span className="hero-description-more">اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.</span></p><Link to="/#products" className="btn-primary">اكتشفي المختارات <Icon name="arrow" className="size-4 rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> من خانيونس، بكل حب</div></div>
       <div className="editorial-hero__image"><img src="/images/hero-beauty.webp" alt="تشكيلة Gazabella للعناية والعطور" fetchPriority="high" /><span className="hero-edition">THE GAZABELLA EDIT <span>01 / BEAUTY</span></span></div>
     </section>}
@@ -75,8 +76,8 @@ export function ProductsPage() {
     {savedOnly && wishlist.query.isError && <div className="container-page"><ErrorState message={getApiErrorMessage(wishlist.query.error)} onRetry={() => void wishlist.query.refetch()} /></div>}
     {categoriesData.isError && <div className="container-page"><ErrorState message={getApiErrorMessage(categoriesData.error)} onRetry={() => void categoriesData.refetch()} /></div>}
     <section id="products" className="container-page catalog-section">
-      <div className="section-heading"><div><span className="eyebrow">{active ? 'اختياراتكِ، بطريقتكِ' : 'THE EVERYDAY EDIT'}</span><CatalogTitle>{savedOnly ? 'محفوظاتكِ' : search ? `نتائج «${search}»` : currentCategory?.children?.find((c) => c.slug === sub)?.name || currentCategory?.name || 'مختارات تستحق مكانًا لديكِ'}</CatalogTitle><p>{products.data ? <><span className="num">{savedOnly ? list.length : products.data?.meta?.total ?? 0}</span> منتج</> : 'نجهّز مختاراتكِ…'}{products.isFetching && !products.isLoading ? ' · جارٍ التحديث' : ''}</p></div><Link className="text-link" to="/?sort=-created_at#products">وصل حديثًا <Icon name="arrow" className="size-4 rotate-180" /></Link></div>
-      <div className="catalog-toolbar"><button className="filter-toggle" disabled={savedOnly} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="filter" className="size-4" /> تصفية</button><button className={`filter-toggle ${savedOnly ? 'active' : ''}`} aria-pressed={savedOnly} onClick={() => setFilter('saved', savedOnly ? '' : 'true')}><Icon name="heart" className="size-4" /> المحفوظات</button><label className="sort-label">ترتيب حسب <select disabled={savedOnly} aria-label="ترتيب المنتجات" value={validSort || ''} onChange={(e) => setFilter('sort', e.target.value)}><option value="">المختارات</option><option value="-created_at">الأحدث</option><option value="price">السعر: الأقل أولًا</option><option value="-price">السعر: الأعلى أولًا</option></select></label></div>
+      <div className="section-heading"><div><span className="eyebrow">{active ? 'اختياراتكِ، بطريقتكِ' : 'THE EVERYDAY EDIT'}</span><CatalogTitle>{savedOnly ? 'محفوظاتكِ' : search ? `نتائج «${search}»` : currentCategory?.children?.find((c) => c.slug === sub)?.name || currentCategory?.name || 'مختارات تستحق مكانًا لديكِ'}</CatalogTitle><p>{unknownCategory || products.data ? <><span className="num">{unknownCategory ? 0 : savedOnly ? list.length : products.data?.meta?.total ?? 0}</span> منتج</> : 'نجهّز مختاراتكِ…'}{products.isFetching && !products.isLoading ? ' · جارٍ التحديث' : ''}</p></div><Link className="text-link" to="/?sort=-created_at#products">وصل حديثًا <Icon name="arrow" className="size-4 rotate-180" /></Link></div>
+      <div className="catalog-toolbar"><button className="filter-toggle" disabled={savedOnly} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="filter" className="size-4" /> تصفية</button>{!isMvp0Api() && <button className={`filter-toggle ${savedOnly ? 'active' : ''}`} aria-pressed={savedOnly} onClick={() => setFilter('saved', savedOnly ? '' : 'true')}><Icon name="heart" className="size-4" /> المحفوظات</button>}<label className="sort-label">ترتيب حسب <select disabled={savedOnly} aria-label="ترتيب المنتجات" value={validSort || ''} onChange={(e) => setFilter('sort', e.target.value)}><option value="">المختارات</option><option value="-created_at">الأحدث</option><option value="price">السعر: الأقل أولًا</option><option value="-price">السعر: الأعلى أولًا</option></select></label></div>
       {filtersOpen && <CatalogFilters key={params.toString()} categories={categoriesData.data || []} onClose={() => setFiltersOpen(false)} />}
       {!!chips.length && <div className="active-filters">{chips.map((chip) => <button key={chip.key + chip.value} onClick={() => removeChip(chip.key,chip.value)} aria-label={`إزالة فلتر ${chip.label}`}>{chip.label} ×</button>)}{chips.length > 1 && <button onClick={() => setParams({}, {state:{preserveScroll:true}})}>مسح الكل</button>}</div>}
       {(savedOnly ? wishlist.authenticated && wishlist.query.isPending : !products.data && (products.isLoading || (!!resolvedCategorySlug && categoriesData.isPending))) ? <div className="catalog-grid" aria-label="جارٍ تحميل المنتجات">{Array.from({length: 8}, (_, i) => <div key={i} className="product-skeleton"><div /><span /><span /></div>)}</div> : !savedOnly && !products.data && products.isError ? <ErrorState message={getApiErrorMessage(products.error)} onRetry={() => void products.refetch()} /> : !list.length ? <EmptyState title="لم نجد منتجات مطابقة" message="جرّبي قسمًا آخر أو وسّعي نطاق السعر. يمكنكِ أيضًا مسح التصفية." /> : <div className="catalog-grid" aria-busy={products.isFetching}>{list.map((product) => <ProductCard key={product.id} product={product} />)}</div>}

@@ -5,7 +5,7 @@ const memory = new Map()
 globalThis.localStorage = { getItem: k => memory.get(k) ?? null, setItem: (k,v) => memory.set(k,String(v)), removeItem: k => memory.delete(k), clear: () => memory.clear() }
 let server, api, db, operations, formatPrice
 before(async () => {
-  server = await createServer({ configFile:false, cacheDir:'node_modules/.vite-tests', server:{middlewareMode:true,hmr:{port:24682}}, appType:'custom', define:{'import.meta.env.VITE_MOCK_DELAY_MS':'"0"'} })
+  server = await createServer({ configFile:false, resolve:{alias:{axios:new URL('../node_modules/axios/dist/esm/axios.js',import.meta.url).pathname.replace(/^\/(\w:)/,'$1')}}, cacheDir:'node_modules/.vite-tests', server:{middlewareMode:true,hmr:{port:24682}}, appType:'custom', define:{'import.meta.env.VITE_MOCK_DELAY_MS':'"0"','import.meta.env.VITE_DATA_SOURCE':'"mock"'} })
   api = (await server.ssrLoadModule('/src/mock/mockServices.ts')).mockServices
   db = await server.ssrLoadModule('/src/mock/mockDatabase.ts')
   operations = await server.ssrLoadModule('/src/mock/demoOperations.ts')
@@ -13,7 +13,7 @@ before(async () => {
 })
 after(async () => { await server?.close() })
 beforeEach(() => memory.clear())
-const address = {name:'عميلة تجريبية',email:'test@example.test',phone:'0599000000',address:'عنوان اختبار محلي فقط',payment_method:'cash_on_delivery'}
+const address = {name:'عميلة تجريبية',email:'test@example.test',phone:'0599000000',address:'عنوان اختبار محلي فقط',payment_method:'cod'}
 
 test('prices preserve fractional amounts', () => {
   assert.equal(formatPrice('19.50'),'₪19.50')
@@ -50,11 +50,11 @@ test('empty checkout is rejected', async () => {
   await api.clearCart()
   await assert.rejects(api.checkout(address))
 })
-test('COD checkout stays unpaid and creates a matching delivery mission', async () => {
+test('COD checkout stays pending and creates a matching delivery mission', async () => {
   const before=(await api.getOrders()).data.length
   const order=await api.checkout(address)
-  assert.equal(order.payment_method,'cash_on_delivery')
-  assert.equal(order.payment_status,'unpaid')
+  assert.equal(order.payment_method,'cod')
+  assert.equal(order.payment_status,'pending')
   assert.equal(Number(order.total),Number(order.subtotal)+Number(order.delivery_fee))
   assert.equal((await api.getOrders()).data.length,before+1)
   assert.equal((await api.getCart()).total_items,0)
@@ -102,4 +102,37 @@ test('merchant stock updates affect customer product availability',async()=>{
 test('mock discount is lower than original price',async()=>{
   const products=(await api.getProducts({per_page:100})).data
   for(const p of products) if(p.discount_price!==null) assert(p.discount_price<p.price)
+})
+
+
+test('public mock API supports OTP through checkout and Jawwal confirmation without network',async()=>{
+  const front=(await server.ssrLoadModule('/src/api/gazabella.ts')).gazabellaApi
+  const client=await server.ssrLoadModule('/src/lib/apiClient.ts')
+  const auth=(await server.ssrLoadModule('/src/stores/authStore.ts')).useAuthStore
+  const query=(await server.ssrLoadModule('/src/lib/queryClient.ts')).queryClient
+  client.apiClient.defaults.adapter=async()=>{throw Error('Mock must never call API')}
+  assert.equal((await front.otpSend(address.phone)).message,'OTP sent')
+  const session=await front.otpVerify(address.phone,'123456','New customer')
+  assert.equal(session.user.name,'New customer');assert.equal(session.user.phone,address.phone)
+  auth.getState().setSession(session.token,session.user)
+  assert.deepEqual(await front.getMe(),session.user)
+  assert.equal((await front.otpVerify(address.phone,'123456')).user.role,'customer')
+  const {email: _email,...withoutEmail}=address
+  const order=await front.checkout(withoutEmail)
+  assert.equal(order.payment_method,'cod');assert.equal(order.payment_status,'pending')
+  assert.equal((await front.getCart()).total_items,0)
+  query.setQueryData(['order',order.order_number],order)
+  const paid=await front.confirmJawwalPayment(order.order_number,'mock-ref')
+  assert.equal(paid.payment_status,'paid');assert.equal(paid.payment_reference,'mock-ref')
+  await assert.rejects(front.confirmJawwalPayment('missing','mock-ref'),/Order not found in mock/)
+  await assert.rejects(front.lookupOrderByReference('mock-ref'),/غير متاح في الوضع التجريبي/)
+  query.clear();auth.getState().clearSession()
+})
+
+test('stored legacy mock payment statuses migrate to the current contract',()=>{
+  const orders=db.getStoredOrders()
+  orders[0].payment_status='unpaid';orders[1].payment_status='unknown'
+  db.saveStoredOrders(orders)
+  assert.equal(db.getStoredOrders()[0].payment_status,'pending')
+  assert.equal(db.getStoredOrders()[1].payment_status,'pending')
 })

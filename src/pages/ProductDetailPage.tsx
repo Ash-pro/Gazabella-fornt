@@ -1,7 +1,8 @@
+import { isMvp0Api } from '../lib/apiContract'
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { gazabellaApi, isMockMode } from '../api/gazabella'
+import { gazabellaApi } from '../api/gazabella'
 import { useCartStore } from '../stores/cartStore'
 import { queryClient } from '../lib/queryClient'
 import { ProductVisual } from '../components/product/ProductVisual'
@@ -10,6 +11,7 @@ import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { money } from '../lib/format'
+import { productPricing } from '../lib/productPricing'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
@@ -17,6 +19,7 @@ export function ProductDetailPage() {
 }
 
 function ProductContent({ slug }: { slug: string }) {
+  const [variantId, setVariantId] = useState<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [imageIndex, setImageIndex] = useState(0)
   const [zoom, setZoom] = useState(false)
@@ -28,17 +31,19 @@ function ProductContent({ slug }: { slug: string }) {
   })
   const product = query.data
 
-  const limit = (isMockMode() ? Math.min(10, product?.stock ?? 0) : product?.stock ?? 0)
+  const variant = product?.variants?.find(v => v.id === variantId) ?? product?.variants?.find(v => v.available_quantity > 0) ?? product?.variants?.[0]
+  const limit = Math.min(10, variant?.available_quantity ?? product?.stock ?? 0)
 
   const add = useMutation({
-    mutationFn: () => gazabellaApi.addToCart(product!.id, quantity),
+    mutationFn: () => gazabellaApi.addToCart(isMvp0Api() ? variant!.id : product!.id, quantity),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
       const primaryImg = (product!.images ?? []).find((i) => i.is_primary)?.url ?? (product!.images ?? [])[0]?.url ?? null
       useCartStore.getState().showCartToast({
         productName: product!.name,
         thumbnailUrl: primaryImg,
-        price: product!.discount_price ?? product!.price,
+        price: productPricing(product!, variant).current,
+        variantName: variant?.name,
       })
     },
   })
@@ -65,8 +70,7 @@ function ProductContent({ slug }: { slug: string }) {
     )
 
   const image = (product.images ?? [])[imageIndex] ?? (product.images ?? [])[0]
-  const displayPrice = product.discount_price ?? product.price
-  const originalPrice = product.discount_price ? product.price : null
+  const { current: displayPrice, original: originalPrice, percent } = productPricing(product, variant)
   const disabled = add.isPending || !product.in_stock || quantity > limit
 
   const button = (
@@ -125,17 +129,19 @@ function ProductContent({ slug }: { slug: string }) {
           </p>
 
           <div className="detail-price">
-            {originalPrice && (
-              <del className="line-through text-gray-400 text-sm">
+            {originalPrice !== null && (
+              <del aria-label="السعر السابق" className="line-through text-gray-400 text-sm">
                 <span className="num">{money(originalPrice)}</span>
               </del>
             )}
             <b><span className="num">{money(displayPrice)}</span></b>
+            {percent > 0 && <span className="text-[var(--primary)]">خصم {percent}%</span>}
             <span className={product.in_stock ? 'in-stock' : 'out-stock'}>
               {product.in_stock ? 'متوفر' : 'غير متوفر'}
             </span>
           </div>
 
+          {!!product.variants?.length && <label className="field-label">اختاري النوع<select className="form-field" value={variant?.id ?? ''} onChange={e => { setVariantId(Number(e.target.value)); setQuantity(1) }}>{product.variants.map(v => <option key={v.id} value={v.id} disabled={v.available_quantity < 1}>{v.name} — {money(v.price)}{v.available_quantity < 1 ? ' — غير متوفر' : ''}</option>)}</select></label>}
           <div className="detail-buy">
             <div className="quantity-control">
               <button

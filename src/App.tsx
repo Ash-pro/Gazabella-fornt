@@ -1,3 +1,6 @@
+import { OrderLookupPage } from './pages/OrderLookupPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { CheckoutReceiptPage } from './pages/CheckoutReceiptPage'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
@@ -9,6 +12,7 @@ import { ErrorState } from './components/ui/AsyncState'
 import { getApiErrorMessage } from './lib/apiClient'
 import { gazabellaApi, isMockMode } from './api/gazabella'
 import { useAuthStore } from './stores/authStore'
+import { isMvp0Api } from './lib/apiContract'
 
 import { ProductsPage } from './pages/ProductsPage'
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
@@ -47,7 +51,10 @@ export default function App() {
               <Route path="products/:slug" element={<Suspense fallback={<PageLoader />}><ProductDetailPage /></Suspense>} />
               <Route path="cart" element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
               <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
-              <Route path="checkout" element={<Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense>} />
+              <Route path="checkout" element={<Suspense fallback={<PageLoader />}>{isMvp0Api() ? <ProtectedRoute><CheckoutPage /></ProtectedRoute> : <CheckoutPage />}</Suspense>} />
+              <Route path="checkout/receipt" element={<CheckoutReceiptPage />} />
+              <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="orders/lookup" element={<OrderLookupPage />} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
               <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
             </Route>

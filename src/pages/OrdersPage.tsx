@@ -1,3 +1,4 @@
+import { isMvp0Api } from '../lib/apiContract'
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -29,11 +30,11 @@ export function OrdersPage() {
   return (
     <div className="container-page py-10 sm:py-14">
       <span className="eyebrow">حسابك ومشترياتك</span>
-      <div className="flex items-center justify-between"><h1 className="section-title mt-2">طلباتي</h1><button className="btn-ghost" disabled={logout.isPending} onClick={() => logout.mutate()}>تسجيل الخروج</button></div>{logout.isError && <p className="field-error">{getApiErrorMessage(logout.error)}</p>}
+      <div className="flex items-center justify-between"><h1 className="section-title mt-2">طلباتي</h1>{!isMockMode() && !isMvp0Api() && <Link className="text-link" to="/profile">الملف الشخصي</Link>}<button className="btn-ghost" disabled={logout.isPending} onClick={() => logout.mutate()}>تسجيل الخروج</button></div>{logout.isError && <p className="field-error">{getApiErrorMessage(logout.error)}</p>}
       <div className="mt-8 grid gap-4">
         {!ordersQuery.data?.data.length && <EmptyState title="لا توجد طلبات بعد" message="عندما تتمين أول طلب سيظهر هنا بكل تفاصيله." />}
         {ordersQuery.data?.data.map((order) => (
-          <Link to={`/orders/${isMockMode() ? order.order_number : order.id}`} key={order.id} className="order-card hover:border-[var(--primary)] transition-all">
+          <Link to={`/orders/${(isMockMode() || isMvp0Api()) ? order.order_number : order.id}`} key={order.id} className="order-card hover:border-[var(--primary)] transition-all">
             <div className="space-y-1.5">
               <div className="flex items-center gap-3">
                 <p className="font-mono text-base font-black text-[var(--primary)] num" dir="ltr">{order.order_number}</p>
