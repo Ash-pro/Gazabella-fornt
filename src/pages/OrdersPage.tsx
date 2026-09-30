@@ -1,4 +1,5 @@
 import { isMvp0Api } from '../lib/apiContract'
+import { orderStatusLabel } from '../lib/orderStatus'
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -8,17 +9,6 @@ import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { formatPrice } from '../lib/format'
-import type { OrderStatus } from '../types/api'
-
-const statusLabel: Record<OrderStatus, string> = {
-  pending: 'قيد الاستلام',
-  confirmed: 'تم التأكيد',
-  processing: 'قيد التجهيز',
-  shipped: 'في الطريق إليكِ',
-  delivered: 'مكتمل',
-  cancelled: 'ملغي',
-  refunded: 'مسترد',
-}
 
 export function OrdersPage() {
   const [page, setPage] = useState(1)
@@ -45,13 +35,13 @@ export function OrdersPage() {
                 )}
               </div>
               <p className="text-xs text-[var(--text-2)]">
-                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items.length}</span> منتجات
+                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items_count ?? order.items.length}</span> منتجات
               </p>
-              <p className="mt-3 text-sm">{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</p>
+              <p className="mt-3 text-sm">{order.items.length > 0 ? <>{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</> : <span className="text-[var(--text-3)]">{order.items_count ?? 0} منتج</span>}</p>
               <span className="text-link mt-3">تفاصيل الطلب</span>
             </div>
             <div className="mr-auto text-left flex flex-col items-end">
-              <span className={`status-badge status-${order.status}`}>{statusLabel[order.status] || order.status}</span>
+              <span className={`status-badge status-${order.status}`}>{orderStatusLabel(order.status)}</span>
               <p className="mt-2 font-mono text-lg font-bold text-[var(--text)]"><span className="num">{formatPrice(order.total)}</span></p>
             </div>
             <Icon name="chevron" className="size-5 text-[var(--text-3)] shrink-0" />

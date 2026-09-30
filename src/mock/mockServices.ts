@@ -228,7 +228,6 @@ export const mockServices = {
         id: detail.id,
         name: detail.name,
         slug: detail.slug,
-        store: detail.store,
         images: detail.images,
         price: detail.price,
         discount_price: detail.discount_price,
@@ -345,11 +344,13 @@ export const mockServices = {
     const deliveryFeeNum = Number(defaultDelivery?.fee || '5.00')
     const totalNum = subtotalNum + deliveryFeeNum
     const generatedPin = String(Math.floor(1000 + Math.random() * 9000))
+    const isCod = payload.payment_method !== 'jawwal_pay'
 
     const newOrder: Order = {
       id: Date.now(),
       order_number: orderNum,
-      status: 'confirmed',
+      // D-01 · G-01: COD يُؤكَّد فوراً؛ جوال باي يبقى pending حتى تأكيد الدفع
+      status: isCod ? 'confirmed' : 'pending',
       items: cart.items.map((i, index) => ({
         id: Math.max(0, ...orders.flatMap((o) => o.items.map((item) => item.id))) + index + 1,
         product_name: i.product_name,
@@ -370,7 +371,9 @@ export const mockServices = {
       payment_status: 'pending',
       payment_method: payload.payment_method,
       tracking: [
-        { status: 'confirmed', note: 'تم تأكيد الطلب التجريبي — الدفع عند الاستلام', created_at: new Date().toISOString() },
+        isCod
+          ? { status: 'confirmed', note: 'تم تأكيد الطلب التجريبي — الدفع عند الاستلام', created_at: new Date().toISOString() }
+          : { status: 'pending', note: 'طلب تجريبي — بانتظار تأكيد دفع جوال باي', created_at: new Date().toISOString() },
       ],
       delivery_pin: generatedPin,
       created_at: new Date().toISOString(),
@@ -394,7 +397,7 @@ export const mockServices = {
       total_amount: newOrder.total,
       delivery_fee: newOrder.delivery_fee,
       payment_status: 'unpaid',
-      payment_method: 'cash_on_delivery',
+      payment_method: isCod ? 'cash_on_delivery' : 'jawwal_pay',
       delivery_status: 'pending_pickup',
       pickup_stores: [...new Set(cart.items.map((i) => {
         const p = INITIAL_PRODUCTS.find((pr) => pr.id === i.product_id)

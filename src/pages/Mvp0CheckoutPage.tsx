@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { resolvePaymentMethods } from '../lib/paymentMethods'
+import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
+import { DeliveryFeeRow } from '../components/checkout/DeliveryFee'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { LegalConsent } from '../components/checkout/LegalConsent'
+import { lineItems, track, trackPurchase } from '../lib/analytics'
 import { gazabellaApi } from '../api/gazabella'
 import { mvp0Checkout, normalizePhone } from '../api/mvp0'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -9,9 +14,11 @@ import { money } from '../lib/format'
 import { useAuthStore } from '../stores/authStore'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
-import type { CheckoutBegin, CheckoutQuote, Mvp0Address, Mvp0CheckoutPayload } from '../types/api'
+import type { CheckoutBegin, CheckoutQuote, Mvp0Address, Mvp0CheckoutPayload, PaymentMethodCode } from '../types/api'
 
 type Attempt = { key: string; payload: Mvp0CheckoutPayload }
+
+const statusOf = (e: unknown) => (e as { response?: { status?: number } }).response?.status ?? 0
 
 export function Mvp0CheckoutPage() {
   const user = useAuthStore(s => s.user)
@@ -28,12 +35,21 @@ export function Mvp0CheckoutPage() {
   })
   const [deliveryId, setDeliveryId] = useState(0)
   const [coupon, setCoupon] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [now, setNow] = useState(Date.now)
   const formRef = useRef<HTMLFormElement>(null)
+  const paymentOptions = resolvePaymentMethods(begin?.payment_methods)
+  const activePayment = paymentOptions.some(o => o.code === paymentMethod) ? paymentMethod : paymentOptions[0].code
 
   const cart = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const checkoutTracked = useRef(false)
+  useEffect(() => {
+    if (checkoutTracked.current || !cart.data?.items.length) return
+    checkoutTracked.current = true
+    track('begin_checkout', lineItems(cart.data.items))
+  }, [cart.data])
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -47,16 +63,19 @@ export function Mvp0CheckoutPage() {
       setAddress(prev => ({ ...prev, city: result.active_cities[0] ?? '' }))
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
+    onError: (e) => track('checkout_error', { stage: 'reserve', status: statusOf(e) }),
   })
 
   const review = useMutation({
     mutationFn: () => mvp0Checkout.quote(deliveryId, address.city, coupon.trim() || undefined),
     onSuccess: setQuote,
+    onError: (e) => track('checkout_error', { stage: 'quote', status: statusOf(e) }),
   })
 
   const create = useMutation({
     mutationFn: (value: Attempt) => mvp0Checkout.create(value.payload, value.key),
     onSuccess: order => {
+      trackPurchase(order)
       sessionStorage.removeItem(storageKey); setAttempt(null)
       queryClient.setQueryData(['order', order.order_number], order)
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
@@ -65,6 +84,7 @@ export function Mvp0CheckoutPage() {
     },
     onError: e => {
       const status = (e as { response?: { status?: number } }).response?.status
+      track('checkout_error', { stage: 'create', status: status ?? 0 })
       if (status && status >= 400 && status < 500 && ![401, 408, 429].includes(status)) {
         sessionStorage.removeItem(storageKey); setAttempt(null); setQuote(null)
       }
@@ -87,7 +107,7 @@ export function Mvp0CheckoutPage() {
         payload: {
           address: { ...address, phone: normalizePhone(address.phone) },
           delivery_option_id: deliveryId,
-          payment_method: 'jawwal_pay',
+          payment_method: activePayment,
           quote_token: quote.quote_token,
           ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
           ...(notes.trim() ? { notes: notes.trim() } : {}),
@@ -318,21 +338,7 @@ export function Mvp0CheckoutPage() {
                   <span className="flex size-8 items-center justify-center rounded-full bg-[var(--primary)] text-white text-sm font-bold">٣</span>
                   <h2 className="text-lg font-bold">طريقة الدفع</h2>
                 </div>
-                <section className="jawwal-payment" aria-labelledby="payment-heading">
-                  <div className="jawwal-payment__heading">
-                    <h2 id="payment-heading">الدفع الإلكتروني</h2>
-                    <span>الخيار المتاح حاليًا</span>
-                  </div>
-                  <label className="jawwal-payment__option">
-                    <input type="radio" name="payment_method" value="jawwal_pay" checked readOnly aria-describedby="jawwal-payment-note" />
-                    <span className="jawwal-payment__logo"><img src="/payments/jawwal-pay.png" alt="Jawwal Pay" width="130" height="64" /></span>
-                    <span className="jawwal-payment__copy"><strong>جوال باي</strong><span>ادفعي باستخدام محفظتكِ الإلكترونية</span></span>
-                    <span className="jawwal-payment__selected" aria-hidden="true">✓</span>
-                  </label>
-                  <p id="jawwal-payment-note" className="jawwal-payment__note">
-                    <span>نسخة تجريبية</span> الدفع حاليًا في وضع الاختبار، ولا تُخصم أموال حقيقية.
-                  </p>
-                </section>
+                <PaymentMethodPicker options={paymentOptions} value={activePayment} disabled={busy} onChange={v => { setPaymentMethod(v); invalidate() }} />
               </div>
             </form>
           </div>
@@ -363,9 +369,7 @@ export function Mvp0CheckoutPage() {
                 <div className="flex justify-between text-[var(--text-2)]">
                   <span>المنتجات</span><span className="num">{money(quote.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[var(--text-2)]">
-                  <span>التوصيل</span><span className="num">{money(quote.delivery_fee)}</span>
-                </div>
+                <DeliveryFeeRow fees={quote} className="text-[var(--text-2)]" />
                 {parseFloat(quote.discount_amount) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>خصم الكوبون</span><span className="num">− {money(quote.discount_amount)}</span>
@@ -413,7 +417,7 @@ export function Mvp0CheckoutPage() {
             </button>
           )}
 
-          <p className="text-center text-xs text-[var(--text-3)]">🔒 دفع آمن عبر جوال بي</p>
+          <LegalConsent />
         </aside>
       </div>
     </div>

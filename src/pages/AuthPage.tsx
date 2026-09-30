@@ -3,6 +3,8 @@ import { isMvp0Api } from '../lib/apiContract'
 import { useState, useEffect, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { LegalConsent } from '../components/checkout/LegalConsent'
+import { track } from '../lib/analytics'
 import { gazabellaApi } from '../api/gazabella'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -38,6 +40,7 @@ export function AuthPage() {
 
   function onSuccess(token: string, user: User) {
     useAuthStore.getState().setSession(token, user)
+    track('login', { method: 'otp' })
     void queryClient.invalidateQueries({ queryKey: ['cart'] })
     navigate(safeNext, { replace: true })
   }
@@ -155,6 +158,7 @@ export function AuthPage() {
                 {pending ? 'جارٍ الإرسال…' : 'إرسال الكود'}
                 <Icon name="arrow" className="size-4 rotate-180" />
               </button>
+              <LegalConsent action="بالمتابعة" />
             </form>
           )}
 

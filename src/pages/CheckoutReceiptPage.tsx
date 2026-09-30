@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { DeliveryFeeRow } from '../components/checkout/DeliveryFee'
 import { Link, useLocation } from 'react-router-dom'
 import type { Order } from '../types/api'
 import { money } from '../lib/format'
@@ -14,7 +15,7 @@ export function CheckoutReceiptPage() {
     <section className="order-summary space-y-4">
       {order.items.map((item) => <div className="flex justify-between gap-4" key={item.id}><span>{item.product_name} × {item.quantity}</span><b>{money(item.subtotal)}</b></div>)}
       <div className="flex justify-between"><span>قيمة المنتجات</span><b>{money(order.subtotal)}</b></div>
-      <div className="flex justify-between"><span>التوصيل</span><b>{money(order.delivery_fee)}</b></div>
+      <DeliveryFeeRow fees={order} />
       <div className="flex justify-between border-t pt-4"><span>الإجمالي من المتجر</span><b>{money(order.total)}</b></div>
       <p role="status">{order.payment_status === 'paid' ? 'تم تأكيد الدفع' : 'لم يُؤكد الدفع بعد'}</p>
     </section>

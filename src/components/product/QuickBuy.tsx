@@ -9,6 +9,7 @@ import { productPricing } from '../../lib/productPricing'
 import { useCartStore } from '../../stores/cartStore'
 import { Dialog } from '../ui/Dialog'
 import { ProductVisual } from './ProductVisual'
+import { productItem, track } from '../../lib/analytics'
 import type { ProductBrief } from '../../types/api'
 
 export function QuickBuy({ product }: { product: ProductBrief }) {
@@ -24,7 +25,8 @@ export function QuickBuy({ product }: { product: ProductBrief }) {
   const image = product.images?.find(i => i.is_primary)?.url ?? product.images?.[0]?.url ?? null
   const add = useMutation({
     mutationFn: ({ id, count }: { id: number; count: number }) => gazabellaApi.addToCart(id, count),
-    onSuccess: cart => {
+    onSuccess: (cart, { count }) => {
+      track('add_to_cart', { items: [productItem(product, { quantity: count, variant: variant?.name, price })], value: price * count })
       queryClient.setQueryData(['cart'], cart)
       setOpen(false)
       useCartStore.getState().showCartToast({ productName: product.name, variantName: variant?.name, thumbnailUrl: image, price })

@@ -8,6 +8,13 @@ import { registerServiceWorker } from './lib/registerSw'
 import './index.css'
 import { useAuthStore } from './stores/authStore'
 import { useCheckoutStore } from './stores/checkoutStore'
+import { initAnalytics } from './lib/analytics'
+import { initMonitoring, installChunkReloadGuard, setMonitoringUser } from './lib/monitoring'
+
+initMonitoring()
+installChunkReloadGuard()
+initAnalytics()
+setMonitoringUser(useAuthStore.getState().user?.id)
 
 useAuthStore.subscribe((state, previous) => {
   if (state.token !== previous.token) {
@@ -15,6 +22,7 @@ useAuthStore.subscribe((state, previous) => {
     queryClient.clear()
     useCheckoutStore.getState().reset()
   }
+  if (state.user?.id !== previous.user?.id) setMonitoringUser(state.user?.id)
 })
 
 registerServiceWorker()

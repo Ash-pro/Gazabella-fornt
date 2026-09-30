@@ -68,6 +68,42 @@ test('missing order totals are rejected instead of displaying free shipping',()=
   const order=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,status:'pending',payment_status:'pending'})
   assert.equal(order.delivery_fee,'0');assert.equal(order.payment_status,'pending')
 })
+test('delivery fee: normal fee passes through without waiver (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:15,delivery_fee:5,status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_fee,'5');assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
+})
+test('delivery fee: compensation waiver keeps the original fee for strike-through (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'compensation',label:'عرض تعويضي — توصيل مجاني'},status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_fee,'0');assert.equal(o.delivery_fee_original,'5.00');assert.deepEqual(o.delivery_waiver,{reason:'compensation',label:'عرض تعويضي — توصيل مجاني'})
+})
+test('delivery fee: unknown waiver reason is ignored and original is dropped (D-22)',()=>{
+  const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'hack',label:'x'},status:'confirmed',payment_status:'pending'})
+  assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
+})
+test('payment methods: missing server list falls back to COD only (D-01, P1-FE-02)',async()=>{
+  const pm=await server.ssrLoadModule('/src/lib/paymentMethods.ts')
+  assert.deepEqual(pm.resolvePaymentMethods(undefined).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([]).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y',is_sandbox:true}]).map(m=>m.code),['cod','jawwal_pay'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'bitcoin',label:'z'}]).map(m=>m.code),['cod'])
+})
+test('order status + payment method labels are unified (D-21, P1-FE-03)',async()=>{
+  const os=await server.ssrLoadModule('/src/lib/orderStatus.ts')
+  assert.equal(os.orderStatusLabel('pending'),'بانتظار التأكيد');assert.equal(os.orderStatusLabel('shipped'),'خرج للتوصيل')
+  assert.equal(os.orderStatusLabel('delivered'),'تم التسليم');assert.equal(os.orderStatusLabel('weird'),'قيد المعالجة')
+  assert.equal(os.paymentMethodLabel('cod'),'الدفع عند الاستلام');assert.equal(os.paymentMethodLabel('cash_on_delivery'),'الدفع عند الاستلام')
+  assert.equal(os.paymentMethodLabel('jawwal_pay'),'جوال باي');assert.equal(os.paymentMethodLabel(undefined),'—')
+})
+test('realtime contract: channel, events, auth URL and invalidation keys (G-03, P1-FE-04)',async()=>{
+  const rt=await server.ssrLoadModule('/src/lib/realtime.ts')
+  assert.equal(rt.userChannel(7),'App.Models.User.7')
+  assert.equal(rt.REALTIME_EVENTS.orderStatus,'.order.status.updated')
+  assert.equal(rt.broadcastAuthUrl('http://127.0.0.1:8000/api/v1'),'http://127.0.0.1:8000/broadcasting/auth')
+  assert.equal(rt.broadcastAuthUrl('/api/v1',undefined,'https://shop.test'),'https://shop.test/broadcasting/auth')
+  assert.equal(rt.broadcastAuthUrl('http://x/api/v1','https://ws.test/auth'),'https://ws.test/auth')
+  assert.deepEqual(rt.orderEventQueryKeys({order_number:'GAZ-2026-0042'}),[['orders'],['order','GAZ-2026-0042']])
+  assert.deepEqual(rt.orderEventQueryKeys(null),[['orders'],['order']])
+})
 test('invalid authentication payload does not establish a session',async()=>{
   client.apiClient.defaults.adapter=async config=>respond({data:{user:{id:1}}},config)
   await assert.rejects(api.otpVerify('0591234567','123456'),/غير مكتملة/)

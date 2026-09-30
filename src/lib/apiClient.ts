@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
 import { isMvp0Api } from './apiContract'
 import { getGuestUuid } from './guest'
+import { captureMessage } from './monitoring'
 
 // ── Cart Token (للمستخدم الضيف) ──────────────────────────────────────────
 const CART_TOKEN_KEY = `gz_cart_token:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
@@ -50,6 +51,12 @@ apiClient.interceptors.response.use(
     return response
   },
   (error: AxiosError<ApiErrorBody>) => {
+    const status = error.response?.status
+    if (status && status >= 500) {
+      // المسار بدون query، والأرقام تُستبدل بـ :id لتجميع نفس الخطأ في Sentry
+      const path = (error.config?.url ?? '').split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:id').replace(/\/(GZ|GAZ)-[\w-]+/gi, '/:order')
+      captureMessage(`API ${status} ${(error.config?.method ?? 'get').toUpperCase()} ${path}`, { level: 'error', status, path })
+    }
     if (error.response?.status === 401 && error.config?.headers.get('Authorization') === `Bearer ${useAuthStore.getState().token}`) {
       useAuthStore.getState().clearSession()
 

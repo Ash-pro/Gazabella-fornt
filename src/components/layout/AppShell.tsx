@@ -8,10 +8,13 @@ import { queryClient } from '../../lib/queryClient'
 import { disconnectEcho } from '../../lib/echo'
 import { Footer } from './Footer'
 import { Header } from './Header'
+import { EnvBanner } from './EnvBanner'
 import { MobileBottomNav } from './MobileBottomNav'
 import { CartDrawer } from '../cart/CartDrawer'
 import { CartToast } from '../cart/CartToast'
 import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt'
+import { SupportFab } from '../support/SupportFab'
+import { RouteSeo } from './RouteSeo'
 import { PageLoader } from '../ui/AsyncState'
 
 export function AppShell() {
@@ -31,7 +34,9 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col pb-16 lg:pb-0">
+      <RouteSeo />
       <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
+      <EnvBanner />
       <Header />
       <CartDrawer />
       <CartToast />
@@ -42,6 +47,7 @@ export function AppShell() {
       </main>
       <Footer />
       <MobileBottomNav />
+      <SupportFab />
       <PwaInstallPrompt />
     </div>
   )

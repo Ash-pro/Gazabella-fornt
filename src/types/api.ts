@@ -30,7 +30,6 @@ export interface ProductImage {
 
 export interface ProductBrief {
   variants?: ProductVariant[]
-  store?: { name: string }
   id: number
   name: string
   slug: string
@@ -45,7 +44,6 @@ export interface ProductBrief {
 
 export interface ProductDetail {
   variants?: ProductVariant[]
-  store?: { name: string }
   id: number
   name: string
   slug: string
@@ -99,7 +97,16 @@ export interface Mvp0Address {
   lng?: number
 }
 
+export type PaymentMethodCode = 'cod' | 'jawwal_pay'
+export interface PaymentMethodOption {
+  code: PaymentMethodCode
+  label: string
+  is_sandbox?: boolean
+}
+
 export interface CheckoutBegin {
+  /** C-P1-01 — اختياري للتوافق مع باك اند أقدم؛ غيابه ⇒ COD فقط (D-01) */
+  payment_methods?: PaymentMethodOption[]
   expires_at: string
   seconds_remaining: number
   reservation_extended: boolean
@@ -107,11 +114,26 @@ export interface CheckoutBegin {
   delivery_options: Array<{ id: number; name: string; fee: string; estimated_days: string }>
 }
 
-export interface CheckoutQuote {
+/** إعفاء/خصم رسوم التوصيل (D-22). غيابه = رسوم توصيل عادية. */
+export type DeliveryWaiverReason = 'compensation' | 'free_threshold' | 'promotion'
+export interface DeliveryWaiver {
+  reason: DeliveryWaiverReason
+  /** نص جاهز للعرض من الخادم، مثل: «عرض تعويضي — توصيل مجاني» */
+  label: string
+}
+/** حقول التوصيل المشتركة بين العرض (quote) والطلب */
+export interface DeliveryFeeFields {
+  /** الرسوم المستحقة فعلاً — إلزامية دائماً، و"0.00" مسموحة فقط مع delivery_waiver */
+  delivery_fee: string
+  /** الرسوم قبل الإعفاء — تظهر مشطوبة */
+  delivery_fee_original?: string | null
+  delivery_waiver?: DeliveryWaiver | null
+}
+
+export interface CheckoutQuote extends DeliveryFeeFields {
   quote_token: string
   expires_at: string
   subtotal: string
-  delivery_fee: string
   discount_amount: string
   total: string
   currency: string
@@ -207,8 +229,11 @@ export interface Order {
   payment_method?: 'cash_on_delivery' | 'jawwal_pay' | string
   escrow_expires_at?: string
   delivery_pin?: string
+  delivery_fee_original?: string | null
+  delivery_waiver?: DeliveryWaiver | null
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   payment_reference?: string | null
+  items_count?: number
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
   created_at: string
 }

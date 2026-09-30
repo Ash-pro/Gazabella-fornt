@@ -1,5 +1,5 @@
 import { isMvp0Api } from '../lib/apiContract'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -12,6 +12,10 @@ import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { money } from '../lib/format'
 import { productPricing } from '../lib/productPricing'
+import { productItem, track } from '../lib/analytics'
+import { useSeo } from '../lib/seo'
+import { toMetaDescription } from '../content/seo'
+import { getImageUrl } from '../lib/apiClient'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
@@ -37,6 +41,8 @@ function ProductContent({ slug }: { slug: string }) {
   const add = useMutation({
     mutationFn: () => gazabellaApi.addToCart(isMvp0Api() ? variant!.id : product!.id, quantity),
     onSuccess: () => {
+      const unit = productPricing(product!, variant).current
+      track('add_to_cart', { items: [productItem(product!, { quantity, variant: variant?.name, price: unit })], value: unit * quantity })
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
       const primaryImg = (product!.images ?? []).find((i) => i.is_primary)?.url ?? (product!.images ?? [])[0]?.url ?? null
       useCartStore.getState().showCartToast({
@@ -47,6 +53,38 @@ function ProductContent({ slug }: { slug: string }) {
       })
     },
   })
+
+  const seoPrice = product ? productPricing(product, variant).current : 0
+  const seoImage = product ? getImageUrl((product.images ?? []).find((i) => i.is_primary)?.url ?? (product.images ?? [])[0]?.url ?? null) : null
+  useSeo(product ? {
+    title: product.name,
+    description: toMetaDescription(product.description, `${product.name} — ${product.category?.name ?? 'منتجات التجميل'} من Gazabella بسعر ${seoPrice} ₪. توصيل في خان يونس ودفع عند الاستلام.`),
+    image: seoImage,
+    type: 'product',
+    price: { amount: seoPrice, currency: 'ILS' },
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      ...(product.description ? { description: toMetaDescription(product.description, product.name) } : {}),
+      ...(seoImage ? { image: [seoImage] } : {}),
+      sku: String(product.id),
+      category: product.category?.name,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'ILS',
+        price: seoPrice.toFixed(2),
+        availability: product.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: window.location.href.split('?')[0],
+      },
+    },
+  } : null)
+
+  const viewedId = product?.id
+  useEffect(() => {
+    if (!product) return
+    track('view_item', { items: [productItem(product)], value: Number(product.discount_price ?? product.price) || 0 })
+  }, [viewedId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (query.isLoading) return (
     <div className="container-page product-detail-skeleton">

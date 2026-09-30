@@ -374,7 +374,8 @@ decisions:[
  ['D-18','خانيونس فقط حتى MVP3؛ التسمية <code>sub_orders</code>.','ثابت'],
  ['D-19','<b>جديد:</b> نافذة دفع Jawwal النهائية 15 د من إنشاء الطلب؛ الحجز يتحول إلى <code>held_for_payment</code> ولا يُخصم المخزون إلا عند الدفع.','P4'],
  ['D-20','<b>جديد — مؤقت:</b> Pilot بلا مزود SMS: <code>OTP_DELIVERY=manual</code> لأرقام قائمة Pilot فقط؛ الإدارة ترسل الرمز يدوياً عبر واتساب ويُسجَّل كل إرسال.','P3'],
- ['D-21','<b>جديد:</b> العميل يرى 4 حالات فقط: تم التأكيد · قيد التجهيز · خرج للتوصيل · تم التسليم (+ ملغي/مسترد). <code>pending</code> يُعرض «بانتظار التأكيد».','P1 · P2']
+ ['D-21','<b>جديد:</b> العميل يرى 4 حالات فقط: تم التأكيد · قيد التجهيز · خرج للتوصيل · تم التسليم (+ ملغي/مسترد). <code>pending</code> يُعرض «بانتظار التأكيد».','P1 · P2'],
+ ['D-22','<b>جديد:</b> رسوم التوصيل إلزامية في كل عرض وطلب (<code>0.00</code> مسموحة فقط مع إعفاء). الإعفاء عبر <code>delivery_waiver</code> بأسباب: <code>compensation</code> عرض تعويضي · <code>free_threshold</code> فوق حد التوصيل المجاني · <code>promotion</code> عرض تسويقي. الرسوم الأصلية تُعرض مشطوبة في <code>delivery_fee_original</code>. تمويل الإعفاء على Gazabella (D-08).','P1']
 ],
 phases:[
 /* ═══════════════════════════ PHASE 1 ═══════════════════════════ */
@@ -766,8 +767,18 @@ contracts:[
   "payment_method": "cod", "total": 155.00, "currency": "ILS", "items": [ ... ] } }`}]},
  {id:'C-P1-03',title:'عقد البث — قناة وحدث وحمولة',status:'ready',
   body:'القناة <code>private-App.Models.User.{id}</code> · الأحداث <code>order.status.updated</code> و<code>cart.reservation.updated</code> · المصادقة <code>POST /broadcasting/auth</code> بـ Bearer. الحمولة: <code>order_number · status · status_label · updated_at</code> فقط.'},
- {id:'C-P1-04',title:'مزامنة <code>openapi.yaml</code> مع ملحق عقد MVP0',status:'todo',
-  body:'دمج <code>Docs/MVP0_CONTRACT_DELTA.md</code>: <code>POST /auth/guest/init</code> · <code>X-Guest-UUID</code> · <code>POST /orders/checkout/quote</code> · <code>POST /orders</code> + <code>Idempotency-Key</code> · <code>compare_at_price</code> · تعليم <code>POST /checkout</code> كـ <code>deprecated</code> · إضافة C-P1-01…03.'}
+ {id:'C-P1-04',title:'مزامنة <code>openapi.yaml</code> مع ملحق عقد MVP0',status:'done',
+  body:'دمج <code>Docs/Backup/03-api-review-and-guides/MVP0_CONTRACT_DELTA.md</code>: <code>POST /auth/guest/init</code> · <code>X-Guest-UUID</code> · <code>POST /orders/checkout/quote</code> · <code>POST /orders</code> + <code>Idempotency-Key</code> · <code>compare_at_price</code> · تعليم <code>POST /checkout</code> كـ <code>deprecated</code> · إضافة C-P1-01…03.'},
+ {id:'C-P1-05',title:'رسوم التوصيل والإعفاء التعويضي (D-22)',status:'ready',
+  body:'يُضاف لـ <code>POST /orders/checkout/quote</code> و<code>GET /orders</code> و<code>GET /orders/{n}</code>. <code>delivery_fee</code> إلزامي دائماً. غياب <code>delivery_waiver</code> = رسوم عادية. سبب غير معروف يُتجاهل. <b>التعويض يُمنح</b> من الإدارة ككوبون <code>free_delivery</code> مرتبط بالعميل، لمرة واحدة، مع سبب (تأخير · إزالة بند D-05 · نزاع).',
+  code:[{lang:'json',src:`{
+  "subtotal": "176.00",
+  "delivery_fee": "0.00",
+  "delivery_fee_original": "15.00",
+  "delivery_waiver": { "reason": "compensation", "label": "عرض تعويضي — توصيل مجاني" },
+  "discount_amount": "0.00",
+  "total": "176.00"
+}`}]}
 ],
 scenarios:[
  {title:'P1-S1 — طلب COD على Staging حتى «تم التأكيد»',steps:[
@@ -824,28 +835,34 @@ cards:[
  {id:'P1-BE-07',track:'BE',title:'CI للباك اند + حماية <code>main</code>',refs:['G-04'],status:'todo',
   spec:'<code>.github/workflows/backend.yml</code> على MySQL 8، Branch protection: CI إلزامي + مراجعة واحدة.',
   dod:['PR تجريبي باختبار مكسور يُمنع من الدمج','الشارة خضراء على <code>main</code>']},
- {id:'P1-FE-01',track:'FE',title:'التزام تعديلات الواجهة + Vercel Staging',refs:['G-04'],status:'todo',
+ {id:'P1-BE-08',track:'BE',title:'رسوم التوصيل والإعفاء في quote والطلب',refs:['D-22','C-P1-05','D-08'],status:'todo',
+  spec:'حقول <code>delivery_fee_original</code> و<code>delivery_waiver_reason</code> و<code>delivery_waiver_label</code> على <code>orders</code> (snapshot)، كوبون من نوع <code>free_delivery</code> (مرتبط بـ user_id، استعمال واحد، سبب إلزامي، يمنحه المشرف من صفحة الطلب)، و<code>free_threshold</code> من إعداد حد التوصيل المجاني. الاستجابة حسب C-P1-05.',
+  dod:['quote بكوبون تعويضي ← <code>delivery_fee=0.00</code> + waiver','الكوبون لا يُستعمل مرتين','مستحق المتجر لا يتأثر']},
+ {id:'P1-FE-01',track:'FE',title:'التزام تعديلات الواجهة + Vercel Staging',refs:['G-04'],status:'review',evidence:'فرع مرفوع · .env.staging · build:staging ✓ · شريط البيئة · CI frontend.yml — بانتظار ربط Vercel + رابط API Staging',
   spec:'فرع <code>chore/mvp0-closure</code>، PR، <code>.env.staging</code> (<code>VITE_API_CONTRACT=mvp0</code> · API الـ Staging · <code>VITE_ENV_LABEL=بيئة تجريبية</code>)، ربط Vercel Preview، شريط البيئة.',
   dod:['<code>git status</code> نظيف على <code>main</code> بعد الدمج','رابط Staging Front يعمل على API الـ Staging','الشريط يظهر في Staging ولا يظهر في Production']},
- {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'todo',
+ {id:'P1-FE-02',track:'FE',title:'<code>PaymentMethodPicker</code> وإزالة <code>jawwal_pay</code> الثابت',refs:['G-02','C-P1-01','D-01'],status:'review',evidence:'37/37 · build:mvp0 ✓ · لقطة Mock',
   spec:'المكوّن الجديد، تعديل <code>Mvp0CheckoutPage</code> (السطر 90 والأسطر 321–335)، النوع <code>PaymentMethodOption</code>، الافتراضي COD عند غياب الحقل. <code>CheckoutPage</code> القديم (عقد legacy) لا يُلمس.',
   dod:['اختبار وحدة: غياب الحقل ← COD','<code>npm run test:mvp0</code> ينشئ طلب COD','لقطة Staging: خيار COD وحده']},
- {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'todo',
+ {id:'P1-FE-03',track:'FE',title:'تسميات الحالة الموحدة + رسالة نجاح COD',refs:['G-01','D-21'],status:'review',evidence:'38/38 · لقطات Mock: القائمة · التفاصيل · نافذة النجاح',
   spec:'<code>src/lib/orderStatus.ts</code>، استبدال الكائنات المحلية في <code>OrderDetailPage</code> و<code>OrdersPage</code>، رسالة نجاح عند <code>?created=1</code> حسب <code>payment_method</code>.',
   dod:['لا تكرار لتعريف التسميات في المشروع','لقطة لرسالة النجاح']},
- {id:'P1-FE-04',track:'FE',title:'Echo authorizer + تحديث تفاصيل الطلب',refs:['G-03','C-P1-03'],status:'todo',
+ {id:'P1-FE-04',track:'FE',title:'Echo authorizer + تحديث تفاصيل الطلب',refs:['G-03','C-P1-03'],status:'review',evidence:'39/39 · build ✓ · يتفعّل بضبط VITE_PUSHER_* (P3)',
   spec:'إضافة <code>authorizer</code> في <code>echo.ts</code> وتحديث <code>useRealtimeEvents</code>. يبقى معطلاً حتى تُضبط متغيرات <code>VITE_PUSHER_*</code> في P3.',
   dod:['البناء ينجح بدون المتغيرات (no-op)','محلياً مع Reverb: الحدث يحدّث صفحة التفاصيل']},
- {id:'P1-FE-05',track:'FE',title:'مزامنة <code>openapi.yaml</code>',refs:['C-P1-04','G-05'],status:'todo',
+ {id:'P1-FE-05',track:'FE',title:'مزامنة <code>openapi.yaml</code>',refs:['C-P1-04','G-05'],status:'review',evidence:'openapi 1.1.0 · Redocly: valid 🎉',
   spec:'نقل ملحق عقد MVP0 وعقود C-P1-01…03 إلى <code>Docs/openapi.yaml</code>، وتعليم <code>POST /checkout</code> deprecated. التحقق بـ Bruno collection.',
   dod:['<code>openapi.yaml</code> يمر بمدقق Swagger بلا أخطاء','Bruno: كل طلبات MVP0 تنجح على Staging']},
+ {id:'P1-FE-06',track:'FE',title:'عرض رسوم التوصيل والإعفاء التعويضي',refs:['D-22','C-P1-05'],status:'review',evidence:'36/36 اختبار · build:mvp0 ✓',
+  spec:'<code>src/lib/deliveryFee.ts</code> (توحيد للعقدين) + <code>components/checkout/DeliveryFee.tsx</code> في المراجعة والإيصال وتفاصيل الطلب. الرسوم إلزامية؛ الإعفاء يُعرض «مجاني» + الأصلية مشطوبة + شارة السبب. عرض وهمي في Mock على الطلب <code>GAZ-2026-0015</code> حتى يجهز الـ API.',
+  dod:['3 اختبارات D-22 ناجحة','لقطة للحالتين: رسوم عادية · عرض تعويضي']},
  {id:'P1-UX-01',track:'UX',title:'نصوص الدفع والحالات وشريط البيئة',refs:['D-21'],status:'todo',
   spec:'اعتماد نصوص قسم «التصميم» أعلاه، وصياغة رسائل الخطأ 409/422 في <code>getApiErrorMessage</code>.',
   dod:['قائمة النصوص معتمدة في هذا الملف']},
  {id:'P1-QA-01',track:'QA',title:'تشغيل سيناريوهات P1-S1…S4 على Staging',status:'todo',dep:['P1-BE-02','P1-FE-01'],
   spec:'كل طرف يشغّل سيناريوهات الطرف الآخر. لقطات + رقم الطلب كدليل.',
   dod:['4 سيناريوهات ناجحة بأدلة','أي خلل ← بطاقة جديدة لا تعديل صامت']},
- {id:'P1-QA-02',track:'QA',title:'فحص آلي لتسريب هوية المتجر',status:'todo',
+ {id:'P1-QA-02',track:'QA',title:'فحص آلي لتسريب هوية المتجر',status:'review',evidence:'tests/leak-scan.test.mjs (Mock ✓) · npm run scan:leaks -- --base … (Staging عند جاهزيته)',
   spec:'سكربت Node في <code>tests/</code> يمر على استجابات Staging (<code>/products</code> · <code>/cart</code> · <code>/orders</code> · <code>/orders/{n}</code>) ويفشل عند ظهور <code>store</code> أو <code>commission</code> أو <code>sub_order</code>.',
   dod:['السكربت في CI الواجهة (ليلياً)','نتيجة صفر مخالفات']},
  {id:'P1-OPS-01',track:'OPS',title:'سياسة النسخ الاحتياطي والترحيل',status:'todo',
@@ -872,7 +889,7 @@ risks:[
  ['الاستضافة المشتركة لا تسمح بـ Cron كل دقيقة','Cron مقيد بـ 5 د','مؤقتاً مقبول (الحجز 15 د)؛ تسريع الانتقال للـ VPS'],
  ['ترحيل حالات قديمة على بيانات حقيقية','فروقات في العد بعد <code>migrate</code>','نسخة احتياطية + <code>--dry-run</code> + مقارنة العدد قبل/بعد']
 ],
-log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude']]
+log:[['27-09-2026','إنشاء الـ Playbook وفتح بوابة P1 — تحويل G-01…G-04 إلى حلول مؤقتة ونهائية','أشرف + Claude'],['27-09-2026','P1-FE-01: .env.staging + build:staging + EnvBanner + .github/workflows/frontend.yml (PR + فحص تسريب ليلي)','أشرف + Claude'],['27-09-2026','P1-QA-02: فاحص التسريب tests/lib/leakScan.mjs + اختبار Mock + scripts/leak-scan.mjs للـ API الحقيقي · إزالة store من أنواع وبيانات منتجات العميل','أشرف + Claude'],['27-09-2026','P1-FE-05: openapi.yaml v1.1.0 — دمج ملحق MVP0 + C-P1-01/02/03/05، /auth/me، /orders/checkout/quote، Idempotency-Key، /checkout deprecated، تحويل nullable إلى صيغة 3.1 (22 خطأ قديم أُصلح) — Redocly valid','أشرف + Claude'],['27-09-2026','P1-FE-04: lib/realtime.ts (عقد C-P1-03) + authorizer بـ Bearer في echo.ts + تحديث تفاصيل الطلب عند الحدث — معطّل حتى P3','أشرف + Claude'],['27-09-2026','P1-FE-03: lib/orderStatus.ts — تسميات موحدة (D-21) + طريقة الدفع + رسالة نجاح حسب COD/جوال باي','أشرف + Claude'],['27-09-2026','P1-FE-02: PaymentMethodPicker في صفحتي الدفع — COD افتراضي، الخادم مصدر القائمة، Mock يعرض جوال باي «تجريبي»','أشرف + Claude'],['27-09-2026','D-22 رسوم التوصيل والعرض التعويضي + C-P1-05 + P1-FE-06 (بانتظار الدليل) + P1-BE-08 · أرشفة بوابة المتجر React','أشرف + Claude'],['30-09-2026','Tunnel عاصم = عقد legacy بدون أي من P1-BE-01…08 — بطاقات BE تبقى todo؛ P1-BE-02 معطّلة (رابط مؤقت)','أشرف + Claude'],['30-09-2026','جاهزية الإطلاق 1–5: صفحات السياسات (خصوصية/شروط/توصيل/استرجاع) + تواصل/FAQ + زر واتساب + موافقة الموقع + ترويسات أمان Vercel + تنظيف الإنتاج — القيم في src/content/storeInfo.ts بانتظار اعتماد BIZ','أشرف + Claude'],['30-09-2026','جاهزية الإطلاق 8/10/11: SEO لكل صفحة + OG للروبوتات عبر middleware.ts + JSON-LD للمنتج · Sentry كسول مع تنقية البيانات · طبقة Analytics (Plausible/GA4) بأحداث GA4 Ecommerce دون بيانات شخصية — 50/50 اختبار','أشرف + Claude'],['30-09-2026','تسليم Docs/handoff/LAUNCH_BACKEND_REQUESTS.md لعاصم: B-01…B-12 (P0: settings · delivery-zones · PATCH /auth/me · lookup-by-reference · إعدادات الإنتاج · products/{slug} للمعاينات)','أشرف + Claude']]
 },
 
 /* ═══════════════════════════ PHASE 2 ═══════════════════════════ */

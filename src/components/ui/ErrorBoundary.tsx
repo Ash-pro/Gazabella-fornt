@@ -1,4 +1,5 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
+import { captureError } from '../../lib/monitoring'
 
 interface Props {
   children: ReactNode
@@ -20,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Gazabella ErrorBoundary caught an error:', error, errorInfo)
+    captureError(error, { componentStack: errorInfo.componentStack, route: window.location.pathname })
   }
 
   render() {
