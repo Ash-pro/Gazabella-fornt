@@ -65,7 +65,8 @@ const BOTS = /facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|slackb
 interface Meta { title: string; description: string; image: string; url: string; type: string; noindex: boolean; price?: string }
 
 const env = (k: string): string => {
-  try { return (typeof process !== 'undefined' ? process.env?.[k] ?? '' : '').replace(/\/$/, '') } catch { return '' }
+  // عبر globalThis بدون الاعتماد على تعريفات Node (Vercel يفحص الملف بدونها)
+  try { return ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[k] ?? '').replace(/\/$/, '') } catch { return '' }
 }
 
 /**
