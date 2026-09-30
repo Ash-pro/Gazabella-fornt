@@ -5,7 +5,55 @@
  * Env على Vercel (Runtime): OG_API_BASE_URL · OG_STORAGE_URL · SITE_URL
  * (ويقرأ VITE_API_BASE_URL / VITE_STORAGE_URL / VITE_SITE_URL كبديل)
  */
-import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, fullTitle, isPrivatePath, OG_LOCALE, ROUTE_SEO, SITE_NAME, toMetaDescription } from './src/content/seo.ts'
+// ── نسخة من src/content/seo.ts (الـ middleware مستقل تماماً عن bundle التطبيق) ──
+// اختبار tests/launch-observability.test.mjs يفشل إذا اختلفت عن الأصل.
+interface SeoEntry {
+  title: string | null // null = العنوان الافتراضي للموقع
+  description: string
+  noindex?: boolean
+}
+
+const SITE_NAME = 'Gazabella'
+const DEFAULT_TITLE = 'Gazabella | الجمال أقرب إليك'
+const DEFAULT_DESCRIPTION = 'Gazabella — وجهتكِ الموحدة لمنتجات التجميل والعناية والهدايا في خان يونس. توصيل للبيت ودفع عند الاستلام.'
+const DEFAULT_OG_IMAGE = '/brand/social/og-1200x630.png'
+const OG_LOCALE = 'ar_AR'
+
+/** المفاتيح مسارات دقيقة؛ المسارات الديناميكية (المنتج) تُعالج في مكانها */
+const ROUTE_SEO: Record<string, SeoEntry> = {
+  '/': { title: null, description: DEFAULT_DESCRIPTION },
+  '/delivery-info': { title: 'التوصيل والرسوم', description: 'مناطق التوصيل ورسومها ومددها، ومتى تكون التوصيلة مجانية، وكيف يعمل كود التسليم.' },
+  '/returns': { title: 'الاسترجاع والاستبدال', description: 'سياسة الاسترجاع والاستبدال لمنتجات التجميل والعناية: المنتج التالف أو الخاطئ، ومدة الإرجاع، والاستثناءات.' },
+  '/privacy': { title: 'سياسة الخصوصية', description: 'ما البيانات التي نجمعها ولماذا، ومن يراها، وكيف نحميها، وحقوقكِ في الوصول إليها وحذفها.' },
+  '/terms': { title: 'شروط الاستخدام', description: 'شروط استخدام Gazabella: الطلب والتأكيد، الأسعار والدفع، الاستلام والإلغاء.' },
+  '/faq': { title: 'الأسئلة الشائعة', description: 'أجوبة سريعة عن الطلب والدفع والتوصيل وكود التسليم والاسترجاع.' },
+  '/contact': { title: 'تواصلي معنا', description: 'تواصلي مع خدمة عميلات Gazabella عبر واتساب أو الهاتف.' },
+  '/cart': { title: 'سلة التسوق', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/checkout': { title: 'إتمام الطلب', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/checkout/receipt': { title: 'تم استلام طلبكِ', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/auth': { title: 'تسجيل الدخول', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/profile': { title: 'الملف الشخصي', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/orders': { title: 'طلباتي', description: DEFAULT_DESCRIPTION, noindex: true },
+  '/orders/lookup': { title: 'تتبع طلب', description: 'تتبعي حالة طلبكِ برقم المرجع.', noindex: true },
+}
+
+/** صفحات خاصة لا تُفهرس حتى لو كانت ديناميكية */
+function isPrivatePath(pathname: string): boolean {
+  return /^\/(orders|checkout|profile|auth|cart|merchant|delivery)(\/|$)/.test(pathname)
+}
+
+function fullTitle(title: string | null | undefined): string {
+  return title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE
+}
+
+/** وصف نظيف بطول مناسب لمحركات البحث والمعاينات (≤160 حرفاً) */
+function toMetaDescription(text: string | null | undefined, fallback = DEFAULT_DESCRIPTION): string {
+  const clean = (text ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!clean) return fallback
+  return clean.length > 160 ? `${clean.slice(0, 157).replace(/\s+\S*$/, '')}…` : clean
+}
+// ── نهاية النسخة ──
+
 
 export const config = {
   // كل المسارات بدون امتداد ملف، ما عدا الأصول الثابتة
@@ -16,7 +64,17 @@ const BOTS = /facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|slackb
 
 interface Meta { title: string; description: string; image: string; url: string; type: string; noindex: boolean; price?: string }
 
-const env = (k: string) => (process.env[k] ?? '').replace(/\/$/, '')
+const env = (k: string): string => {
+  try { return (typeof process !== 'undefined' ? process.env?.[k] ?? '' : '').replace(/\/$/, '') } catch { return '' }
+}
+
+/**
+ * «أكمل الطلب كما هو» — نفس ما تفعله next() من @vercel/functions.
+ * إرجاع undefined لا يكفي في Routing Middleware خارج Next.js ويسبب MIDDLEWARE_INVOCATION_FAILED.
+ */
+function next(): Response {
+  return new Response(null, { headers: { 'x-middleware-next': '1' } })
+}
 
 function esc(v: string): string {
   return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -80,8 +138,17 @@ function render(html: string, m: Meta): string {
     .replace('</head>', `    ${tags}\n  </head>`)
 }
 
-export default async function middleware(request: Request): Promise<Response | undefined> {
-  if (request.method !== 'GET' || !BOTS.test(request.headers.get('user-agent') ?? '')) return undefined
+export default async function middleware(request: Request): Promise<Response> {
+  try {
+    return (await botPreview(request)) ?? next()
+  } catch {
+    // أي خطأ هنا يجب ألا يُسقط الموقع — نمرّر الطلب كما هو
+    return next()
+  }
+}
+
+async function botPreview(request: Request): Promise<Response | null> {
+  if (request.method !== 'GET' || !BOTS.test(request.headers.get('user-agent') ?? '')) return null
   const url = new URL(request.url)
   const origin = env('SITE_URL') || env('VITE_SITE_URL') || url.origin
   const path = url.pathname.replace(/\/+$/, '') || '/'
@@ -96,7 +163,7 @@ export default async function middleware(request: Request): Promise<Response | u
   }
 
   const shell = await fetch(new URL('/index.html', url.origin))
-  if (!shell.ok) return undefined
+  if (!shell.ok) return null
   const html = render(await shell.text(), base)
   return new Response(html, {
     status: 200,
