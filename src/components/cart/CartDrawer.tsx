@@ -1,9 +1,10 @@
+import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '../../lib/queryClient'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
-import { syncCart, useProceedToCheckout } from '../../hooks/useCartActions'
+import { syncCart, trackCartRemoval, trackCartView, useProceedToCheckout } from '../../hooks/useCartActions'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { money } from '../../lib/format'
 import { useCartStore } from '../../stores/cartStore'
@@ -17,9 +18,14 @@ export function CartDrawer() {
   const close = useCartStore((state) => state.closeDrawer)
   const cart = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart, enabled: open, staleTime: 2 * 60 * 1000 })
   const update = useMutation({ mutationFn: ({id, quantity}: {id: number; quantity: number}) => gazabellaApi.updateCartItem(id, quantity), onSuccess: syncCart, onError: (err) => { if (axios.isAxiosError(err) && (err.response?.status === 404 || err.response?.status === 422)) void queryClient.invalidateQueries({ queryKey: ['cart'] }) } })
-  const remove = useMutation({ mutationFn: gazabellaApi.removeCartItem, onSuccess: syncCart, onError: (err) => { if (axios.isAxiosError(err) && (err.response?.status === 404 || err.response?.status === 422)) void queryClient.invalidateQueries({ queryKey: ['cart'] }) } })
+  const remove = useMutation({ mutationFn: gazabellaApi.removeCartItem, onMutate: trackCartRemoval, onSuccess: syncCart, onError: (err) => { if (axios.isAxiosError(err) && (err.response?.status === 404 || err.response?.status === 422)) void queryClient.invalidateQueries({ queryKey: ['cart'] }) } })
   const proceed = useProceedToCheckout()
   const busy = update.isPending || remove.isPending || proceed.isPending
+  const viewed = useRef(false)
+  useEffect(() => {
+    if (!open) { viewed.current = false; return }
+    if (!viewed.current && cart.data) { viewed.current = true; trackCartView(cart.data) }
+  }, [open, cart.data])
 
   if (!open) return null
 

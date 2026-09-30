@@ -4,6 +4,8 @@ import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
 import { DeliveryFeeRow } from '../components/checkout/DeliveryFee'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { LegalConsent } from '../components/checkout/LegalConsent'
+import { lineItems, track, trackPurchase } from '../lib/analytics'
 import { gazabellaApi } from '../api/gazabella'
 import { mvp0Checkout, normalizePhone } from '../api/mvp0'
 import { getApiErrorMessage } from '../lib/apiClient'
@@ -15,6 +17,8 @@ import { Icon } from '../components/ui/Icon'
 import type { CheckoutBegin, CheckoutQuote, Mvp0Address, Mvp0CheckoutPayload, PaymentMethodCode } from '../types/api'
 
 type Attempt = { key: string; payload: Mvp0CheckoutPayload }
+
+const statusOf = (e: unknown) => (e as { response?: { status?: number } }).response?.status ?? 0
 
 export function Mvp0CheckoutPage() {
   const user = useAuthStore(s => s.user)
@@ -40,6 +44,12 @@ export function Mvp0CheckoutPage() {
   const activePayment = paymentOptions.some(o => o.code === paymentMethod) ? paymentMethod : paymentOptions[0].code
 
   const cart = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const checkoutTracked = useRef(false)
+  useEffect(() => {
+    if (checkoutTracked.current || !cart.data?.items.length) return
+    checkoutTracked.current = true
+    track('begin_checkout', lineItems(cart.data.items))
+  }, [cart.data])
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -53,16 +63,19 @@ export function Mvp0CheckoutPage() {
       setAddress(prev => ({ ...prev, city: result.active_cities[0] ?? '' }))
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
+    onError: (e) => track('checkout_error', { stage: 'reserve', status: statusOf(e) }),
   })
 
   const review = useMutation({
     mutationFn: () => mvp0Checkout.quote(deliveryId, address.city, coupon.trim() || undefined),
     onSuccess: setQuote,
+    onError: (e) => track('checkout_error', { stage: 'quote', status: statusOf(e) }),
   })
 
   const create = useMutation({
     mutationFn: (value: Attempt) => mvp0Checkout.create(value.payload, value.key),
     onSuccess: order => {
+      trackPurchase(order)
       sessionStorage.removeItem(storageKey); setAttempt(null)
       queryClient.setQueryData(['order', order.order_number], order)
       void queryClient.invalidateQueries({ queryKey: ['cart'] })
@@ -71,6 +84,7 @@ export function Mvp0CheckoutPage() {
     },
     onError: e => {
       const status = (e as { response?: { status?: number } }).response?.status
+      track('checkout_error', { stage: 'create', status: status ?? 0 })
       if (status && status >= 400 && status < 500 && ![401, 408, 429].includes(status)) {
         sessionStorage.removeItem(storageKey); setAttempt(null); setQuote(null)
       }
@@ -403,7 +417,7 @@ export function Mvp0CheckoutPage() {
             </button>
           )}
 
-          <p className="text-center text-xs text-[var(--text-3)]">🔒 دفع آمن عبر جوال بي</p>
+          <LegalConsent />
         </aside>
       </div>
     </div>

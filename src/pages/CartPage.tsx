@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -5,7 +6,7 @@ import { ProductVisual } from '../components/product/ProductVisual'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
-import { syncCart, useProceedToCheckout } from '../hooks/useCartActions'
+import { syncCart, trackCartRemoval, trackCartView, useProceedToCheckout } from '../hooks/useCartActions'
 import { formatPrice } from '../lib/format'
 import type { Cart } from '../types/api'
 
@@ -22,9 +23,12 @@ export function CartPage() {
   })
   const removeMutation = useMutation({
     mutationFn: gazabellaApi.removeCartItem,
+    onMutate: trackCartRemoval,
     onSuccess: updateCache,
   })
   const reserveMutation = useProceedToCheckout()
+  const cartViewed = useRef(false)
+  useEffect(() => { if (!cartViewed.current && cartQuery.data) { cartViewed.current = true; trackCartView(cartQuery.data) } }, [cartQuery.data])
   const busy = updateMutation.isPending || removeMutation.isPending || reserveMutation.isPending
 
   if (cartQuery.isLoading) return <div className="container-page"><PageLoader label="نجهّز سلتك…" /></div>

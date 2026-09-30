@@ -5,6 +5,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { DemoRoleBar } from './components/layout/DemoRoleBar'
+import { AnalyticsTracker } from './components/layout/AnalyticsTracker'
 import { PageLoader } from './components/ui/AsyncState'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { useQuery } from '@tanstack/react-query'
@@ -23,6 +24,12 @@ const OrdersPage = lazy(() => import('./pages/OrdersPage').then((module) => ({ d
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage').then((module) => ({ default: module.OrderDetailPage })))
 const MerchantDashboard = lazy(() => import('./pages/merchant/MerchantDashboard').then((module) => ({ default: module.MerchantDashboard })))
 const DeliveryDashboard = lazy(() => import('./pages/delivery/DeliveryDashboard').then((module) => ({ default: module.DeliveryDashboard })))
+const DeliveryPolicyPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({ default: m.DeliveryPolicyPage })))
+const ReturnsPolicyPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({ default: m.ReturnsPolicyPage })))
+const PrivacyPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({ default: m.PrivacyPage })))
+const TermsPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({ default: m.TermsPage })))
+const FaqPage = lazy(() => import('./pages/info/SupportPages').then((m) => ({ default: m.FaqPage })))
+const ContactPage = lazy(() => import('./pages/info/SupportPages').then((m) => ({ default: m.ContactPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -36,14 +43,16 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 function OperationalPreview({ children }: { children: ReactNode }) {
+  // اللوحات التشغيلية تعيش في Filament — في الإنتاج لا نكشف وجود هذه المسارات
   if (isMockMode()) return children
-  return <div className="container-page py-16"><h1 className="section-title">اللوحة قيد الربط</h1><p className="mt-4">تُتاح هذه اللوحة بعد اعتماد تسجيل الدخول والصلاحيات من الباك اند.</p><a href="/" className="btn-primary mt-6">العودة للمتجر</a></div>
+  return <Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>
 }
 export default function App() {
   return (
     <ErrorBoundary>
       <div className="flex min-h-screen flex-col font-sans">
         <DemoRoleBar />
+        <AnalyticsTracker />
         <div className="flex-1">
           <Routes>
             <Route element={<AppShell />}>
@@ -57,6 +66,12 @@ export default function App() {
               <Route path="orders/lookup" element={<OrderLookupPage />} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
               <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
+              <Route path="delivery-info" element={<DeliveryPolicyPage />} />
+              <Route path="returns" element={<ReturnsPolicyPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
+              <Route path="terms" element={<TermsPage />} />
+              <Route path="faq" element={<FaqPage />} />
+              <Route path="contact" element={<ContactPage />} />
             </Route>
 
             {/* لوحة تحكم التاجر */}

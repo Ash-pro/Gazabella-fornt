@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
 import { DEFAULT_PAYMENT_METHODS, MOCK_PAYMENT_METHODS } from '../lib/paymentMethods'
 import type { PaymentMethodCode } from '../types/api'
@@ -8,6 +8,8 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { LegalConsent } from '../components/checkout/LegalConsent'
+import { lineItems, track, trackPurchase } from '../lib/analytics'
 import { z } from 'zod'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
@@ -105,6 +107,12 @@ function LegacyCheckoutPage() {
   const user = useAuthStore((s) => s.user)
 
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const checkoutTracked = useRef(false)
+  useEffect(() => {
+    if (checkoutTracked.current || !cartQuery.data?.items.length) return
+    checkoutTracked.current = true
+    track('begin_checkout', lineItems(cartQuery.data.items))
+  }, [cartQuery.data])
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -132,6 +140,7 @@ function LegacyCheckoutPage() {
       })
     },
     onSuccess: (order) => {
+      trackPurchase(order)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
       queryClient.setQueryData(['order', String(isMockMode() ? order.order_number : order.id)], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -142,6 +151,7 @@ function LegacyCheckoutPage() {
     },
     onError: (error) => {
       const status = (error as { response?: { status?: number } }).response?.status
+      track('checkout_error', { stage: 'submit', status: status ?? 0 })
       if (!status || status >= 500 || status === 408) setUncertain(true)
     },
     onSettled: () => { submitting.current = false },
@@ -391,9 +401,7 @@ function LegacyCheckoutPage() {
                 : 'إنشاء الطلب والدفع'}
             </button>
 
-            <p className="text-center text-xs text-[var(--text-3)]">
-              بإتمام الطلب توافقين على شروط الخدمة والسياسة العامة للمتجر
-            </p>
+            <LegalConsent />
 
           </aside>
         </div>
