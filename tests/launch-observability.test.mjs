@@ -48,3 +48,27 @@ test('support: WhatsApp numbers normalise to international format', () => {
   assert.equal(storeInfo.normalizeWhatsapp('123'), null)
   assert.equal(storeInfo.resolveWhatsapp({ whatsapp: 'https://wa.me/970561112233' }), '970561112233')
 })
+
+test('middleware: self-contained SEO copy matches src/content/seo.ts', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const norm = (x) => x.replace(/export /g, '').replace(/\s+/g, ' ').trim()
+  const src = await readFile(new URL('../src/content/seo.ts', import.meta.url), 'utf8')
+  const mw = await readFile(new URL('../middleware.ts', import.meta.url), 'utf8')
+  const original = norm(src.slice(src.indexOf('export interface SeoEntry')))
+  const copy = norm(mw.slice(mw.indexOf('interface SeoEntry'), mw.indexOf('// ── نهاية النسخة ──')))
+  assert.equal(copy, original)
+  assert.ok(!/from '\.\/src\//.test(mw), 'middleware must not import from src/')
+})
+
+test('middleware: normal visitors pass through with x-middleware-next, bots get HTML, errors never break the site', async () => {
+  const mod = await server.ssrLoadModule('/middleware.ts')
+  const human = await mod.default(new Request('https://gazabella.ps/products/x', { headers: { 'user-agent': 'Mozilla/5.0 Chrome/120' } }))
+  assert.ok(human instanceof Response)
+  assert.equal(human.headers.get('x-middleware-next'), '1')
+  const realFetch = globalThis.fetch
+  globalThis.fetch = async () => { throw new Error('network down') }
+  try {
+    const bot = await mod.default(new Request('https://gazabella.ps/returns', { headers: { 'user-agent': 'WhatsApp/2.23' } }))
+    assert.equal(bot.headers.get('x-middleware-next'), '1', 'fetch failure must fall back to pass-through')
+  } finally { globalThis.fetch = realFetch }
+})
