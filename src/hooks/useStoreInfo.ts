@@ -16,7 +16,7 @@ export function useStoreInfo() {
   const sup = settings?.support
 
   const liveZones: DeliveryZone[] | null = zonesQuery.data?.length
-    ? zonesQuery.data.map((z) => ({ name: z.name, fee: z.fee, etaMinutes: z.eta_minutes }))
+    ? zonesQuery.data.map((z) => ({ id: z.id, name: z.name, fee: z.fee, etaMinutes: z.eta_minutes }))
     : null
   const deliveryZones: readonly DeliveryZone[] = liveZones ?? STORE_INFO.deliveryZones
   const threshold = p.free_delivery_threshold

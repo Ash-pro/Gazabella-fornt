@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -16,7 +17,11 @@ function setDismissed(): void {
   try { localStorage.setItem(DISMISSED_KEY, '1') } catch {}
 }
 
+/** مسارات لا يظهر فيها الاقتراح حتى لا يغطي نماذج الطلب والدخول */
+const HIDDEN_ON = /^\/(checkout|cart|auth|profile|orders)(\/|$)/
+
 export function PwaInstallPrompt() {
+  const { pathname } = useLocation()
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
 
@@ -34,7 +39,7 @@ export function PwaInstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  if (!visible || !prompt) return null
+  if (!visible || !prompt || HIDDEN_ON.test(pathname)) return null
 
   const handleInstall = async () => {
     try {

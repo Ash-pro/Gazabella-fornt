@@ -833,7 +833,8 @@ button:focus-visible, a:focus-visible { border-radius: 8px; }
 }
 @media (min-width: 1024px) {
   .pwa-install-prompt {
-    bottom: env(safe-area-inset-bottom, 24px);
+    /* env() تعطي 0 على الديسكتوب — لذلك نضيف هامشاً ثابتاً حتى لا يلتصق بالحافة */
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     left: auto;
     right: 24px;
     max-width: 360px;

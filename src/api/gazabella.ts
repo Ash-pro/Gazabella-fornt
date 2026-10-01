@@ -462,7 +462,8 @@ const legacyGazabellaApi = {
   // ── الطلبات ──────────────────────────────────────────────────────────
   async checkout(payload: CheckoutPayload): Promise<Order> {
     if (isMockMode()) return mockServices.checkout(payload)
-    const { data } = await apiClient.post<ApiData<RawOrder>>('/checkout', payload)
+    // إنشاء الطلب أبطأ من القراءة (مخزون + حساب + إشعارات) — مهلة أطول حتى لا نقطع طلباً ناجحاً
+    const { data } = await apiClient.post<ApiData<RawOrder>>('/checkout', payload, { timeout: 45_000 })
     return normalizeOrder(data.data)
   },
 

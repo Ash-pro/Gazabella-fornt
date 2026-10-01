@@ -6,7 +6,7 @@ import { isMvp0Api } from '../lib/apiContract'
 import { Mvp0CheckoutPage } from './Mvp0CheckoutPage'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { LegalConsent } from '../components/checkout/LegalConsent'
 import { lineItems, track, trackPurchase } from '../lib/analytics'
@@ -16,7 +16,9 @@ import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
-import { money } from '../lib/format'
+import { formatPrice, money } from '../lib/format'
+import { useStoreInfo } from '../hooks/useStoreInfo'
+import { formatEta } from '../content/storeInfo'
 
 // ─── Schema (no email — phone is the primary identifier) ───────────────────
 const schema = z.object({
@@ -28,7 +30,7 @@ const schema = z.object({
       /^(\+?(970|972))?0?5\d{8}$/,
       'رقم الجوال غير صحيح — أدخل رقمًا فلسطينيًا بصيغة 05XXXXXXXX',
     ),
-  city: z.string().trim().min(2, 'أدخل اسم المدينة'),
+  city: z.string().trim().min(2, 'اختاري منطقة التوصيل'),
   neighborhood: z.string().trim().min(2, 'أدخل اسم الحي أو المنطقة'),
   street: z.string().trim().min(3, 'أدخل اسم الشارع أو أقرب معلم'),
   notes: z.string().trim().max(500, 'الملاحظات لا تتجاوز ٥٠٠ حرف').optional(),
@@ -107,6 +109,7 @@ function LegacyCheckoutPage() {
   const user = useAuthStore((s) => s.user)
 
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const store = useStoreInfo()
   const checkoutTracked = useRef(false)
   useEffect(() => {
     if (checkoutTracked.current || !cartQuery.data?.items.length) return
@@ -129,14 +132,18 @@ function LegacyCheckoutPage() {
   })
 
   const errs = form.formState.errors
+  const selectedCity = useWatch({ control: form.control, name: 'city' })
 
   const checkout = useMutation({
     mutationFn: (values: Values) => {
       const { city, neighborhood, street, ...rest } = values
+      const zoneId = store.deliveryZones.find((z) => z.name === city)?.id
       return gazabellaApi.checkout({
         ...rest,
         address: `${city}، ${neighborhood}، ${street}`,
         payment_method: paymentMethod,
+        // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها (يُتجاهل إن لم يدعمه بعد)
+        ...(zoneId ? { delivery_zone_id: zoneId } : {}),
       })
     },
     onSuccess: (order) => {
@@ -188,6 +195,9 @@ function LegacyCheckoutPage() {
     )
 
   const isSubmitting = checkout.isPending || submitting.current
+  const zone = store.deliveryZones.find((z) => z.name === selectedCity) ?? null
+  const freeDelivery = Boolean(store.freeDeliveryThreshold && Number(cart.subtotal) >= store.freeDeliveryThreshold)
+  const estimatedTotal = Number(cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
 
   return (
     <div className="container-page py-10">
@@ -257,17 +267,20 @@ function LegacyCheckoutPage() {
               <div className="space-y-4">
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field id="city" label="المدينة" error={errs.city?.message}>
+                  <Field id="city" label="منطقة التوصيل" error={errs.city?.message}>
                     {(inputProps) => (
-                      <input
+                      <select
                         id="city"
-                        type="text"
                         autoComplete="address-level2"
-                        placeholder="مثال: رام الله"
                         disabled={isSubmitting}
                         {...inputProps}
                         {...form.register('city')}
-                      />
+                      >
+                        <option value="">اختاري منطقة التوصيل</option>
+                        {store.deliveryZones.map((z) => (
+                          <option key={z.name} value={z.name}>{z.name} — {formatPrice(z.fee)}</option>
+                        ))}
+                      </select>
                     )}
                   </Field>
 
@@ -277,7 +290,7 @@ function LegacyCheckoutPage() {
                         id="neighborhood"
                         type="text"
                         autoComplete="address-level3"
-                        placeholder="مثال: البالوع"
+                        placeholder="مثال: الكتيبة"
                         disabled={isSubmitting}
                         {...inputProps}
                         {...form.register('neighborhood')}
@@ -292,7 +305,7 @@ function LegacyCheckoutPage() {
                       id="street"
                       type="text"
                       autoComplete="street-address"
-                      placeholder="مثال: شارع الاستقلال، بجانب صيدلية النور"
+                      placeholder="مثال: شارع جلال، بجانب صيدلية النور"
                       disabled={isSubmitting}
                       {...inputProps}
                       {...form.register('street')}
@@ -342,22 +355,34 @@ function LegacyCheckoutPage() {
                   </div>
                 ))}
               </div>
+              <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm">
+                <span className="text-[var(--text-2)]">قيمة المنتجات</span>
+                <b>{money(cart.subtotal)}</b>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-[var(--text-2)]">رسوم التوصيل{zone ? ` (${zone.name})` : ''}</span>
+                {zone ? <b>{freeDelivery ? <><s className="text-[var(--text-3)] font-normal">{formatPrice(zone.fee)}</s> مجاني</> : formatPrice(zone.fee)}</b> : <span className="text-[var(--text-3)]">من {formatPrice(store.minDeliveryFee)}</span>}
+              </div>
               <div className="flex justify-between border-t border-[var(--border)] pt-3">
-                <span className="font-bold">قيمة المنتجات</span>
-                <b className="text-[var(--primary)]">{money(cart.subtotal)}</b>
+                <span className="font-bold">{zone ? 'الإجمالي المتوقع' : 'الإجمالي'}</span>
+                <b className="text-[var(--primary)]">{zone ? formatPrice(estimatedTotal) : money(cart.subtotal)}</b>
               </div>
               <p className="rounded-lg bg-[var(--primary-dim)] px-3 py-2 text-xs leading-relaxed text-[var(--text-2)]">
-                رسوم التوصيل تظهر في الطلب بعد إنشائه — الإجمالي النهائي يُعرض قبل الدفع.
+                {zone ? <>التوصيل {formatEta(zone.etaMinutes)} تقريباً. المبلغ النهائي يظهر في صفحة الطلب بعد التأكيد.</> : 'اختاري منطقة التوصيل لعرض الرسوم والإجمالي.'}
               </p>
             </div>
 
-            {/* Info note */}
-            {!isMockMode() && (
+            {/* Info note — حسب طريقة الدفع */}
+            {!isMockMode() && paymentMethod === 'jawwal_pay' && (
               <div className="flex items-start gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--text-2)]">
                 <span className="mt-px text-sm">ℹ️</span>
-                <p>
-                  بعد إنشاء الطلب ستنتقلين لخطوة الدفع عبر جوال باي — لا يُخصم مبلغ الآن.
-                </p>
+                <p>بعد إنشاء الطلب ستنتقلين لخطوة الدفع عبر جوال باي — لا يُخصم مبلغ الآن.</p>
+              </div>
+            )}
+            {!isMockMode() && paymentMethod === 'cod' && (
+              <div className="flex items-start gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--text-2)]">
+                <span className="mt-px text-sm">💵</span>
+                <p>تدفعين {zone ? <b className="num">{formatPrice(estimatedTotal)}</b> : 'قيمة الطلب'} نقداً للمندوب عند الاستلام — لا يُخصم أي مبلغ الآن.</p>
               </div>
             )}
             {isMockMode() && (
@@ -370,11 +395,12 @@ function LegacyCheckoutPage() {
                 <span className="mt-0.5 text-base text-amber-500">⚠</span>
                 <div className="text-sm leading-relaxed text-amber-800">
                   <b className="block mb-1">لم نتأكد من إتمام الطلب</b>
-                  راجعي{' '}
-                  <Link className="underline font-bold" to="/orders">
-                    طلباتي
-                  </Link>{' '}
-                  أولاً بنفس رقم الجوال قبل المحاولة مجددًا لتجنب تكرار الطلب.
+                  ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي{' '}
+                  <Link className="underline font-bold" to="/orders" target="_blank" rel="noopener">طلباتي</Link>{' '}
+                  أولاً لتجنب تكرار الطلب.
+                  <button type="button" className="mt-2 block font-bold underline" onClick={() => { setUncertain(false); checkout.reset() }}>
+                    تحققت ولم أجد الطلب — أعيدي المحاولة
+                  </button>
                 </div>
               </div>
             )}
@@ -395,10 +421,12 @@ function LegacyCheckoutPage() {
               disabled={isSubmitting || uncertain}
             >
               {isSubmitting
-                ? 'جارٍ إنشاء الطلب…'
+                ? 'جارٍ إرسال الطلب…'
                 : isMockMode()
                 ? 'إنشاء طلب تجريبي'
-                : 'إنشاء الطلب والدفع'}
+                : paymentMethod === 'jawwal_pay'
+                ? 'إنشاء الطلب والدفع'
+                : 'تأكيد الطلب'}
             </button>
 
             <LegalConsent />

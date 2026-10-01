@@ -7,6 +7,8 @@
  */
 
 export interface DeliveryZone {
+  /** معرّف المنطقة من /delivery-zones (غير موجود في القيم الاحتياطية) */
+  id?: number
   name: string
   fee: number
   /** مدة التوصيل المتوقعة بالدقائق (null = غير محددة) */

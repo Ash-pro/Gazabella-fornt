@@ -197,6 +197,8 @@ export interface CheckoutPayload {
   email?: string
   notes?: string
   coupon_code?: string
+  /** B-02 — منطقة التوصيل المختارة من /delivery-zones */
+  delivery_zone_id?: number
 }
 
 export interface JawwalConfirmPayload {

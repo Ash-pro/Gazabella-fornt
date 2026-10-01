@@ -67,7 +67,15 @@ apiClient.interceptors.response.use(
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
-    if (error.response?.status === 401) return 'انتهت الجلسة. يرجى تسجيل الدخول مجددًا.'
+    // بدون رد: انتهت المهلة أو انقطع الاتصال — نميّز بينهما حتى يعرف المستخدم والفريق السبب
+    if (!error.response) {
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') return 'استغرق الخادم وقتاً أطول من المعتاد. قد يكون الطلب تم فعلاً — راجعي «طلباتي» قبل إعادة المحاولة.'
+      return navigator.onLine === false ? 'لا يوجد اتصال بالإنترنت. تحققي من الشبكة ثم حاولي مجدداً.' : 'تعذّر الوصول إلى الخادم الآن. حاولي بعد قليل.'
+    }
+    const status = error.response.status
+    const requestId = (error.response.headers?.['x-request-id'] as string | undefined)?.slice(0, 8)
+    if (status >= 500) return `حدث خطأ في الخادم (رمز ${status}${requestId ? ` · ${requestId}` : ''}). حاولي بعد قليل، وإن تكرر تواصلي معنا.`
+    if (status === 401) return 'انتهت الجلسة. يرجى تسجيل الدخول مجددًا.'
     if (error.response?.status === 403) return 'لا تملك صلاحية تنفيذ هذا الإجراء.'
     if (error.response?.status === 429) return 'طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.'
     const messages = Object.values(error.response?.data?.errors ?? {}).flat().filter((message) => typeof message === 'string')
