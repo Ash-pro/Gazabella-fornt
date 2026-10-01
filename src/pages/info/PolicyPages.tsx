@@ -1,18 +1,19 @@
 import { Link } from 'react-router-dom'
-import { STORE_INFO } from '../../content/storeInfo'
+import { formatEta } from '../../content/storeInfo'
+import { useStoreInfo } from '../../hooks/useStoreInfo'
 import { formatPrice } from '../../lib/format'
 import { InfoLayout, Section } from './InfoLayout'
 
-const S = STORE_INFO
 
 export function DeliveryPolicyPage() {
+  const S = useStoreInfo()
   return (
     <InfoLayout title="التوصيل والرسوم" lead={`نوصل طلبكِ من ${S.brand} إلى باب البيت، والرسوم تظهر كاملة قبل تأكيد الطلب.`}>
       <Section title="مناطق التوصيل والرسوم">
         <div className="info-table-wrap">
           <table className="info-table">
             <thead><tr><th scope="col">المنطقة</th><th scope="col">رسوم التوصيل</th><th scope="col">مدة التوصيل المتوقعة</th></tr></thead>
-            <tbody>{S.deliveryZones.map((z) => <tr key={z.name}><td>{z.name}</td><td><span className="num">{formatPrice(z.fee)}</span></td><td>{z.eta}</td></tr>)}</tbody>
+            <tbody>{S.deliveryZones.map((z) => <tr key={z.name}><td>{z.name}</td><td><span className="num">{formatPrice(z.fee)}</span></td><td>{formatEta(z.etaMinutes)}</td></tr>)}</tbody>
           </table>
         </div>
         <p>الرسوم <b>لكل طلب</b> وليست لكل منتج، حتى لو احتوى الطلب منتجات متعددة.</p>
@@ -21,7 +22,7 @@ export function DeliveryPolicyPage() {
         <p>قد تُلغى رسوم التوصيل في إحدى الحالات التالية، ويظهر ذلك بوضوح في ملخص الطلب قبل التأكيد (السعر الأصلي مشطوب وبجانبه «مجاني»):</p>
         <ul>
           <li><b>عرض تعويضي:</b> إذا تأخر طلب سابق أو حصل خطأ من جهتنا.</li>
-          <li><b>حد التوصيل المجاني:</b> عند تجاوز الطلب قيمة معيّنة يُعلن عنها داخل المتجر.</li>
+          <li><b>حد التوصيل المجاني:</b> {S.freeDeliveryThreshold ? <>للطلبات بقيمة <span className="num">{formatPrice(S.freeDeliveryThreshold)}</span> فأكثر.</> : 'عند الإعلان عنه داخل المتجر.'}</li>
           <li><b>عرض ترويجي:</b> لفترة محددة أو مناسبة خاصة.</li>
         </ul>
       </Section>
@@ -39,7 +40,7 @@ export function DeliveryPolicyPage() {
       </Section>
       <Section title="عند الاستلام">
         <ul>
-          <li>الدفع حالياً <b>نقداً عند الاستلام</b> بالمبلغ الظاهر في صفحة الطلب.</li>
+          {S.codAvailable && <li>الدفع حالياً <b>نقداً عند الاستلام</b> بالمبلغ الظاهر في صفحة الطلب.</li>}
           <li>افحصي سلامة الغلاف أمام المندوب؛ وإن وُجد تلف ظاهر يمكنكِ رفض الاستلام دون أي رسوم.</li>
           <li>إذا تعذّر الوصول إليكِ بعد محاولتي اتصال، يعود الطلب ونتواصل معكِ لإعادة جدولته أو إلغائه.</li>
         </ul>
@@ -49,6 +50,7 @@ export function DeliveryPolicyPage() {
 }
 
 export function ReturnsPolicyPage() {
+  const S = useStoreInfo()
   return (
     <InfoLayout title="الاسترجاع والاستبدال" lead="راحتكِ وسلامتكِ أولاً. هذه السياسة مصممة لمنتجات العناية والتجميل حيث النظافة والسلامة أساس.">
       <Section title="منتج تالف أو خاطئ أو منتهي الصلاحية">
@@ -82,13 +84,14 @@ export function ReturnsPolicyPage() {
 }
 
 export function PrivacyPage() {
+  const S = useStoreInfo()
   return (
     <InfoLayout title="سياسة الخصوصية" lead={`نجمع أقل قدر ممكن من البيانات، ونستخدمه فقط لإيصال طلبكِ وخدمتكِ. لا نبيع بياناتكِ لأي جهة.`}>
       <Section title="البيانات التي نجمعها">
         <ul>
           <li><b>رقم الجوال:</b> لتسجيل الدخول برمز التحقق (OTP) وللتواصل بخصوص الطلب. يُنشأ حسابكِ تلقائياً عند أول دخول أو أول طلب.</li>
           <li><b>الاسم والعنوان والمعلم القريب والملاحظات:</b> لتوصيل الطلب.</li>
-          <li><b>الموقع الجغرافي:</b> يُرسل <b>مرة واحدة فقط</b> عند حفظ ملفكِ الشخصي أو تحديد موقع التوصيل، وبعد موافقتكِ الصريحة في المتصفح. لا نتتبع موقعكِ بشكل مستمر.</li>
+          <li><b>الموقع الجغرافي (اختياري):</b> يُرسل <b>مرة واحدة فقط</b> إذا اخترتِ مشاركته عند حفظ ملفكِ الشخصي، وبعد موافقتكِ الصريحة في المتصفح. يمكنكِ الحفظ بدونه، ولا نتتبع موقعكِ بشكل مستمر.</li>
           <li><b>بيانات اختيارية:</b> البريد الإلكتروني، الجنس، تاريخ الميلاد — إن أضفتِها في الملف الشخصي.</li>
           <li><b>سجل الطلبات:</b> المنتجات، المبالغ، طريقة الدفع وحالتها. لا نخزّن أي بيانات بطاقات بنكية.</li>
           <li><b>بيانات تقنية على جهازكِ:</b> نحفظ في متصفحكِ جلسة الدخول ومحتوى السلة لتعمل الخدمة. لا نستخدم ملفات تتبع إعلانية.</li>
@@ -118,7 +121,8 @@ export function PrivacyPage() {
       <Section title="حقوقكِ">
         <ul>
           <li>عرض بياناتكِ وتعديلها من <Link className="text-link" to="/profile">الملف الشخصي</Link>.</li>
-          <li>طلب نسخة من بياناتكِ أو حذف حسابكِ عبر <Link className="text-link" to="/contact">التواصل معنا</Link>؛ ننفذ الطلب خلال 14 يوماً، مع الاحتفاظ بما يلزم قانونياً من سجلات الطلبات.</li>
+          <li><b>تنزيل نسخة من بياناتكِ</b> أو <b>حذف حسابكِ نهائياً</b> مباشرة من <Link className="text-link" to="/profile">الملف الشخصي</Link> ← «بياناتكِ وحقوقكِ». عند الحذف تُزال بياناتكِ التعريفية فوراً، وتبقى سجلات الطلبات بدون أي بيانات تعريفية لأغراض المحاسبة.</li>
+          <li>إن واجهتِ مشكلة، <Link className="text-link" to="/contact">تواصلي معنا</Link> وننفذ طلبكِ خلال 14 يوماً.</li>
           <li>رفض مشاركة الموقع في أي وقت من إعدادات المتصفح — التسوق يبقى متاحاً.</li>
         </ul>
       </Section>
@@ -130,6 +134,7 @@ export function PrivacyPage() {
 }
 
 export function TermsPage() {
+  const S = useStoreInfo()
   return (
     <InfoLayout title="شروط الاستخدام" lead={`باستخدامكِ ${S.brand} أو إتمام طلب، فأنتِ توافقين على هذه الشروط.`}>
       <Section title="1. عن الخدمة">

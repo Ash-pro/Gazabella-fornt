@@ -1,40 +1,53 @@
 /**
  * القيم التشغيلية المعروضة للعميلة في صفحات السياسات والتواصل.
- * مصدر واحد — أي تعديل تجاري (رسوم، مناطق، مدة الاسترجاع) يتم هنا فقط.
- * القيم المعلّمة بـ ⚠️ مبدئية وتحتاج اعتماد P1-BIZ-01 قبل الإطلاق.
- * بعد الاعتماد: VITE_POLICIES_APPROVED=true لإخفاء شارة «نسخة أولية».
+ * المصدر الأساسي: الباك اند — GET /settings (support · policies) و GET /delivery-zones.
+ * هذه القيم **احتياط فقط** عند غياب حقل أو تعذّر الاتصال (تُقرأ عبر useStoreInfo).
+ * القيم التشغيلية معتمدة في 01/10/2026 (P1-BIZ-01).
+ * بعد اعتماد نصوص السياسات: VITE_POLICIES_APPROVED=true لإخفاء شارة «نسخة أولية».
  */
 
 export interface DeliveryZone {
   name: string
   fee: number
-  eta: string
+  /** مدة التوصيل المتوقعة بالدقائق (null = غير محددة) */
+  etaMinutes: number | null
 }
 
 export const STORE_INFO = {
   brand: 'Gazabella',
   city: 'خان يونس',
-  /** آخر تحديث للسياسات — يُعدّل مع كل تغيير جوهري */
-  policiesUpdatedAt: '2026-09-30',
-  /** ⚠️ ساعات الدعم */
+  /** آخر تحديث للسياسات — يُستبدل بـ policies.updated_at عند توفره */
+  policiesUpdatedAt: '2026-10-01',
   supportHours: 'يومياً من 10:00 صباحاً حتى 8:00 مساءً',
-  /** ⚠️ زمن الرد المتوقع على واتساب */
   supportResponse: 'خلال ساعة في أوقات الدوام',
   /** D-04: نافذة قبول المتجر للطلب */
   acceptanceWindowMinutes: 30,
-  /** ⚠️ مدة طلب الاسترجاع من تاريخ الاستلام (منتج مغلق وغير مستخدم) */
-  returnWindowDays: 3,
-  /** ⚠️ مهلة الإبلاغ عن منتج تالف أو خاطئ أو منتهي الصلاحية */
+  /** ✅ معتمد: مدة طلب الاسترجاع من تاريخ الاستلام (منتج مغلق وغير مستخدم) */
+  returnWindowDays: 7,
+  /** مهلة الإبلاغ عن منتج تالف أو خاطئ أو منتهي الصلاحية */
   damageReportHours: 24,
-  /** ⚠️ مدة الاحتفاظ ببيانات الطلبات */
+  /** مدة الاحتفاظ ببيانات الطلبات */
   dataRetentionMonths: 24,
-  /** ⚠️ مناطق التوصيل ورسومها — تطابق قيم الباك اند (D-22) */
+  /** ✅ معتمد: مناطق التوصيل ورسومها (D-22) — مطابقة لـ /delivery-zones */
   deliveryZones: [
-    { name: 'خان يونس — المدينة', fee: 10, eta: 'في نفس اليوم للطلبات المؤكدة قبل 4 مساءً' },
-    { name: 'خان يونس — المناطق الشرقية والغربية', fee: 15, eta: 'خلال 24 ساعة' },
-    { name: 'رفح ودير البلح', fee: 20, eta: 'خلال 24–48 ساعة' },
+    { name: 'خان يونس', fee: 5, etaMinutes: 45 },
+    { name: 'رفح', fee: 8, etaMinutes: 60 },
+    { name: 'مدينة غزة', fee: 10, etaMinutes: 90 },
   ] satisfies DeliveryZone[],
 } as const
+
+/** 45 → «خلال 45 دقيقة» · 60 → «خلال ساعة» · 90 → «خلال ساعة ونصف» · 120 → «خلال ساعتين» */
+export function formatEta(minutes: number | null | undefined): string {
+  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return 'حسب التغطية'
+  const m = Math.round(minutes)
+  if (m < 60) return `خلال ${m} دقيقة`
+  const h = Math.floor(m / 60)
+  const rest = m % 60
+  const hours = h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : h <= 10 ? `${h} ساعات` : `${h} ساعة`
+  if (rest === 0) return `خلال ${hours}`
+  if (rest === 30) return `خلال ${hours} ونصف`
+  return `خلال ${hours} و${rest} دقيقة`
+}
 
 /** روابط صفحات المساعدة والسياسات (القائمة الجانبية) */
 export const INFO_NAV = [

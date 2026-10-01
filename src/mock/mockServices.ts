@@ -22,6 +22,8 @@ import type {
   BannerType,
   Collection,
   SiteSettings,
+  PersonalDataExport,
+  DeliveryZoneInfo,
 } from '../types/api'
 import type { ProductFilters } from '../api/gazabella'
 import {
@@ -78,6 +80,16 @@ export const mockServices = {
   },
 
   logout: async () => delay({ message: 'تم تسجيل الخروج بنجاح' }),
+
+  // نفس شكل GET /auth/me/export (B-10)
+  exportMyData: async (): Promise<PersonalDataExport> =>
+    delay({
+      exported_at: new Date().toISOString(),
+      profile: { id: 101, name: 'أمل النجار', phone: '0591234567', email: 'amal@example.com', terms_version: '2026-10-01' },
+      orders: (await mockServices.getOrders()).data,
+    }),
+
+  deleteMyAccount: async (): Promise<void> => { await delay(null) },
 
   register: async (payload: { name: string; email: string; password: string; password_confirmation: string }): Promise<AuthResponse> =>
     delay({
@@ -149,10 +161,22 @@ export const mockServices = {
       tagline: 'جمالكِ، قصتنا',
       logo_url: '/brand/symbol/logo-192.webp',
       favicon_url: null,
-      phone: null,
-      email: null,
-      address: null,
+      phone: '0599000000',
+      email: 'support@gazabella.ps',
+      address: 'خان يونس',
+      // نفس شكل GET /settings الحقيقي (B-01) — قيم تجريبية
+      support: { email: 'support@gazabella.ps', phone: '0599000000', whatsapp: '970599000000', hours: 'يومياً من 10:00 صباحاً حتى 8:00 مساءً', response_time: 'خلال ساعة في أوقات الدوام' },
+      social_links: { whatsapp: '970599000000' },
+      policies: { return_window_days: 7, acceptance_window_minutes: 30, free_delivery_threshold: null, cod_available: true, payment_methods: ['cod', 'jawwal_pay'] },
     }),
+
+  // نفس شكل GET /delivery-zones الحقيقي (B-02) — القيم المعتمدة 01/10/2026
+  getDeliveryZones: async (): Promise<DeliveryZoneInfo[]> =>
+    delay([
+      { id: 1, name: 'خان يونس', fee: 5, eta_minutes: 45, currency: 'ILS' },
+      { id: 2, name: 'رفح', fee: 8, eta_minutes: 60, currency: 'ILS' },
+      { id: 3, name: 'مدينة غزة', fee: 10, eta_minutes: 90, currency: 'ILS' },
+    ]),
 
   getBanners: async (_type?: BannerType): Promise<Banner[]> => delay([]),
 

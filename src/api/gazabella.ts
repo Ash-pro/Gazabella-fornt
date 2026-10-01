@@ -28,6 +28,9 @@ import type {
   ProductBrief,
   ProductDetail,
   SiteSettings,
+  PersonalDataExport,
+  StoreSupport,
+  DeliveryZoneInfo,
   User,
 } from '../types/api'
 
@@ -242,14 +245,46 @@ async function allPages<T>(path: string): Promise<T[]> {
 export function normalizeCategory(category: Category): Category {
   return { ...category, children: (category.children ?? []).map(normalizeCategory) }
 }
-interface RawSettings extends Partial<SiteSettings> {
-  site_name?: string; support_phone?: string; support_email?: string; social?: Record<string, string>
+interface RawSettings extends Partial<Omit<SiteSettings, 'support'>> {
+  site_name?: string; support_phone?: string; support_email?: string; social?: Record<string, string | null>
+  support?: Partial<StoreSupport> | null
 }
+const clean = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null)
+const num = (v: unknown): number | null => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))
 export function normalizeSettings(raw: RawSettings): SiteSettings {
+  const s = raw.support ?? {}
+  const support = {
+    email: clean(s.email) ?? clean(raw.support_email) ?? clean(raw.email),
+    phone: clean(s.phone) ?? clean(raw.support_phone) ?? clean(raw.phone),
+    whatsapp: clean(s.whatsapp) ?? clean(raw.social?.whatsapp),
+    hours: clean(s.hours),
+    response_time: clean(s.response_time),
+  }
+  // روابط التواصل: نحذف القيم الفارغة، وواتساب الدعم يغلب واتساب السوشال
+  const social: Record<string, string> = {}
+  for (const [k, v] of Object.entries(raw.social ?? raw.social_links ?? {})) { const c = clean(v); if (c) social[k] = c }
+  if (support.whatsapp) social.whatsapp = support.whatsapp
+  const p = raw.policies ?? {}
+  const policies = {
+    updated_at: clean(p.updated_at),
+    return_window_days: num(p.return_window_days),
+    acceptance_window_minutes: num(p.acceptance_window_minutes),
+    damage_report_hours: num(p.damage_report_hours),
+    data_retention_months: num(p.data_retention_months),
+    free_delivery_threshold: num(p.free_delivery_threshold),
+    cod_available: typeof p.cod_available === 'boolean' ? p.cod_available : null,
+    payment_methods: Array.isArray(p.payment_methods) ? p.payment_methods.filter((m): m is string => typeof m === 'string') : null,
+  }
   return { store_name: raw.site_name ?? raw.store_name ?? 'Gazabella', tagline: raw.tagline ?? null,
     logo_url: raw.logo_url ?? null, favicon_url: raw.favicon_url ?? null, address: raw.address ?? null,
-    phone: raw.support_phone ?? raw.phone ?? null, email: raw.support_email ?? raw.email ?? null,
-    social_links: raw.social ?? raw.social_links }
+    phone: support.phone, email: support.email, social_links: social, support, policies }
+}
+
+interface RawDeliveryZone { id?: number; name?: string; fee?: number | string; eta_minutes?: number | string | null; currency?: string; is_active?: boolean }
+export function normalizeDeliveryZones(raw: RawDeliveryZone[] | null | undefined): DeliveryZoneInfo[] {
+  return (raw ?? [])
+    .filter((z) => z && z.is_active !== false && clean(z.name) && num(z.fee) !== null)
+    .map((z, i) => ({ id: Number(z.id ?? i + 1), name: clean(z.name)!, fee: num(z.fee)!, eta_minutes: num(z.eta_minutes), currency: clean(z.currency) ?? 'ILS' }))
 }
 interface RawBanner extends Banner { cta_text?: string | null; cta_url?: string | null }
 export function normalizeBanner(raw: RawBanner): Banner {
@@ -311,12 +346,25 @@ const legacyGazabellaApi = {
 
   async updateProfile(payload: import('../types/api').ProfileUpdate): Promise<User> {
     if (isMockMode() || isMvp0Api()) return unavailable()
-    if (!Number.isFinite(payload.latitude) || !Number.isFinite(payload.longitude) || Math.abs(payload.latitude) > 90 || Math.abs(payload.longitude) > 180) throw new Error('يرجى السماح بالوصول إلى موقعكِ الحالي لتحديث الملف.')
-    // Explicit fields prevent accidentally sending the immutable login phone.
+    // B-03: الإحداثيات اختيارية — تُرسل فقط إذا كانت صالحة ومكتملة
     const { name, email, gender, birth_date, city, address, latitude, longitude } = payload
-    const { data } = await apiClient.patch<ApiData<User>>('/auth/me', { name, email, gender, birth_date, city, address, latitude, longitude })
+    const hasLocation = Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude!) <= 90 && Math.abs(longitude!) <= 180
+    // Explicit fields prevent accidentally sending the immutable login phone.
+    const { data } = await apiClient.patch<ApiData<User>>('/auth/me', { name, email, gender, birth_date, city, address, ...(hasLocation ? { latitude, longitude } : {}) })
     return data.data
   },
+
+  /** B-10 — نسخة كاملة من بيانات العميلة (JSON) */
+  exportMyData: (): Promise<PersonalDataExport> =>
+    isMockMode()
+      ? mockServices.exportMyData()
+      : apiClient.get<ApiData<PersonalDataExport>>('/auth/me/export').then((r) => r.data.data),
+
+  /** B-10 — إخفاء الهوية وحذف البيانات الشخصية (لا رجعة) */
+  deleteMyAccount: (): Promise<void> =>
+    isMockMode()
+      ? mockServices.deleteMyAccount()
+      : apiClient.delete('/auth/me').then(() => undefined),
 
   logout: () =>
     isMockMode()
@@ -334,6 +382,12 @@ const legacyGazabellaApi = {
     isMockMode()
       ? mockServices.getSettings()
       : apiClient.get<ApiData<RawSettings>>('/settings').then((r) => normalizeSettings(r.data.data)),
+
+  /** B-02 — مناطق التوصيل ورسومها (المصدر الوحيد للرسوم) */
+  getDeliveryZones: (): Promise<DeliveryZoneInfo[]> =>
+    isMockMode()
+      ? mockServices.getDeliveryZones()
+      : apiClient.get<ApiData<RawDeliveryZone[]>>('/delivery-zones').then((r) => normalizeDeliveryZones(r.data.data)),
 
   getBanners: (type?: BannerType): Promise<Banner[]> =>
     isMockMode()

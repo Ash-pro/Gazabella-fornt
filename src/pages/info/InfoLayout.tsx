@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { INFO_NAV, policiesApproved, STORE_INFO } from '../../content/storeInfo'
+import { INFO_NAV, policiesApproved } from '../../content/storeInfo'
+import { useStoreInfo } from '../../hooks/useStoreInfo'
 
-const updatedLabel = new Intl.DateTimeFormat('ar-PS-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(STORE_INFO.policiesUpdatedAt))
+const dateFmt = new Intl.DateTimeFormat('ar-PS-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' })
+const formatUpdated = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? iso : dateFmt.format(d) }
 
 export function InfoLayout({ title, lead, children, showUpdated = true }: { title: string; lead?: string; children: ReactNode; showUpdated?: boolean }) {
+  const { policiesUpdatedAt } = useStoreInfo()
   return (
     <div className="container-page info-page">
       <nav aria-label="مسار الصفحة" className="info-breadcrumb"><Link to="/">الرئيسية</Link><span aria-hidden="true">/</span><span>{title}</span></nav>
@@ -18,7 +21,7 @@ export function InfoLayout({ title, lead, children, showUpdated = true }: { titl
             <h1 className="section-title">{title}</h1>
             {lead && <p className="info-lead">{lead}</p>}
             <div className="info-meta">
-              {showUpdated && <span>آخر تحديث: <time dateTime={STORE_INFO.policiesUpdatedAt}>{updatedLabel}</time></span>}
+              {showUpdated && <span>آخر تحديث: <time dateTime={policiesUpdatedAt}>{formatUpdated(policiesUpdatedAt)}</time></span>}
               {!policiesApproved() && <span className="info-draft">نسخة أولية — قيد الاعتماد</span>}
             </div>
           </header>

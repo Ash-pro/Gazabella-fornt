@@ -170,8 +170,17 @@ export interface ProfileUpdate {
   birth_date?: string | null
   city?: string | null
   address?: string | null
-  latitude: number
-  longitude: number
+  /** اختيارية منذ B-03 — تُرسل معاً أو لا تُرسل */
+  latitude?: number
+  longitude?: number
+}
+
+/** GET /auth/me/export (B-10) */
+export interface PersonalDataExport {
+  exported_at: string
+  profile: Record<string, unknown>
+  orders: unknown[]
+  [key: string]: unknown
 }
 
 export interface AuthResponse {
@@ -285,7 +294,40 @@ export interface Collection {
 // =======================================================================
 // Site Settings
 // =======================================================================
+/** GET /settings → support (B-01) */
+export interface StoreSupport {
+  email: string | null
+  phone: string | null
+  whatsapp: string | null
+  hours: string | null
+  response_time: string | null
+}
+
+/** GET /settings → policies (B-01) — كل الحقول اختيارية؛ الواجهة عندها قيم احتياطية */
+export interface StorePolicies {
+  updated_at?: string | null
+  return_window_days?: number | null
+  acceptance_window_minutes?: number | null
+  damage_report_hours?: number | null
+  data_retention_months?: number | null
+  /** null أو 0 = لا يوجد حد للتوصيل المجاني */
+  free_delivery_threshold?: number | null
+  cod_available?: boolean | null
+  payment_methods?: string[] | null
+}
+
+/** GET /delivery-zones (B-02) بعد التطبيع */
+export interface DeliveryZoneInfo {
+  id: number
+  name: string
+  fee: number
+  eta_minutes: number | null
+  currency: string
+}
+
 export interface SiteSettings {
+  support?: StoreSupport | null
+  policies?: StorePolicies | null
   store_name: string
   tagline: string | null
   logo_url: string | null

@@ -16,7 +16,7 @@ async function readPermission(): Promise<PermissionView> {
 }
 
 /** شرح واضح قبل طلب إذن الموقع من المتصفح — يرفع نسبة القبول ويحقق الشفافية */
-export function LocationConsentDialog({ onConfirm, onClose, busy = false }: { onConfirm: () => void; onClose: () => void; busy?: boolean }) {
+export function LocationConsentDialog({ onConfirm, onSkip, onClose, busy = false }: { onConfirm: () => void; onSkip?: () => void; onClose: () => void; busy?: boolean }) {
   const [permission, setPermission] = useState<PermissionView>('checking')
   useEffect(() => { let alive = true; void readPermission().then((p) => { if (alive) setPermission(p) }); return () => { alive = false } }, [])
 
@@ -24,11 +24,11 @@ export function LocationConsentDialog({ onConfirm, onClose, busy = false }: { on
   return (
     <Dialog title="مشاركة موقعكِ الحالي" onClose={onClose}>
       <div className="location-consent">
-        <p>لحفظ ملفكِ نحتاج موقعكِ الحالي <b>مرة واحدة</b> ليصل المندوب لعنوانكِ بدقة.</p>
+        <p>مشاركة موقعكِ الحالي <b>مرة واحدة</b> تساعد المندوب على الوصول لعنوانكِ بدقة.</p>
         <ul>
           <li>يُرسل الموقع لحظة الحفظ فقط — <b>لا تتبع مستمر</b>.</li>
           <li>يراه فريق التوصيل فقط عند توصيل طلباتكِ، ولا تراه المتاجر.</li>
-          <li>تحديث الملف اختياري؛ الرفض لا يؤثر على التسوق أو الطلب.</li>
+          <li>المشاركة اختيارية — يمكنكِ حفظ الملف بدون الموقع.</li>
         </ul>
         {permission === 'denied' && <p role="alert" className="location-consent__warn">إذن الموقع مرفوض حالياً في المتصفح. افتحي إعدادات الموقع من رمز القفل 🔒 بجانب الرابط، اسمحي بـ«الموقع»، ثم أعيدي المحاولة.</p>}
         {permission === 'unsupported' && <p role="alert" className="location-consent__warn">المتصفح لا يدعم تحديد الموقع. جرّبي متصفحاً آخر، أو تابعي التسوق دون تحديث الملف.</p>}
@@ -38,7 +38,8 @@ export function LocationConsentDialog({ onConfirm, onClose, busy = false }: { on
           <button type="button" className="btn-primary" disabled={blocked || busy || permission === 'checking'} onClick={onConfirm}>
             {busy ? 'جارٍ تحديد الموقع…' : permission === 'granted' ? 'موافقة وحفظ' : 'موافقة ومشاركة الموقع'}
           </button>
-          <button type="button" className="btn-ghost" onClick={onClose}>ليس الآن</button>
+          {onSkip ? <button type="button" className="btn-ghost" disabled={busy} onClick={onSkip}>حفظ بدون الموقع</button>
+            : <button type="button" className="btn-ghost" onClick={onClose}>ليس الآن</button>}
         </div>
       </div>
     </Dialog>

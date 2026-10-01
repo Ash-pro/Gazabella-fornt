@@ -72,3 +72,47 @@ test('middleware: normal visitors pass through with x-middleware-next, bots get 
     assert.equal(bot.headers.get('x-middleware-next'), '1', 'fetch failure must fall back to pass-through')
   } finally { globalThis.fetch = realFetch }
 })
+
+test('B-01: /settings normalises support, social and policies (real response shape)', async () => {
+  const api = await server.ssrLoadModule('/src/api/gazabella.ts')
+  const s = api.normalizeSettings({
+    site_name: 'Gazabella', tagline: 'الجمال، أقرب إليكِ',
+    support: { email: 'support@gazabella.com', phone: '+970599000000', whatsapp: null, hours: null, response_time: null },
+    social: { instagram: 'https://ig/x', facebook: '', whatsapp: null },
+    policies: { return_window_days: 7, acceptance_window_minutes: 30, free_delivery_threshold: 0, cod_available: true },
+  })
+  assert.equal(s.store_name, 'Gazabella')
+  assert.equal(s.phone, '+970599000000')
+  assert.equal(s.email, 'support@gazabella.com')
+  assert.deepEqual(s.social_links, { instagram: 'https://ig/x' }, 'empty/null social links are dropped')
+  assert.equal(s.policies.return_window_days, 7)
+  assert.equal(s.policies.free_delivery_threshold, 0)
+  assert.equal(s.policies.updated_at, null)
+  const withWa = api.normalizeSettings({ support: { whatsapp: '0599111222' }, social: { whatsapp: '970500000000' } })
+  assert.equal(withWa.social_links.whatsapp, '0599111222', 'support.whatsapp wins over social.whatsapp')
+})
+
+test('B-02: /delivery-zones normalises numbers and drops invalid rows', async () => {
+  const api = await server.ssrLoadModule('/src/api/gazabella.ts')
+  const zones = api.normalizeDeliveryZones([
+    { id: 1, name: 'خان يونس', fee: 5, eta_minutes: 45, currency: 'ILS' },
+    { id: 2, name: 'رفح', fee: '8.00', eta_minutes: '60' },
+    { id: 3, name: '', fee: 3 },
+    { id: 4, name: 'مغلقة', fee: 2, is_active: false },
+  ])
+  assert.deepEqual(zones, [
+    { id: 1, name: 'خان يونس', fee: 5, eta_minutes: 45, currency: 'ILS' },
+    { id: 2, name: 'رفح', fee: 8, eta_minutes: 60, currency: 'ILS' },
+  ])
+})
+
+test('delivery ETA is phrased naturally in Arabic', () => {
+  assert.equal(storeInfo.formatEta(45), 'خلال 45 دقيقة')
+  assert.equal(storeInfo.formatEta(60), 'خلال ساعة')
+  assert.equal(storeInfo.formatEta(90), 'خلال ساعة ونصف')
+  assert.equal(storeInfo.formatEta(120), 'خلال ساعتين')
+  assert.equal(storeInfo.formatEta(75), 'خلال ساعة و15 دقيقة')
+  assert.equal(storeInfo.formatEta(null), 'حسب التغطية')
+  assert.deepEqual(storeInfo.STORE_INFO.deliveryZones.map((z) => [z.name, z.fee, z.etaMinutes]), [['خان يونس', 5, 45], ['رفح', 8, 60], ['مدينة غزة', 10, 90]])
+  assert.equal(storeInfo.STORE_INFO.returnWindowDays, 7)
+})

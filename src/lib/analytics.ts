@@ -32,7 +32,8 @@ export interface AnalyticsEvents {
   login: { method: 'otp' }
   search: { search_term: string }
   contact: { channel: 'whatsapp' | 'phone' | 'email'; page: string }
-  location_consent: { outcome: 'accepted' | 'dismissed' | 'failed' }
+  location_consent: { outcome: 'accepted' | 'dismissed' | 'failed' | 'skipped' }
+  privacy_action: { action: 'export' | 'delete' }
 }
 
 type Provider = 'none' | 'plausible' | 'ga4'
