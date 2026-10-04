@@ -4,6 +4,7 @@ import type { ApiErrorBody } from '../types/api'
 import { isMvp0Api } from './apiContract'
 import { getGuestUuid } from './guest'
 import { captureMessage } from './monitoring'
+import { isOutage, serviceStatus } from './serviceStatus'
 
 // ── Cart Token (للمستخدم الضيف) ──────────────────────────────────────────
 const CART_TOKEN_KEY = `gz_cart_token:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
@@ -48,10 +49,14 @@ apiClient.interceptors.response.use(
   (response) => {
     const cartToken = response.headers['x-cart-token'] as string | undefined
     if (cartToken) setCartToken(cartToken)
+    serviceStatus.set(false)
     return response
   },
   (error: AxiosError<ApiErrorBody>) => {
     const status = error.response?.status
+    // أي رد من الخادم (حتى 4xx/500) يعني أنه يعمل؛ الانقطاع = لا رد أو 502/503/504
+    if (isOutage(error)) serviceStatus.set(true)
+    else if (status) serviceStatus.set(false)
     if (status && status >= 500) {
       // المسار بدون query، والأرقام تُستبدل بـ :id لتجميع نفس الخطأ في Sentry
       const path = (error.config?.url ?? '').split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:id').replace(/\/(GZ|GAZ)-[\w-]+/gi, '/:order')

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
-import { DEFAULT_PAYMENT_METHODS, MOCK_PAYMENT_METHODS } from '../lib/paymentMethods'
+import { MOCK_PAYMENT_METHODS, paymentOptionsFromCodes } from '../lib/paymentMethods'
 import type { PaymentMethodCode } from '../types/api'
 import { isMvp0Api } from '../lib/apiContract'
 import { Mvp0CheckoutPage } from './Mvp0CheckoutPage'
@@ -105,12 +105,14 @@ function LegacyCheckoutPage() {
   const navigate = useNavigate()
   const submitting = useRef(false)
   const [uncertain, setUncertain] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
-  const paymentOptions = isMockMode() ? MOCK_PAYMENT_METHODS : DEFAULT_PAYMENT_METHODS
+  const store = useStoreInfo()
+  const [chosenMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
+  const paymentOptions = isMockMode() ? MOCK_PAYMENT_METHODS : paymentOptionsFromCodes(store.paymentMethods)
+  // إن لم تعد الطريقة المختارة مفعّلة من الخادم نرجع لأول طريقة متاحة
+  const paymentMethod = paymentOptions.some((o) => o.code === chosenMethod) ? chosenMethod : paymentOptions[0].code
   const user = useAuthStore((s) => s.user)
 
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
-  const store = useStoreInfo()
   const checkoutTracked = useRef(false)
   useEffect(() => {
     if (checkoutTracked.current || !cartQuery.data?.items.length) return

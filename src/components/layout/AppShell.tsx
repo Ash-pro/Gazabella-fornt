@@ -14,6 +14,7 @@ import { CartDrawer } from '../cart/CartDrawer'
 import { CartToast } from '../cart/CartToast'
 import { PwaInstallPrompt } from '../pwa/PwaInstallPrompt'
 import { SupportFab } from '../support/SupportFab'
+import { ServiceStatusBanner } from './ServiceStatusBanner'
 import { RouteSeo } from './RouteSeo'
 import { PageLoader } from '../ui/AsyncState'
 
@@ -37,6 +38,7 @@ export function AppShell() {
       <RouteSeo />
       <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
       <EnvBanner />
+      <ServiceStatusBanner />
       <Header />
       <CartDrawer />
       <CartToast />

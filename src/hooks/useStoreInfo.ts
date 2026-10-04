@@ -34,6 +34,8 @@ export function useStoreInfo() {
     /** null = لا يوجد حد توصيل مجاني (0 يُعامل كغير مفعّل) */
     freeDeliveryThreshold: typeof threshold === 'number' && threshold > 0 ? threshold : null,
     codAvailable: p.cod_available !== false,
+    /** طرق الدفع المفعّلة من الخادم (null = لم يحددها) */
+    paymentMethods: p.payment_methods ?? null,
     deliveryZones,
     minDeliveryFee: Math.min(...deliveryZones.map((z) => z.fee)),
     zonesFromServer: Boolean(liveZones),

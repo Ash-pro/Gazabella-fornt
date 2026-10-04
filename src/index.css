@@ -1335,3 +1335,8 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .auth-context--plain { border-color: var(--border); background: var(--surface2); color: var(--text-2) !important; }
 /* زر واتساب العائم لا يغطي روابط أسفل الفوتر على الشاشات المتوسطة */
 @media (min-width: 1024px) { .footer-bottom { padding-left: max(0px, calc(170px - (100vw - 1240px) / 2)); } }
+
+/* ===== Service status banner ===== */
+.service-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 10px 16px; background: #fff4e5; border-bottom: 1px solid #f1d9b0; font-size: 13px; line-height: 1.7; color: #7a4b00; text-align: center; }
+.service-banner button { min-height: 32px; padding: 0 14px; border: 1px solid currentColor; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.service-banner button:disabled { opacity: .6; }
