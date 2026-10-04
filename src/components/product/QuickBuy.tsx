@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { gazabellaApi } from '../../api/gazabella'
@@ -46,15 +47,15 @@ export function QuickBuy({ product }: { product: ProductBrief }) {
     else submit(1)
   }
   return <>
-    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={`شراء سريع: ${product.name}`} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
-      {add.isPending ? 'جارٍ الإضافة…' : !product.in_stock ? 'غير متوفر' : 'شراء سريع +'}
+    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={t('شراء سريع: {name}', { name: product.name })} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
+      {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر') : t('شراء سريع +')}
     </button>
     {add.isError && !open && <p role="alert" className="field-error">{getApiErrorMessage(add.error)}</p>}
-    {open && <Dialog title={`شراء سريع — ${product.name}`} bottom returnFocusRef={trigger} onClose={() => { if (!sending.current) setOpen(false) }}>
+    {open && <Dialog title={t('شراء سريع — {name}', { name: product.name })} bottom returnFocusRef={trigger} onClose={() => { if (!sending.current) setOpen(false) }}>
       <form className="quick-buy-content" onSubmit={e => { e.preventDefault(); submit(quantity) }}>
-        <div className="quick-buy-preview"><ProductVisual src={image} alt={product.name} /><div><b>{product.name}</b>{original !== null && <del aria-label="السعر السابق">{money(original)}</del>}<p>{money(price)} للقطعة {percent > 0 && <span>— خصم {percent}%</span>}</p></div></div>
+        <div className="quick-buy-preview"><ProductVisual src={image} alt={product.name} /><div><b>{product.name}</b>{original !== null && <del aria-label={t('السعر السابق')}>{money(original)}</del>}<p>{money(price)} {t('للقطعة')} {percent > 0 && <span>{t('— خصم')} {percent}%</span>}</p></div></div>
         <div>
-          <p className="field-label mb-3">النوع أو الحجم</p>
+          <p className="field-label mb-3">{t('النوع أو الحجم')}</p>
           <div className="flex flex-wrap gap-2">
             {variants.map(v => {
               const selected = (variant?.id ?? -1) === v.id
@@ -89,11 +90,11 @@ export function QuickBuy({ product }: { product: ProductBrief }) {
             })}
           </div>
         </div>
-        <div className="quick-buy-quantity"><span>الكمية</span><div className="quantity-control"><button type="button" aria-label="تقليل كمية الشراء السريع" disabled={quantity <= 1 || add.isPending} onClick={() => setQuantity(q => q - 1)}>−</button><output aria-label="كمية الشراء السريع">{quantity}</output><button type="button" aria-label="زيادة كمية الشراء السريع" disabled={quantity >= limit || add.isPending} onClick={() => setQuantity(q => q + 1)}>+</button></div></div>
-        <div className="quick-buy-total"><span>قيمة المنتجات</span><b>{money(price * quantity)}</b></div>
-        <p className="text-sm text-[var(--text-2)]">تُراجع رسوم التوصيل قبل تأكيد الطلب.</p>
+        <div className="quick-buy-quantity"><span>{t('الكمية')}</span><div className="quantity-control"><button type="button" aria-label={t('تقليل كمية الشراء السريع')} disabled={quantity <= 1 || add.isPending} onClick={() => setQuantity(q => q - 1)}>−</button><output aria-label={t('كمية الشراء السريع')}>{quantity}</output><button type="button" aria-label={t('زيادة كمية الشراء السريع')} disabled={quantity >= limit || add.isPending} onClick={() => setQuantity(q => q + 1)}>+</button></div></div>
+        <div className="quick-buy-total"><span>{t('قيمة المنتجات')}</span><b>{money(price * quantity)}</b></div>
+        <p className="text-sm text-[var(--text-2)]">{t('تُراجع رسوم التوصيل قبل تأكيد الطلب.')}</p>
         {add.isError && <p role="alert" className="field-error">{getApiErrorMessage(add.error)}</p>}
-        <button type="submit" className="btn-primary w-full" disabled={add.isPending || quantity > limit || !variant}>{add.isPending ? 'جارٍ الإضافة…' : 'أضيفي للسلة'}</button>
+        <button type="submit" className="btn-primary w-full" disabled={add.isPending || quantity > limit || !variant}>{add.isPending ? t('جارٍ الإضافة…') : t('أضيفي للسلة')}</button>
       </form>
     </Dialog>}
   </>

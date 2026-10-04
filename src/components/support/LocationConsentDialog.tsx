@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Dialog } from '../ui/Dialog'
@@ -22,24 +23,24 @@ export function LocationConsentDialog({ onConfirm, onSkip, onClose, busy = false
 
   const blocked = permission === 'denied' || permission === 'unsupported' || permission === 'insecure'
   return (
-    <Dialog title="مشاركة موقعكِ الحالي" onClose={onClose}>
+    <Dialog title={t('مشاركة موقعكِ الحالي')} onClose={onClose}>
       <div className="location-consent">
-        <p>مشاركة موقعكِ الحالي <b>مرة واحدة</b> تساعد المندوب على الوصول لعنوانكِ بدقة.</p>
+        <p>{t('مشاركة موقعكِ الحالي')} <b>{t('مرة واحدة')}</b> {t('تساعد المندوب على الوصول لعنوانكِ بدقة.')}</p>
         <ul>
-          <li>يُرسل الموقع لحظة الحفظ فقط — <b>لا تتبع مستمر</b>.</li>
-          <li>يراه فريق التوصيل فقط عند توصيل طلباتكِ، ولا تراه المتاجر.</li>
-          <li>المشاركة اختيارية — يمكنكِ حفظ الملف بدون الموقع.</li>
+          <li>{t('يُرسل الموقع لحظة الحفظ فقط —')} <b>{t('لا تتبع مستمر')}</b>.</li>
+          <li>{t('يراه فريق التوصيل فقط عند توصيل طلباتكِ، ولا تراه المتاجر.')}</li>
+          <li>{t('المشاركة اختيارية — يمكنكِ حفظ الملف بدون الموقع.')}</li>
         </ul>
-        {permission === 'denied' && <p role="alert" className="location-consent__warn">إذن الموقع مرفوض حالياً في المتصفح. افتحي إعدادات الموقع من رمز القفل 🔒 بجانب الرابط، اسمحي بـ«الموقع»، ثم أعيدي المحاولة.</p>}
-        {permission === 'unsupported' && <p role="alert" className="location-consent__warn">المتصفح لا يدعم تحديد الموقع. جرّبي متصفحاً آخر، أو تابعي التسوق دون تحديث الملف.</p>}
-        {permission === 'insecure' && <p role="alert" className="location-consent__warn">تحديد الموقع يعمل فقط على رابط آمن (https).</p>}
-        <p className="location-consent__more">التفاصيل في <Link to="/privacy" target="_blank" rel="noopener" className="text-link">سياسة الخصوصية</Link>.</p>
+        {permission === 'denied' && <p role="alert" className="location-consent__warn">{t('إذن الموقع مرفوض حالياً في المتصفح. افتحي إعدادات الموقع من رمز القفل 🔒 بجانب الرابط، اسمحي بـ«الموقع»، ثم أعيدي المحاولة.')}</p>}
+        {permission === 'unsupported' && <p role="alert" className="location-consent__warn">{t('المتصفح لا يدعم تحديد الموقع. جرّبي متصفحاً آخر، أو تابعي التسوق دون تحديث الملف.')}</p>}
+        {permission === 'insecure' && <p role="alert" className="location-consent__warn">{t('تحديد الموقع يعمل فقط على رابط آمن (https).')}</p>}
+        <p className="location-consent__more">{t('التفاصيل في')} <Link to="/privacy" target="_blank" rel="noopener" className="text-link">{t('سياسة الخصوصية')}</Link>.</p>
         <div className="location-consent__actions">
           <button type="button" className="btn-primary" disabled={blocked || busy || permission === 'checking'} onClick={onConfirm}>
-            {busy ? 'جارٍ تحديد الموقع…' : permission === 'granted' ? 'موافقة وحفظ' : 'موافقة ومشاركة الموقع'}
+            {busy ? t('جارٍ تحديد الموقع…') : permission === 'granted' ? t('موافقة وحفظ') : t('موافقة ومشاركة الموقع')}
           </button>
-          {onSkip ? <button type="button" className="btn-ghost" disabled={busy} onClick={onSkip}>حفظ بدون الموقع</button>
-            : <button type="button" className="btn-ghost" onClick={onClose}>ليس الآن</button>}
+          {onSkip ? <button type="button" className="btn-ghost" disabled={busy} onClick={onSkip}>{t('حفظ بدون الموقع')}</button>
+            : <button type="button" className="btn-ghost" onClick={onClose}>{t('ليس الآن')}</button>}
         </div>
       </div>
     </Dialog>

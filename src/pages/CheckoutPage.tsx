@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useEffect, useRef, useState } from 'react'
 import { PaymentMethodPicker } from '../components/checkout/PaymentMethodPicker'
 import { MOCK_PAYMENT_METHODS, paymentOptionsFromCodes } from '../lib/paymentMethods'
@@ -50,7 +51,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
       className="mt-2 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2"
     >
       <span className="mt-px flex-none text-sm text-red-500">⚠</span>
-      <p className="text-sm leading-snug text-red-700">{message}</p>
+      <p className="text-sm leading-snug text-red-700">{t(message)}</p>
     </div>
   )
 }
@@ -108,17 +109,17 @@ type Step = 'details' | 'review'
 function CheckoutSteps({ step, onBack }: { step: Step; onBack: () => void }) {
   const review = step === 'review'
   return (
-    <nav className="co-steps" aria-label="خطوات إتمام الطلب">
-      <p className="co-steps__mobile"><b>الخطوة <span className="num">{review ? 2 : 1}</span> من <span className="num">2</span></b> · {review ? 'المراجعة والتأكيد' : 'بياناتكِ'}</p>
+    <nav className="co-steps" aria-label={t('خطوات إتمام الطلب')}>
+      <p className="co-steps__mobile"><b className="num">{t('الخطوة {n} من {total}', { n: review ? 2 : 1, total: 2 })}</b> · {review ? t('المراجعة والتأكيد') : t('بياناتكِ')}</p>
       <div className="co-steps__bar" aria-hidden="true"><i style={{ width: review ? '100%' : '50%' }} /></div>
       <ol>
-        <li className="done"><Link to="/cart"><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>السلة</Link></li>
+        <li className="done"><Link to="/cart"><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>{t('السلة')}</Link></li>
         <li className={review ? 'done' : 'current'} aria-current={review ? undefined : 'step'}>
           {review
-            ? <button type="button" onClick={onBack}><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>بياناتكِ</button>
-            : <span><span className="co-steps__dot num">1</span>بياناتكِ</span>}
+            ? <button type="button" onClick={onBack}><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>{t('بياناتكِ')}</button>
+            : <span><span className="co-steps__dot num">1</span>{t('بياناتكِ')}</span>}
         </li>
-        <li className={review ? 'current' : undefined} aria-current={review ? 'step' : undefined}><span><span className="co-steps__dot num">2</span>المراجعة والتأكيد</span></li>
+        <li className={review ? 'current' : undefined} aria-current={review ? 'step' : undefined}><span><span className="co-steps__dot num">2</span>{t('المراجعة والتأكيد')}</span></li>
       </ol>
     </nav>
   )
@@ -167,7 +168,7 @@ function LegacyCheckoutPage() {
   const errs = form.formState.errors
   const values = useWatch({ control: form.control })
   const selectedCity = values.city ?? ''
-  const fullAddress = [values.city, values.neighborhood, values.street].map((v) => v?.trim()).filter(Boolean).join('، ')
+  const fullAddress = [values.city, values.neighborhood, values.street].map((v) => v?.trim()).filter(Boolean).join(t('، '))
 
   const checkout = useMutation({
     mutationFn: (v: Values) => {
@@ -211,7 +212,7 @@ function LegacyCheckoutPage() {
   function goReview(v: Values) {
     // المنطقة يجب أن تكون من مناطق التوصيل الحالية حتى يكون الإجمالي في المراجعة نهائياً
     if (!store.deliveryZones.some((z) => z.name === v.city)) {
-      form.setError('city', { message: 'اختاري منطقة التوصيل' }, { shouldFocus: true })
+      form.setError('city', { message: t('اختاري منطقة التوصيل') }, { shouldFocus: true })
       return
     }
     setReviewReady(true)
@@ -230,7 +231,7 @@ function LegacyCheckoutPage() {
   if (cartQuery.isPending)
     return (
       <div className="container-page">
-        <PageLoader label="نجهّز السلة…" />
+        <PageLoader label={t('نجهّز السلة…')} />
       </div>
     )
   if (cartQuery.isError)
@@ -243,9 +244,9 @@ function LegacyCheckoutPage() {
   if (!cart.items.length)
     return (
       <div className="container-page py-16 text-center">
-        <h1 className="section-title">السلة فارغة</h1>
+        <h1 className="section-title">{t('السلة فارغة')}</h1>
         <Link className="btn-primary mt-6 inline-block" to="/">
-          تصفح المنتجات
+          {t('تصفح المنتجات')}
         </Link>
       </div>
     )
@@ -256,18 +257,18 @@ function LegacyCheckoutPage() {
   const total = Number(cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
   const itemsCount = cart.items.reduce((n, i) => n + i.quantity, 0)
   const cod = paymentMethod === 'cod'
-  const paymentLabel = paymentOptions.find((o) => o.code === paymentMethod)?.label ?? ''
-  const totalLabel = zone ? formatPrice(total) : <>{money(cart.subtotal)} <span className="co-plus">+ التوصيل</span></>
-  const confirmLabel = isSubmitting ? 'جارٍ تأكيد طلبكِ…'
-    : isMockMode() ? 'إنشاء طلب تجريبي'
-    : <>{cod ? 'تأكيد الطلب' : 'إنشاء الطلب والدفع'} · <span className="num">{formatPrice(total)}</span></>
+  const paymentLabel = t(paymentOptions.find((o) => o.code === paymentMethod)?.label ?? '')
+  const totalLabel = zone ? formatPrice(total) : <>{money(cart.subtotal)} <span className="co-plus">{t('+ التوصيل')}</span></>
+  const confirmLabel = isSubmitting ? t('جارٍ تأكيد طلبكِ…')
+    : isMockMode() ? t('إنشاء طلب تجريبي')
+    : <>{cod ? t('تأكيد الطلب') : t('إنشاء الطلب والدفع')} · <span className="num">{formatPrice(total)}</span></>
 
   const deliveryRow = (
     <div className="flex justify-between gap-3 text-sm">
-      <span className="text-[var(--text-2)]">التوصيل{zone ? ` (${zone.name})` : ''}</span>
+      <span className="text-[var(--text-2)]">{t('التوصيل')}{zone ? ` (${zone.name})` : ''}</span>
       {zone
-        ? <b>{freeDelivery ? <><s className="font-normal text-[var(--text-3)]">{formatPrice(zone.fee)}</s> مجاني</> : formatPrice(zone.fee)}</b>
-        : <span className="text-[var(--text-3)]">يُحسب بعد اختيار المنطقة</span>}
+        ? <b>{freeDelivery ? <><s className="font-normal text-[var(--text-3)]">{formatPrice(zone.fee)}</s> {t('مجاني')}</> : formatPrice(zone.fee)}</b>
+        : <span className="text-[var(--text-3)]">{t('يُحسب بعد اختيار المنطقة')}</span>}
     </div>
   )
 
@@ -277,12 +278,12 @@ function LegacyCheckoutPage() {
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3" role="alert">
           <span className="mt-0.5 text-base text-amber-500">⚠</span>
           <div className="text-sm leading-relaxed text-amber-800">
-            <b className="mb-1 block">لم نتأكد من إتمام الطلب</b>
-            ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي{' '}
-            <Link className="font-bold underline" to="/orders" target="_blank" rel="noopener">طلباتي</Link>{' '}
-            أولاً لتجنب تكرار الطلب.
+            <b className="mb-1 block">{t('لم نتأكد من إتمام الطلب')}</b>
+            {t('ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي')}{' '}
+            <Link className="font-bold underline" to="/orders" target="_blank" rel="noopener">{t('طلباتي')}</Link>{' '}
+            {t('أولاً لتجنب تكرار الطلب.')}
             <button type="button" className="mt-2 block font-bold underline" onClick={() => { setUncertain(false); checkout.reset() }}>
-              تحققت ولم أجد الطلب — أعيدي المحاولة
+              {t('تحققت ولم أجد الطلب — أعيدي المحاولة')}
             </button>
           </div>
         </div>
@@ -299,7 +300,7 @@ function LegacyCheckoutPage() {
   return (
     <div className="container-page co-page">
       <CheckoutSteps step={step} onBack={() => editDetails()} />
-      <h1 className="section-title co-title">{step === 'review' ? 'راجعي طلبكِ قبل التأكيد' : 'إتمام الطلب'}</h1>
+      <h1 className="section-title co-title">{step === 'review' ? t('راجعي طلبكِ قبل التأكيد') : t('إتمام الطلب')}</h1>
 
       <form onSubmit={(event) => void form.handleSubmit(step === 'review' ? submit : goReview)(event)} noValidate>
         <div key={step} className={`co-pane ${step === 'review' ? 'co-pane--fwd' : reviewReady ? 'co-pane--back' : ''}`}>
@@ -308,19 +309,19 @@ function LegacyCheckoutPage() {
               <div className="space-y-5">
                 {/* ملخص مصغّر قابل للفتح — موبايل فقط */}
                 <details className="co-mini lg:hidden">
-                  <summary><span><span className="num">{itemsCount}</span> {itemsCount === 1 ? 'منتج' : 'منتجات'}</span><b className="num">{totalLabel}</b><Icon name="chevron" className="size-4" /></summary>
+                  <summary><span><span className="num">{itemsCount}</span> {itemsCount === 1 ? t('منتج') : t('منتجات')}</span><b className="num">{totalLabel}</b><Icon name="chevron" className="size-4" /></summary>
                   <ul>
                     {cart.items.map((item) => <li key={item.id}><span>{item.product_name} × <span className="num">{item.quantity}</span></span><b className="num">{money(item.subtotal)}</b></li>)}
                   </ul>
                 </details>
 
                 <div className="checkout-card">
-                  <SectionHeader step={1} title="معلومات التواصل" />
+                  <SectionHeader step={1} title={t('معلومات التواصل')} />
                   <div className="space-y-4">
-                    <Field id="name" label="الاسم الكامل" error={errs.name?.message}>
-                      {(inputProps) => <input id="name" type="text" autoComplete="name" placeholder="مثال: سارة أحمد" {...inputProps} {...form.register('name')} />}
+                    <Field id="name" label={t('الاسم الكامل')} error={errs.name?.message}>
+                      {(inputProps) => <input id="name" type="text" autoComplete="name" placeholder={t('مثال: سارة أحمد')} {...inputProps} {...form.register('name')} />}
                     </Field>
-                    <Field id="phone" label="رقم الجوال" error={errs.phone?.message}>
+                    <Field id="phone" label={t('رقم الجوال')} error={errs.phone?.message}>
                       {(inputProps) => (
                         <div className="relative">
                           <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="05XXXXXXXX" dir="ltr" {...inputProps} className={`${inputProps.className} ps-10`} {...form.register('phone')} />
@@ -332,39 +333,39 @@ function LegacyCheckoutPage() {
                 </div>
 
                 <div className="checkout-card">
-                  <SectionHeader step={2} title="عنوان التوصيل" />
+                  <SectionHeader step={2} title={t('عنوان التوصيل')} />
                   <div className="space-y-4">
-                    <Field id="city" label="منطقة التوصيل" error={errs.city?.message}>
+                    <Field id="city" label={t('منطقة التوصيل')} error={errs.city?.message}>
                       {(inputProps) => (
                         <select id="city" autoComplete="address-level2" {...inputProps} {...form.register('city')}>
-                          <option value="">اختاري منطقة التوصيل</option>
+                          <option value="">{t('اختاري منطقة التوصيل')}</option>
                           {store.deliveryZones.map((z) => <option key={z.name} value={z.name}>{z.name} — {formatPrice(z.fee)}</option>)}
                         </select>
                       )}
                     </Field>
                     {zone && (
-                      <p className="co-zone" role="status"><Icon name="truck" className="size-4 shrink-0" />التوصيل <b className="num">{freeDelivery ? 'مجاني' : formatPrice(zone.fee)}</b> · {formatEta(zone.etaMinutes)} تقريباً</p>
+                      <p className="co-zone" role="status"><Icon name="truck" className="size-4 shrink-0" />{t('التوصيل')} <b className="num">{freeDelivery ? t('مجاني') : formatPrice(zone.fee)}</b> · {formatEta(zone.etaMinutes)} {t('تقريباً')}</p>
                     )}
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <Field id="neighborhood" label="الحي / المنطقة" error={errs.neighborhood?.message}>
-                        {(inputProps) => <input id="neighborhood" type="text" autoComplete="address-level3" placeholder="مثال: الكتيبة" {...inputProps} {...form.register('neighborhood')} />}
+                      <Field id="neighborhood" label={t('الحي / المنطقة')} error={errs.neighborhood?.message}>
+                        {(inputProps) => <input id="neighborhood" type="text" autoComplete="address-level3" placeholder={t('مثال: الكتيبة')} {...inputProps} {...form.register('neighborhood')} />}
                       </Field>
-                      <Field id="street" label="الشارع / أقرب معلم" error={errs.street?.message}>
-                        {(inputProps) => <input id="street" type="text" autoComplete="street-address" placeholder="مثال: شارع جلال، بجانب صيدلية النور" {...inputProps} {...form.register('street')} />}
+                      <Field id="street" label={t('الشارع / أقرب معلم')} error={errs.street?.message}>
+                        {(inputProps) => <input id="street" type="text" autoComplete="street-address" placeholder={t('مثال: شارع جلال، بجانب صيدلية النور')} {...inputProps} {...form.register('street')} />}
                       </Field>
                     </div>
                   </div>
                 </div>
 
                 <div className="checkout-card" id="co-payment">
-                  <SectionHeader step={3} title="طريقة الدفع" />
+                  <SectionHeader step={3} title={t('طريقة الدفع')} />
                   <PaymentMethodPicker options={paymentOptions} value={paymentMethod} onChange={setPaymentMethod} />
                 </div>
               </div>
 
               <aside className="hidden space-y-4 self-start lg:sticky lg:top-6 lg:block">
                 <div className="order-summary space-y-3">
-                  <h2 className="text-base font-bold">ملخص الطلب</h2>
+                  <h2 className="text-base font-bold">{t('ملخص الطلب')}</h2>
                   <div className="space-y-2">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex justify-between gap-3 text-sm">
@@ -373,53 +374,53 @@ function LegacyCheckoutPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm"><span className="text-[var(--text-2)]">قيمة المنتجات</span><b>{money(cart.subtotal)}</b></div>
+                  <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm"><span className="text-[var(--text-2)]">{t('قيمة المنتجات')}</span><b>{money(cart.subtotal)}</b></div>
                   {deliveryRow}
-                  <div className="flex items-baseline justify-between border-t border-[var(--border)] pt-3"><span className="font-bold">الإجمالي</span><b className="text-[var(--primary)]">{totalLabel}</b></div>
+                  <div className="flex items-baseline justify-between border-t border-[var(--border)] pt-3"><span className="font-bold">{t('الإجمالي')}</span><b className="text-[var(--primary)]">{totalLabel}</b></div>
                 </div>
-                <button type="submit" className="btn-primary w-full">متابعة للمراجعة</button>
-                <p className="co-hint">لن يُرسل الطلب الآن — ستراجعين كل التفاصيل في الخطوة التالية.</p>
-                {isMockMode() && <p className="demo-note text-xs">عرض تجريبي — لا يُرسل طلب حقيقي.</p>}
+                <button type="submit" className="btn-primary w-full">{t('متابعة للمراجعة')}</button>
+                <p className="co-hint">{t('لن يُرسل الطلب الآن — ستراجعين كل التفاصيل في الخطوة التالية.')}</p>
+                {isMockMode() && <p className="demo-note text-xs">{t('عرض تجريبي — لا يُرسل طلب حقيقي.')}</p>}
               </aside>
 
               <div className="co-sticky">
-                <div><span>الإجمالي</span><b className="num">{totalLabel}</b></div>
-                <button type="submit" className="btn-primary">متابعة للمراجعة</button>
+                <div><span>{t('الإجمالي')}</span><b className="num">{totalLabel}</b></div>
+                <button type="submit" className="btn-primary">{t('متابعة للمراجعة')}</button>
               </div>
             </div>
           ) : (
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
               <div className="space-y-5">
                 <section className="checkout-card co-review" aria-labelledby="co-r-delivery">
-                  <header><h2 id="co-r-delivery"><Icon name="truck" className="size-5" />التوصيل إلى</h2><button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails('name')}>تعديل</button></header>
+                  <header><h2 id="co-r-delivery"><Icon name="truck" className="size-5" />{t('التوصيل إلى')}</h2><button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails('name')}>{t('تعديل')}</button></header>
                   <dl>
-                    <div><dt>الاسم</dt><dd>{values.name}</dd></div>
-                    <div><dt>الجوال</dt><dd><bdi className="num" dir="ltr">{values.phone}</bdi></dd></div>
-                    <div><dt>العنوان</dt><dd>{fullAddress}</dd></div>
-                    {zone && <div><dt>مدة التوصيل</dt><dd>{formatEta(zone.etaMinutes)} تقريباً</dd></div>}
+                    <div><dt>{t('الاسم')}</dt><dd>{values.name}</dd></div>
+                    <div><dt>{t('الجوال')}</dt><dd><bdi className="num" dir="ltr">{values.phone}</bdi></dd></div>
+                    <div><dt>{t('العنوان')}</dt><dd>{fullAddress}</dd></div>
+                    {zone && <div><dt>{t('مدة التوصيل')}</dt><dd>{formatEta(zone.etaMinutes)} {t('تقريباً')}</dd></div>}
                   </dl>
                   <details className="co-note" open={Boolean(values.notes)}>
-                    <summary>إضافة ملاحظة للمندوب <span>(اختياري)</span></summary>
-                    <Field id="notes" label="ملاحظة للمندوب" required={false} error={errs.notes?.message}>
-                      {(inputProps) => <input id="notes" type="text" autoComplete="off" maxLength={500} placeholder="مثال: الاتصال قبل الوصول" disabled={isSubmitting} {...inputProps} {...form.register('notes')} />}
+                    <summary>{t('إضافة ملاحظة للمندوب')} <span>{t('(اختياري)')}</span></summary>
+                    <Field id="notes" label={t('ملاحظة للمندوب')} required={false} error={errs.notes?.message}>
+                      {(inputProps) => <input id="notes" type="text" autoComplete="off" maxLength={500} placeholder={t('مثال: الاتصال قبل الوصول')} disabled={isSubmitting} {...inputProps} {...form.register('notes')} />}
                     </Field>
                   </details>
                 </section>
 
                 <section className="checkout-card co-review" aria-labelledby="co-r-pay">
-                  <header><h2 id="co-r-pay"><Icon name="dollar" className="size-5" />طريقة الدفع</h2>{paymentOptions.length > 1 && <button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails()}>تعديل</button>}</header>
-                  <p className="co-review__pay"><b>{paymentLabel}</b>{cod ? ' — لا يُخصم أي مبلغ الآن، تدفعين للمندوب عند الاستلام.' : ' — بعد إنشاء الطلب تنتقلين لخطوة الدفع.'}</p>
+                  <header><h2 id="co-r-pay"><Icon name="dollar" className="size-5" />{t('طريقة الدفع')}</h2>{paymentOptions.length > 1 && <button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails()}>{t('تعديل')}</button>}</header>
+                  <p className="co-review__pay"><b>{paymentLabel}</b>{cod ? t(' — لا يُخصم أي مبلغ الآن، تدفعين للمندوب عند الاستلام.') : t(' — بعد إنشاء الطلب تنتقلين لخطوة الدفع.')}</p>
                 </section>
 
                 <section className="checkout-card co-review" aria-labelledby="co-r-items">
-                  <header><h2 id="co-r-items"><Icon name="bag" className="size-5" />المنتجات (<span className="num">{itemsCount}</span>)</h2><Link className="text-link" to="/cart">تعديل السلة</Link></header>
+                  <header><h2 id="co-r-items"><Icon name="bag" className="size-5" />{t('المنتجات (')}<span className="num">{itemsCount}</span>)</h2><Link className="text-link" to="/cart">{t('تعديل السلة')}</Link></header>
                   <ul className="co-items">
                     {cart.items.map((item) => {
                       const src = getImageUrl(item.image_url)
                       return (
                         <li key={item.id}>
                           <span className="co-items__thumb">{src ? <img src={src} alt="" loading="lazy" /> : <Icon name="package" className="size-5" />}</span>
-                          <span className="co-items__name">{item.product_name}<small>الكمية: <span className="num">{item.quantity}</span></small></span>
+                          <span className="co-items__name">{item.product_name}<small>{t('الكمية:')} <span className="num">{item.quantity}</span></small></span>
                           <b className="num">{money(item.subtotal)}</b>
                         </li>
                       )
@@ -430,20 +431,20 @@ function LegacyCheckoutPage() {
 
               <aside className="space-y-4 self-start lg:sticky lg:top-6">
                 <div className="order-summary space-y-3">
-                  <h2 className="text-base font-bold">الحساب</h2>
-                  <div className="flex justify-between text-sm"><span className="text-[var(--text-2)]">قيمة المنتجات</span><b>{money(cart.subtotal)}</b></div>
+                  <h2 className="text-base font-bold">{t('الحساب')}</h2>
+                  <div className="flex justify-between text-sm"><span className="text-[var(--text-2)]">{t('قيمة المنتجات')}</span><b>{money(cart.subtotal)}</b></div>
                   {deliveryRow}
-                  <div className="co-total"><span>{cod ? 'المبلغ عند الاستلام' : 'الإجمالي'}</span><strong className="num">{formatPrice(total)}</strong></div>
+                  <div className="co-total"><span>{cod ? t('المبلغ عند الاستلام') : t('الإجمالي')}</span><strong className="num">{formatPrice(total)}</strong></div>
                 </div>
                 {banners}
                 <button type="submit" className="btn-primary co-desktop-only w-full" disabled={isSubmitting || uncertain}>{confirmLabel}</button>
                 <LegalConsent />
-                <button type="button" className="btn-ghost co-desktop-only w-full" disabled={isSubmitting} onClick={() => editDetails()}>رجوع لتعديل البيانات</button>
-                {isMockMode() && <p className="demo-note text-xs">عرض تجريبي — لا يُرسل طلب حقيقي.</p>}
+                <button type="button" className="btn-ghost co-desktop-only w-full" disabled={isSubmitting} onClick={() => editDetails()}>{t('رجوع لتعديل البيانات')}</button>
+                {isMockMode() && <p className="demo-note text-xs">{t('عرض تجريبي — لا يُرسل طلب حقيقي.')}</p>}
               </aside>
 
               <div className="co-sticky co-sticky--confirm">
-                <button type="button" className="btn-ghost" disabled={isSubmitting} onClick={() => editDetails()} aria-label="رجوع لتعديل البيانات">رجوع</button>
+                <button type="button" className="btn-ghost" disabled={isSubmitting} onClick={() => editDetails()} aria-label={t('رجوع لتعديل البيانات')}>{t('رجوع')}</button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting || uncertain}>{confirmLabel}</button>
               </div>
             </div>

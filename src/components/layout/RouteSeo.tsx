@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { isPrivatePath, ROUTE_SEO } from '../../content/seo'
@@ -24,15 +25,15 @@ export function RouteSeo() {
       const slug = params.get('category')
       const category = slug && !filtered ? categories?.find((c) => c.slug === slug) : undefined
       applySeo({
-        title: term ? `نتائج البحث: ${term}` : category?.name ?? null,
-        description: category ? `تسوّقي ${category.name} من Gazabella — توصيل للبيت ودفع عند الاستلام.` : entry?.description,
+        title: term ? t('نتائج البحث: {term}', { term: term }) : category?.name ?? null,
+        description: category ? t('تسوّقي {name} من Gazabella — توصيل للبيت ودفع عند الاستلام.', { name: category.name }) : entry?.description,
         noindex: filtered,
         canonicalPath: slug && !filtered ? `/?category=${encodeURIComponent(slug)}` : undefined,
       })
       return
     }
     if (entry) { applySeo({ title: entry.title, description: entry.description, noindex: entry.noindex }); return }
-    if (/^\/orders\/[^/]+$/.test(pathname)) { applySeo({ title: 'تفاصيل الطلب', noindex: true }); return }
+    if (/^\/orders\/[^/]+$/.test(pathname)) { applySeo({ title: t('تفاصيل الطلب'), noindex: true }); return }
     if (isPrivatePath(pathname)) applySeo({ title: null, noindex: true })
   }, [pathname, search, categories])
   return null

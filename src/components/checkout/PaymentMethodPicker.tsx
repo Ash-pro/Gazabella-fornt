@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import type { PaymentMethodCode, PaymentMethodOption } from '../../types/api'
 
 type Props = {
@@ -22,7 +23,7 @@ export function PaymentMethodPicker({ options, value, onChange, disabled }: Prop
   const selected = options.find(o => o.code === value)
   return (
     <fieldset className="payment-picker" aria-describedby="payment-picker-note" disabled={disabled}>
-      <legend className="sr-only">طريقة الدفع</legend>
+      <legend className="sr-only">{t('طريقة الدفع')}</legend>
       {options.map(o => (
         <label key={o.code} className={'payment-picker__option' + (value === o.code ? ' is-selected' : '')}>
           <input type="radio" name="payment_method" value={o.code} checked={value === o.code} onChange={() => onChange(o.code)} />
@@ -30,15 +31,15 @@ export function PaymentMethodPicker({ options, value, onChange, disabled }: Prop
             ? <span className="payment-picker__logo"><img src="/payments/jawwal-pay.png" alt="" width="96" height="48" /></span>
             : <span className="payment-picker__icon" aria-hidden="true">💵</span>}
           <span className="payment-picker__copy">
-            <strong>{o.label}{o.is_sandbox && <span className="payment-picker__badge">تجريبي</span>}</strong>
-            <span>{HINT[o.code]}</span>
+            <strong>{t(o.label)}{o.is_sandbox && <span className="payment-picker__badge">{t('تجريبي')}</span>}</strong>
+            <span>{t(HINT[o.code])}</span>
           </span>
           <span className="payment-picker__check" aria-hidden="true">✓</span>
         </label>
       ))}
       <p id="payment-picker-note" className="payment-picker__note">
-        {selected?.is_sandbox && <b>وضع تجريبي — لا تُخصم أموال حقيقية. </b>}
-        {NOTE[value]}
+        {selected?.is_sandbox && <b>{t('وضع تجريبي — لا تُخصم أموال حقيقية.')} </b>}
+        {t(NOTE[value])}
       </p>
     </fieldset>
   )

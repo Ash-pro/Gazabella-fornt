@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
@@ -18,6 +19,6 @@ export function Dialog({ title, onClose, children, sheet = false, bottom = false
     }
   }, [returnFocusRef])
   return createPortal(<dialog ref={ref} className={bottom ? 'app-dialog app-dialog--bottom' : sheet ? 'app-dialog app-dialog--sheet' : 'app-dialog'} onCancel={(e) => { e.preventDefault(); onClose() }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
-    <div className="dialog-inner">{bottom && <div className="sheet-handle" aria-hidden="true" />}<div className="dialog-heading"><h2>{title}</h2><button className="icon-button" type="button" aria-label="إغلاق" onClick={onClose}><Icon name="close" className="size-5" /></button></div>{children}</div>
+    <div className="dialog-inner">{bottom && <div className="sheet-handle" aria-hidden="true" />}<div className="dialog-heading"><h2>{title}</h2><button className="icon-button" type="button" aria-label={t('إغلاق')} onClick={onClose}><Icon name="close" className="size-5" /></button></div>{children}</div>
   </dialog>, document.body)
 }

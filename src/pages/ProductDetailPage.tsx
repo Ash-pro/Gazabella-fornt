@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { isMvp0Api } from '../lib/apiContract'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -37,7 +38,7 @@ function ProductContent({ slug }: { slug: string }) {
   })
   const product = query.data
   const store = useStoreInfo()
-  const zoneNames = store.deliveryZones.map((z) => z.name).join('، ')
+  const zoneNames = store.deliveryZones.map((z) => z.name).join(t('، '))
 
   const variant = product?.variants?.find(v => v.id === variantId) ?? product?.variants?.find(v => v.available_quantity > 0) ?? product?.variants?.[0]
   const limit = Math.min(10, variant?.available_quantity ?? product?.stock ?? 0)
@@ -61,9 +62,9 @@ function ProductContent({ slug }: { slug: string }) {
   const seoPrice = product ? productPricing(product, variant).current : 0
   const seoImage = product ? getImageUrl((product.images ?? []).find((i) => i.is_primary)?.url ?? (product.images ?? [])[0]?.url ?? null) : null
   const notFound = (query.error as { response?: { status?: number } } | null)?.response?.status === 404
-  useSeo(notFound ? { title: 'المنتج غير متوفر', noindex: true } : product ? {
+  useSeo(notFound ? { title: t('المنتج غير متوفر'), noindex: true } : product ? {
     title: product.name,
-    description: toMetaDescription(product.description, `${product.name} — ${product.category?.name ?? 'منتجات التجميل'} من Gazabella بسعر ${seoPrice} ₪. توصيل في خان يونس ودفع عند الاستلام.`),
+    description: toMetaDescription(product.description, t('{name} — {v2} من Gazabella بسعر {seoPrice} ₪. توصيل في خان يونس ودفع عند الاستلام.', { name: product.name, v2: product.category?.name ?? 'منتجات التجميل', seoPrice: seoPrice })),
     image: seoImage,
     type: 'product',
     price: { amount: seoPrice, currency: 'ILS' },
@@ -109,9 +110,9 @@ function ProductContent({ slug }: { slug: string }) {
     return (
       <div className="container-page py-20 text-center">
         <span className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-[var(--primary-dim)] text-[var(--primary)]"><Icon name="search" className="size-7" /></span>
-        <h1 className="text-2xl font-extrabold">هذا المنتج غير متوفر</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--text-2)]">ربما نفد أو أُزيل من المتجر، أو أن الرابط غير صحيح. تصفّحي بقية المختارات.</p>
-        <Link className="btn-primary mt-7" to="/#products">تصفّح المنتجات</Link>
+        <h1 className="text-2xl font-extrabold">{t('هذا المنتج غير متوفر')}</h1>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--text-2)]">{t('ربما نفد أو أُزيل من المتجر، أو أن الرابط غير صحيح. تصفّحي بقية المختارات.')}</p>
+        <Link className="btn-primary mt-7" to="/#products">{t('تصفّح المنتجات')}</Link>
       </div>
     )
   if (query.isError || !product)
@@ -133,14 +134,14 @@ function ProductContent({ slug }: { slug: string }) {
       className="btn-primary flex-1"
     >
       <Icon name="bag" className="size-4" />
-      {add.isPending ? 'نضيف اختياركِ…' : !product.in_stock ? 'غير متوفر حاليًا' : 'أضيفي إلى السلة'}
+      {add.isPending ? t('نضيف اختياركِ…') : !product.in_stock ? t('غير متوفر حاليًا') : t('أضيفي إلى السلة')}
     </button>
   )
 
   return (
     <div className="container-page product-detail">
-      <nav className="product-breadcrumb" aria-label="مسار الصفحة">
-        <Link to="/">الرئيسية</Link>
+      <nav className="product-breadcrumb" aria-label={t('مسار الصفحة')}>
+        <Link to="/">{t('الرئيسية')}</Link>
         <span>/</span>
         <Link to={`/?category=${product.category?.slug}#products`}>{product.category?.name}</Link>
         <span>/</span>
@@ -152,10 +153,10 @@ function ProductContent({ slug }: { slug: string }) {
           <button
             className="detail-main-image"
             onClick={() => setZoom(true)}
-            aria-label="تكبير صورة المنتج"
+            aria-label={t('تكبير صورة المنتج')}
           >
             <ProductVisual src={image?.url ?? null} alt={image?.alt_text ?? product.name} priority />
-            <span><Icon name="eye" className="size-4" /> عرض الصورة</span>
+            <span><Icon name="eye" className="size-4" /> {t('عرض الصورة')}</span>
           </button>
           {(product.images ?? []).length > 1 && (
             <div className="detail-thumbnails">
@@ -163,7 +164,7 @@ function ProductContent({ slug }: { slug: string }) {
                 <button
                   key={i}
                   onClick={() => setImageIndex(i)}
-                  aria-label={`عرض الصورة ${i + 1}`}
+                  aria-label={t('عرض الصورة {v1}', { v1: i + 1 })}
                   aria-pressed={imageIndex === i}
                 >
                   <ProductVisual src={img.url} alt="" />
@@ -177,34 +178,34 @@ function ProductContent({ slug }: { slug: string }) {
           <span className="eyebrow">{product.category?.name}</span>
           <h1>{product.name}</h1>
           <p className="detail-description">
-            {product.description ?? 'اكتشفي تفاصيل هذا المنتج الرائع.'}
+            {product.description ?? t('اكتشفي تفاصيل هذا المنتج الرائع.')}
           </p>
 
           <div className="detail-price">
             {originalPrice !== null && (
-              <del aria-label="السعر السابق" className="line-through text-gray-400 text-sm">
+              <del aria-label={t('السعر السابق')} className="line-through text-gray-400 text-sm">
                 <span className="num">{money(originalPrice)}</span>
               </del>
             )}
             <b><span className="num">{money(displayPrice)}</span></b>
-            {percent > 0 && <span className="text-[var(--primary)]">خصم {percent}%</span>}
+            {percent > 0 && <span className="text-[var(--primary)]">{t('خصم')} {percent}%</span>}
             <span className={product.in_stock ? 'in-stock' : 'out-stock'}>
-              {product.in_stock ? 'متوفر' : 'غير متوفر'}
+              {product.in_stock ? t('متوفر') : t('غير متوفر')}
             </span>
           </div>
 
-          {!!product.variants?.length && <label className="field-label">اختاري النوع<select className="form-field" value={variant?.id ?? ''} onChange={e => { setVariantId(Number(e.target.value)); setQuantity(1) }}>{product.variants.map(v => <option key={v.id} value={v.id} disabled={v.available_quantity < 1}>{v.name} — {money(v.price)}{v.available_quantity < 1 ? ' — غير متوفر' : ''}</option>)}</select></label>}
+          {!!product.variants?.length && <label className="field-label">{t('اختاري النوع')}<select className="form-field" value={variant?.id ?? ''} onChange={e => { setVariantId(Number(e.target.value)); setQuantity(1) }}>{product.variants.map(v => <option key={v.id} value={v.id} disabled={v.available_quantity < 1}>{v.name} — {money(v.price)}{v.available_quantity < 1 ? t(' — غير متوفر') : ''}</option>)}</select></label>}
           <div className="detail-buy">
             <div className="quantity-control">
               <button
                 disabled={quantity <= 1 || add.isPending}
-                aria-label="تقليل الكمية"
+                aria-label={t('تقليل الكمية')}
                 onClick={() => setQuantity((q) => q - 1)}
               >−</button>
               <span className="num">{quantity}</span>
               <button
                 disabled={quantity >= limit || add.isPending}
-                aria-label="زيادة الكمية"
+                aria-label={t('زيادة الكمية')}
                 onClick={() => setQuantity((q) => q + 1)}
               >+</button>
             </div>
@@ -216,17 +217,17 @@ function ProductContent({ slug }: { slug: string }) {
           )}
 
           <div className="detail-benefits">
-            <p><Icon name="truck" className="size-4" /> توصيل من <span className="num">{formatPrice(store.minDeliveryFee)}</span> · دفع عند الاستلام</p>
-            <p><Icon name="clock" className="size-4" /> إضافة المنتج للسلة لا تحجز المخزون</p>
+            <p><Icon name="truck" className="size-4" /> {t('توصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('· دفع عند الاستلام')}</p>
+            <p><Icon name="clock" className="size-4" /> {t('إضافة المنتج للسلة لا تحجز المخزون')}</p>
           </div>
 
           <details className="product-information" open>
-            <summary>تفاصيل المنتج</summary>
+            <summary>{t('تفاصيل المنتج')}</summary>
             <p>{product.description}</p>
           </details>
           <details className="product-information">
-            <summary>التوصيل والاستلام</summary>
-            <p>نوصّل إلى: {zoneNames}. رسوم التوصيل من <span className="num">{formatPrice(store.minDeliveryFee)}</span> حسب المنطقة وتظهر قبل تأكيد الطلب، والدفع نقداً عند الاستلام. <Link className="text-link" to="/delivery-info">تفاصيل التوصيل</Link></p>
+            <summary>{t('التوصيل والاستلام')}</summary>
+            <p>{t('نوصّل إلى:')} {zoneNames}{t('. رسوم التوصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة وتظهر قبل تأكيد الطلب، والدفع نقداً عند الاستلام.')} <Link className="text-link" to="/delivery-info">{t('تفاصيل التوصيل')}</Link></p>
           </details>
         </div>
       </div>

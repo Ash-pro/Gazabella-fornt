@@ -1,6 +1,7 @@
+import { t } from '../../i18n'
 import { Icon } from './Icon'
 
-export function PageLoader({ label = 'نرتّب لكِ أجمل الاختيارات…' }: { label?: string }) {
+export function PageLoader({ label = t('نرتّب لكِ أجمل الاختيارات…') }: { label?: string }) {
   return (
     <div className="flex min-h-72 flex-col items-center justify-center gap-4" role="status">
       <span className="loader-ring" />
@@ -10,7 +11,7 @@ export function PageLoader({ label = 'نرتّب لكِ أجمل الاختيا�
 }
 
 export function ErrorState({
-  title = 'لم نتمكن من تحميل المحتوى',
+  title = t('لم نتمكن من تحميل المحتوى'),
   message,
   onRetry,
 }: {
@@ -26,7 +27,7 @@ export function ErrorState({
       <h2 className="mb-2 text-xl font-bold text-[var(--text)]">{title}</h2>
       <p className="mb-5 text-sm leading-7 text-[var(--text-2)]">{message}</p>
       {onRetry && (
-        <button className="btn-primary" type="button" onClick={onRetry}>إعادة المحاولة</button>
+        <button className="btn-primary" type="button" onClick={onRetry}>{t('إعادة المحاولة')}</button>
       )}
     </div>
   )

@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useReservationTimer } from '../../hooks/useReservationTimer'
 import { Icon } from './Icon'
 
@@ -14,7 +15,7 @@ export function ReservationBanner() {
   return (
     <div className={`reservation-banner ${seconds < 180 ? 'reservation-banner--urgent' : ''}`}>
       <Icon name="clock" className="size-5 shrink-0" />
-      <p role="status">{seconds === 0 ? 'انتهت مهلة الحجز. راجعي السلة لتحديث التوافر.' : 'اختياراتكِ محجوزة مؤقتًا لإتمام الطلب'}</p>
+      <p role="status">{seconds === 0 ? t('انتهت مهلة الحجز. راجعي السلة لتحديث التوافر.') : t('اختياراتكِ محجوزة مؤقتًا لإتمام الطلب')}</p>
       <span role="timer" aria-live="off" className="mr-auto font-mono text-base font-bold num" dir="ltr">{formatTime(seconds)}</span>
     </div>
   )

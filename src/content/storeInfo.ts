@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 /**
  * القيم التشغيلية المعروضة للعميلة في صفحات السياسات والتواصل.
  * المصدر الأساسي: الباك اند — GET /settings (support · policies) و GET /delivery-zones.
@@ -40,15 +41,15 @@ export const STORE_INFO = {
 
 /** 45 → «خلال 45 دقيقة» · 60 → «خلال ساعة» · 90 → «خلال ساعة ونصف» · 120 → «خلال ساعتين» */
 export function formatEta(minutes: number | null | undefined): string {
-  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return 'حسب التغطية'
+  if (minutes == null || !Number.isFinite(minutes) || minutes <= 0) return t('حسب التغطية')
   const m = Math.round(minutes)
-  if (m < 60) return `خلال ${m} دقيقة`
+  if (m < 60) return t('خلال {m} دقيقة', { m: m })
   const h = Math.floor(m / 60)
   const rest = m % 60
-  const hours = h === 1 ? 'ساعة' : h === 2 ? 'ساعتين' : h <= 10 ? `${h} ساعات` : `${h} ساعة`
-  if (rest === 0) return `خلال ${hours}`
-  if (rest === 30) return `خلال ${hours} ونصف`
-  return `خلال ${hours} و${rest} دقيقة`
+  const hours = h === 1 ? t('ساعة') : h === 2 ? t('ساعتين') : h <= 10 ? t('{h} ساعات', { h: h }) : t('{h} ساعة', { h: h })
+  if (rest === 0) return t('خلال {hours}', { hours: hours })
+  if (rest === 30) return t('خلال {hours} ونصف', { hours: hours })
+  return t('خلال {hours} و{rest} دقيقة', { hours: hours, rest: rest })
 }
 
 /** روابط صفحات المساعدة والسياسات (القائمة الجانبية) */

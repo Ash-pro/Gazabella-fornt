@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { Suspense, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { usePageNavigation } from '../../hooks/usePageNavigation'
@@ -36,7 +37,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen flex flex-col pb-16 lg:pb-0">
       <RouteSeo />
-      <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
+      <a href="#main-content" className="skip-link">{t('انتقل إلى المحتوى')}</a>
       <EnvBanner />
       <ServiceStatusBanner />
       <Header />

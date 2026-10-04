@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Icon } from '../ui/Icon'
@@ -56,21 +57,21 @@ export function PwaInstallPrompt() {
   }
 
   return (
-    <div className="pwa-install-prompt" role="complementary" aria-label="تثبيت التطبيق">
+    <div className="pwa-install-prompt" role="complementary" aria-label={t('تثبيت التطبيق')}>
       <div className="pwa-install-content">
         <div className="pwa-install-icon" aria-hidden="true">
           <Icon name="bag" className="size-5" />
         </div>
         <div className="pwa-install-text">
-          <b className="pwa-install-title">أضيفي Gazabella لشاشتكِ</b>
-          <p className="pwa-install-sub">تجربة تطبيق أسرع وأسهل</p>
+          <b className="pwa-install-title">{t('أضيفي Gazabella لشاشتكِ')}</b>
+          <p className="pwa-install-sub">{t('تجربة تطبيق أسرع وأسهل')}</p>
         </div>
       </div>
       <div className="pwa-install-actions">
         <button type="button" className="btn-primary pwa-install-btn" onClick={handleInstall}>
-          تثبيت
+          {t('تثبيت')}
         </button>
-        <button type="button" className="pwa-dismiss-btn" aria-label="إغلاق" onClick={handleDismiss}>
+        <button type="button" className="pwa-dismiss-btn" aria-label={t('إغلاق')} onClick={handleDismiss}>
           <Icon name="close" className="size-4" />
         </button>
       </div>

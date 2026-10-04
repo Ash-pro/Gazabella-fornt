@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import type { DeliveryFeeFields } from '../../types/api'
 import { money } from '../../lib/format'
 
@@ -9,8 +10,8 @@ export function DeliveryFeeValue({ fees }: { fees: DeliveryFeeFields }) {
   return (
     <span className="delivery-fee">
       <span className="delivery-fee__amount">
-        {fees.delivery_fee_original && <s className="delivery-fee__was num" aria-label={'بدلاً من ' + money(fees.delivery_fee_original)}>{money(fees.delivery_fee_original)}</s>}
-        {free ? <b className="delivery-fee__free">مجاني</b> : <span className="num">{money(fees.delivery_fee)}</span>}
+        {fees.delivery_fee_original && <s className="delivery-fee__was num" aria-label={t('بدلاً من ') + money(fees.delivery_fee_original)}>{money(fees.delivery_fee_original)}</s>}
+        {free ? <b className="delivery-fee__free">{t('مجاني')}</b> : <span className="num">{money(fees.delivery_fee)}</span>}
       </span>
       <span className={'delivery-waiver delivery-waiver--' + waiver.reason}>{waiver.label}</span>
     </span>
@@ -21,7 +22,7 @@ export function DeliveryFeeValue({ fees }: { fees: DeliveryFeeFields }) {
 export function DeliveryFeeRow({ fees, className = '' }: { fees: DeliveryFeeFields; className?: string }) {
   return (
     <div className={'flex justify-between gap-4 ' + className}>
-      <span>التوصيل</span>
+      <span>{t('التوصيل')}</span>
       <DeliveryFeeValue fees={fees} />
     </div>
   )

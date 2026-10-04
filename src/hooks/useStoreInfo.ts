@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../api/gazabella'
 import { resolveWhatsapp, STORE_INFO, type DeliveryZone } from '../content/storeInfo'
@@ -23,10 +24,10 @@ export function useStoreInfo() {
 
   return {
     brand: settings?.store_name || STORE_INFO.brand,
-    city: STORE_INFO.city,
+    city: t(STORE_INFO.city),
     policiesUpdatedAt: p.updated_at || STORE_INFO.policiesUpdatedAt,
-    supportHours: sup?.hours || STORE_INFO.supportHours,
-    supportResponse: sup?.response_time || STORE_INFO.supportResponse,
+    supportHours: sup?.hours || t(STORE_INFO.supportHours),
+    supportResponse: sup?.response_time || t(STORE_INFO.supportResponse),
     acceptanceWindowMinutes: pos(p.acceptance_window_minutes, STORE_INFO.acceptanceWindowMinutes),
     returnWindowDays: pos(p.return_window_days, STORE_INFO.returnWindowDays),
     damageReportHours: pos(p.damage_report_hours, STORE_INFO.damageReportHours),

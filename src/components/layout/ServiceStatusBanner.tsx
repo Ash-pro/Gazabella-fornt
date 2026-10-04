@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { isMockMode } from '../../api/gazabella'
 import { queryClient } from '../../lib/queryClient'
@@ -37,13 +38,13 @@ export function ServiceStatusBanner() {
   }, [down, online])
 
   if (isMockMode()) return null
-  if (!online) return <div className="service-banner" role="status"><Icon name="alert" className="size-4 shrink-0" /><span>لا يوجد اتصال بالإنترنت. سنكمل تلقائياً عند عودة الاتصال.</span></div>
+  if (!online) return <div className="service-banner" role="status"><Icon name="alert" className="size-4 shrink-0" /><span>{t('لا يوجد اتصال بالإنترنت. سنكمل تلقائياً عند عودة الاتصال.')}</span></div>
   if (!down) return null
   return (
     <div className="service-banner" role="status">
       <Icon name="alert" className="size-4 shrink-0" />
-      <span>الخدمة متوقفة مؤقتاً، ونعيد المحاولة تلقائياً. سلّتكِ محفوظة.</span>
-      <button type="button" onClick={() => void recheck()} disabled={checking}>{checking ? 'نتحقق…' : 'إعادة المحاولة'}</button>
+      <span>{t('الخدمة متوقفة مؤقتاً، ونعيد المحاولة تلقائياً. سلّتكِ محفوظة.')}</span>
+      <button type="button" onClick={() => void recheck()} disabled={checking}>{checking ? t('نتحقق…') : t('إعادة المحاولة')}</button>
     </div>
   )
 }

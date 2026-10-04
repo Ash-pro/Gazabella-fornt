@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -8,6 +9,7 @@ import { useCartStore } from '../../stores/cartStore'
 import { Icon } from '../ui/Icon'
 import { SearchBox } from './SearchBox'
 import { Dialog } from '../ui/Dialog'
+import { LanguageSwitch } from './LanguageSwitch'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -21,17 +23,17 @@ export function Header() {
   const announcement = banners?.find((b) => b.type === 'announcement')
   const searchField = <SearchBox />
   return <>
-    {announcement?.title && <aside className="announcement" aria-label="إعلان">{announcement.title}</aside>}
+    {announcement?.title && <aside className="announcement" aria-label={t('إعلان')}>{announcement.title}</aside>}
     <header className="store-header">
       <div className="container-page header-main">
-        <button className="icon-button menu-trigger" aria-label="فتح التصنيفات" onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
-        <Link to="/" aria-label="Gazabella — الرئيسية" className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" width="44" height="44" decoding="async" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings ? settings.tagline : 'الجمال، أقرب إليكِ'}</small></span></Link>
+        <button className="icon-button menu-trigger" aria-label={t('فتح التصنيفات')} onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
+        <Link to="/" aria-label={t('Gazabella — الرئيسية')} className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" width="44" height="44" decoding="async" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings ? settings.tagline : t('الجمال، أقرب إليكِ')}</small></span></Link>
         <div className="desktop-search">{searchField}</div>
-        <div className="header-actions"><Link className="icon-button" to={token ? '/orders' : '/auth'} aria-label={token ? 'حسابي وطلباتي' : 'تسجيل الدخول'}><Icon name="user" className="size-5" /></Link><button className="icon-button relative" onClick={openDrawer} aria-label={`السلة، ${cart?.total_items ?? 0} عناصر`}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
+        <div className="header-actions"><LanguageSwitch /><Link className="icon-button" to={token ? '/orders' : '/auth'} aria-label={token ? t('حسابي وطلباتي') : t('تسجيل الدخول')}><Icon name="user" className="size-5" /></Link><button className="icon-button relative" onClick={openDrawer} aria-label={t('السلة، {v1} عناصر', { v1: cart?.total_items ?? 0 })}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
       </div>
       <div className="container-page mobile-search">{searchField}</div>
-      <nav className="container-page header-nav" aria-label="التصنيفات الرئيسية"><Link to="/#products" className={!searchParams.get('category') ? 'active' : ''}>جميع المنتجات</Link>{categories?.map((category) => <Link key={category.id} className={searchParams.get('category') === category.slug ? 'active' : ''} to={`/?category=${category.slug}#products`}>{category.name}</Link>)}</nav>
+      <nav className="container-page header-nav" aria-label={t('التصنيفات الرئيسية')}><Link to="/#products" className={!searchParams.get('category') ? 'active' : ''}>{t('جميع المنتجات')}</Link>{categories?.map((category) => <Link key={category.id} className={searchParams.get('category') === category.slug ? 'active' : ''} to={`/?category=${category.slug}#products`}>{category.name}</Link>)}</nav>
     </header>
-    {menuOpen && <Dialog title="اكتشفي Gazabella" sheet onClose={() => setMenuOpen(false)}><div className="p-5 space-y-3"><Link className="menu-category" to="/#products" onClick={() => setMenuOpen(false)}>جميع المنتجات <Icon name="arrow" className="size-4 rotate-180" /></Link>{categories?.map((category) => <details key={category.id} className="category-disclosure"><summary>{category.name}</summary><Link to={`/?category=${category.slug}#products`} onClick={() => setMenuOpen(false)}>كل {category.name}</Link>{(category.children ?? []).map((child) => <Link key={child.id} to={`/?category=${category.slug}&sub=${child.slug}#products`} onClick={() => setMenuOpen(false)}>{child.name}</Link>)}</details>)}<Link className="btn-primary w-full mt-6" to={token ? '/orders' : '/auth'} onClick={() => setMenuOpen(false)}>حسابي وطلباتي</Link></div></Dialog>}
+    {menuOpen && <Dialog title={t('اكتشفي Gazabella')} sheet onClose={() => setMenuOpen(false)}><div className="p-5 space-y-3"><Link className="menu-category" to="/#products" onClick={() => setMenuOpen(false)}>{t('جميع المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>{categories?.map((category) => <details key={category.id} className="category-disclosure"><summary>{category.name}</summary><Link to={`/?category=${category.slug}#products`} onClick={() => setMenuOpen(false)}>{t('كل')} {category.name}</Link>{(category.children ?? []).map((child) => <Link key={child.id} to={`/?category=${category.slug}&sub=${child.slug}#products`} onClick={() => setMenuOpen(false)}>{child.name}</Link>)}</details>)}<Link className="btn-primary w-full mt-6" to={token ? '/orders' : '/auth'} onClick={() => setMenuOpen(false)}>{t('حسابي وطلباتي')}</Link></div></Dialog>}
   </>
 }

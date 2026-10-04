@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useAuthStore } from '../stores/authStore'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
@@ -178,17 +179,17 @@ interface RawOrder {
 }
 
 export function normalizeOrder(raw: RawOrder): Order {
-  if (!raw) throw new Error('تفاصيل الطلب الواردة من الخادم غير مكتملة.')
+  if (!raw) throw new Error(t('تفاصيل الطلب الواردة من الخادم غير مكتملة.'))
   const rawItems = Array.isArray(raw.items) ? raw.items : []
   // يحوّل القيم المالية لنص — يدعم null/undefined بقيمة افتراضية
   const amount = (value: unknown, fallback?: string): string => {
     if (value === null || value === undefined || value === '') {
       if (fallback !== undefined) return fallback
-      throw new Error('مبالغ الطلب الواردة من الخادم غير مكتملة.')
+      throw new Error(t('مبالغ الطلب الواردة من الخادم غير مكتملة.'))
     }
     if ((typeof value !== 'number' && typeof value !== 'string') || !Number.isFinite(Number(value)) || Number(value) < 0) {
       if (fallback !== undefined) return fallback
-      throw new Error('مبالغ الطلب الواردة من الخادم غير مكتملة.')
+      throw new Error(t('مبالغ الطلب الواردة من الخادم غير مكتملة.'))
     }
     return String(value)
   }
@@ -231,7 +232,7 @@ export function normalizeOrder(raw: RawOrder): Order {
 
 
 function unavailable(): Promise<never> {
-  return Promise.reject(new Error('هذه الخدمة غير متاحة حاليًا.'))
+  return Promise.reject(new Error(t('هذه الخدمة غير متاحة حاليًا.')))
 }
 
 async function allPages<T>(path: string): Promise<T[]> {
@@ -240,7 +241,7 @@ async function allPages<T>(path: string): Promise<T[]> {
   let lastPage = 1
   do {
     const { data } = await apiClient.get<ApiList<T>>(path, { params: { page, per_page: 100 } })
-    if (!Array.isArray(data.data)) throw new Error('استجابة غير صالحة من الخادم.')
+    if (!Array.isArray(data.data)) throw new Error(t('استجابة غير صالحة من الخادم.'))
     items.push(...data.data)
     lastPage = data.meta?.last_page ?? 1
     page++
@@ -299,7 +300,7 @@ export function normalizeBanner(raw: RawBanner): Banner {
 function normalizeAuth(response: AuthResponse | ApiData<AuthResponse>): AuthResponse {
   const data = 'data' in response ? response.data : response
   if (!data || typeof data.token !== 'string' || !data.token || !data.user || !Number.isInteger(data.user.id)) {
-    throw new Error('استجابة تسجيل الدخول غير مكتملة. يرجى التواصل مع الدعم.')
+    throw new Error(t('استجابة تسجيل الدخول غير مكتملة. يرجى التواصل مع الدعم.'))
   }
   return data
 }
@@ -314,7 +315,7 @@ function fetchCart(): Promise<Cart> {
 }
 async function ensureCartIdentity() {
   if (!useAuthStore.getState().token && !getCartToken()) await fetchCart()
-  if (!useAuthStore.getState().token && !getCartToken()) throw new Error('تعذر حفظ هوية السلة. يرجى السماح بالتخزين في المتصفح.')
+  if (!useAuthStore.getState().token && !getCartToken()) throw new Error(t('تعذر حفظ هوية السلة. يرجى السماح بالتخزين في المتصفح.'))
 }
 
 const legacyGazabellaApi = {
@@ -330,7 +331,7 @@ const legacyGazabellaApi = {
       return {
         token: 'mock-token',
         token_type: 'Bearer',
-        user: { id: 1, name: name ?? 'مستخدم تجريبي', phone, role: 'customer', created_at: new Date().toISOString() },
+        user: { id: 1, name: name ?? t('مستخدم تجريبي'), phone, role: 'customer', created_at: new Date().toISOString() },
       }
     }
     const cartToken = getCartToken()
@@ -485,7 +486,7 @@ const legacyGazabellaApi = {
   },
 
   async lookupOrderByReference(reference: string): Promise<Order> {
-    if (isMockMode()) throw new Error('غير متاح في الوضع التجريبي')
+    if (isMockMode()) throw new Error(t('غير متاح في الوضع التجريبي'))
     const { data } = await apiClient.get<ApiData<RawOrder>>('/orders/lookup-by-reference', { params: { reference } })
     return normalizeOrder(data.data)
   },

@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { isMvp0Api } from '../lib/apiContract'
 // AuthPage.tsx — full replacement
 import { useState, useEffect, type FormEvent } from 'react'
@@ -39,8 +40,8 @@ export function AuthPage() {
   // countdown timer for resend
   useEffect(() => {
     if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
   }, [countdown])
 
   function onSuccess(token: string, user: User) {
@@ -65,11 +66,11 @@ export function AuthPage() {
     if (pending) return
     setPhoneError('')
     if (!PHONE_REGEX.test(phone.trim())) {
-      setPhoneError('أدخل رقم جوال فلسطينيًا صحيحًا (مثال: 0591234567)')
+      setPhoneError(t('أدخل رقم جوال فلسطينيًا صحيحًا (مثال: 0591234567)'))
       return
     }
     if (isNewUser && !name.trim()) {
-      setPhoneError('أدخل اسمك الكامل')
+      setPhoneError(t('أدخل اسمك الكامل'))
       return
     }
     sendOtp.mutate()
@@ -80,7 +81,7 @@ export function AuthPage() {
     if (pending) return
     setOtpError('')
     if (!/^\d{6}$/.test(otp.trim())) {
-      setOtpError('الكود مكوّن من 6 أرقام')
+      setOtpError(t('الكود مكوّن من 6 أرقام'))
       return
     }
     verifyOtp.mutate()
@@ -91,33 +92,33 @@ export function AuthPage() {
   return (
     <div className="container-page auth-page">
       <Link to="/" className="auth-back">
-        <Icon name="arrow" className="size-4" /> العودة للتسوق
+        <Icon name="arrow" className="size-4 ltr:rotate-180" /> {t('العودة للتسوق')}
       </Link>
       <div className="auth-layout auth-layout--refined">
         <div className="auth-form">
-          {!isMvp0Api() && jawwalEnabled && <Link className="text-link mb-4" to="/orders/lookup">لديكِ مرجع دفع؟ تابعي طلبكِ هنا</Link>}
+          {!isMvp0Api() && jawwalEnabled && <Link className="text-link mb-4" to="/orders/lookup">{t('لديكِ مرجع دفع؟ تابعي طلبكِ هنا')}</Link>}
           {lastOrder ? (
             <p className="auth-context" role="status">
               <Icon name="check" className="size-5 shrink-0" />
-              <span>طلبكِ <b className="num" dir="ltr">{lastOrder.order.order_number}</b> مسجّل عندنا. ادخلي بنفس رقم الجوال لمتابعة حالته — نرسل لكِ كود تحقق فقط.</span>
+              <span>{t('طلبكِ')} <b className="num" dir="ltr">{lastOrder.order.order_number}</b> {t('مسجّل عندنا. ادخلي بنفس رقم الجوال لمتابعة حالته — نرسل لكِ كود تحقق فقط.')}</span>
             </p>
           ) : safeNext.startsWith('/orders') && (
             <p className="auth-context auth-context--plain" role="status">
               <Icon name="package" className="size-5 shrink-0" />
-              <span>سجّلي الدخول برقم الجوال الذي طلبتِ به لعرض طلباتكِ ومتابعتها.</span>
+              <span>{t('سجّلي الدخول برقم الجوال الذي طلبتِ به لعرض طلباتكِ ومتابعتها.')}</span>
             </p>
           )}
-          <span className="eyebrow">مساحتكِ في Gazabella</span>
-          <h1>{step === 'phone' ? 'أهلًا بكِ.' : 'تحقّقي من جوالكِ'}</h1>
+          <span className="eyebrow">{t('مساحتكِ في Gazabella')}</span>
+          <h1>{step === 'phone' ? t('أهلًا بكِ.') : t('تحقّقي من جوالكِ')}</h1>
           <p>
             {step === 'phone'
-              ? 'أدخلي رقم جوالكِ للدخول أو إنشاء حساب جديد.'
-              : `أرسلنا كود مكوّن من 6 أرقام إلى ${phone}`}
+              ? t('أدخلي رقم جوالكِ للدخول أو إنشاء حساب جديد.')
+              : t('أرسلنا كود مكوّن من 6 أرقام إلى {phone}', { phone: phone })}
           </p>
 
           {step === 'phone' && (
             <form onSubmit={submitPhone} className="auth-fields">
-              <div className="auth-switch" role="group" aria-label="نوع الحساب">
+              <div className="auth-switch" role="group" aria-label={t('نوع الحساب')}>
                 {([false, true] as const).map((val) => (
                   <button
                     key={String(val)}
@@ -126,21 +127,21 @@ export function AuthPage() {
                     disabled={pending}
                     onClick={() => setIsNewUser(val)}
                   >
-                    {val ? 'مستخدمة جديدة' : 'لديّ حساب'}
+                    {val ? t('مستخدمة جديدة') : t('لديّ حساب')}
                   </button>
                 ))}
               </div>
 
               {isNewUser && (
                 <div>
-                  <label className="field-label" htmlFor="auth-name">الاسم الكامل</label>
+                  <label className="field-label" htmlFor="auth-name">{t('الاسم الكامل')}</label>
                   <input
                     id="auth-name"
                     className="form-field"
                     autoComplete="name"
                     value={name}
                     onChange={(e) => { setName(e.target.value); setPhoneError('') }}
-                    placeholder="مثال: سارة أحمد"
+                    placeholder={t('مثال: سارة أحمد')}
                     disabled={pending}
                     required
                   />
@@ -148,7 +149,7 @@ export function AuthPage() {
               )}
 
               <div>
-                <label className="field-label" htmlFor="auth-phone">رقم الجوال</label>
+                <label className="field-label" htmlFor="auth-phone">{t('رقم الجوال')}</label>
                 <input
                   id="auth-phone"
                   className="form-field"
@@ -171,17 +172,17 @@ export function AuthPage() {
               )}
 
               <button className="btn-primary auth-submit" disabled={pending}>
-                {pending ? 'جارٍ الإرسال…' : 'إرسال الكود'}
-                <Icon name="arrow" className="size-4 rotate-180" />
+                {pending ? t('جارٍ الإرسال…') : t('إرسال الكود')}
+                <Icon name="arrow" className="size-4 rtl:rotate-180" />
               </button>
-              <LegalConsent action="بالمتابعة" />
+              <LegalConsent action={t('بالمتابعة')} />
             </form>
           )}
 
           {step === 'otp' && (
             <form onSubmit={submitOtp} className="auth-fields">
               <div>
-                <label className="field-label" htmlFor="auth-otp">كود التحقق</label>
+                <label className="field-label" htmlFor="auth-otp">{t('كود التحقق')}</label>
                 <input
                   id="auth-otp"
                   className="form-field"
@@ -206,13 +207,13 @@ export function AuthPage() {
               )}
 
               <button className="btn-primary auth-submit" disabled={pending}>
-                {pending ? 'جارٍ التحقق…' : 'تأكيد الكود'}
-                <Icon name="arrow" className="size-4 rotate-180" />
+                {pending ? t('جارٍ التحقق…') : t('تأكيد الكود')}
+                <Icon name="arrow" className="size-4 rtl:rotate-180" />
               </button>
 
               <div className="auth-shopping">
                 {countdown > 0 ? (
-                  <span>إعادة الإرسال بعد {countdown} ثانية</span>
+                  <span>{t('إعادة الإرسال بعد')} {countdown} {t('ثانية')}</span>
                 ) : (
                   <button
                     type="button"
@@ -220,27 +221,27 @@ export function AuthPage() {
                     disabled={pending}
                     onClick={() => { verifyOtp.reset(); sendOtp.mutate() }}
                   >
-                    إعادة إرسال الكود
+                    {t('إعادة إرسال الكود')}
                   </button>
                 )}
                 <button type="button" className="text-link" disabled={pending} onClick={() => { sendOtp.reset(); verifyOtp.reset(); setStep('phone'); setOtp(''); setOtpError('') }}>
-                  تغيير رقم الجوال
+                  {t('تغيير رقم الجوال')}
                 </button>
               </div>
             </form>
           )}
 
           <div className="auth-shopping">
-            <span>تفضّلين الاستكشاف أولًا؟</span>
-            <Link to="/">متابعة التسوق دون تسجيل <Icon name="arrow" className="size-4 rotate-180" /></Link>
+            <span>{t('تفضّلين الاستكشاف أولًا؟')}</span>
+            <Link to="/">{t('متابعة التسوق دون تسجيل')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
           </div>
         </div>
         <aside className="auth-editorial" aria-label="Gazabella">
           <img src="/images/products/perfume.webp" alt="" />
           <div>
             <span>GAZABELLA</span>
-            <h2>اختيارات تشبهكِ.<br />وتفاصيل تحبينها.</h2>
-            <p>مساحة صغيرة لكل ما يلفت قلبكِ.</p>
+            <h2>{t('اختيارات تشبهكِ.')}<br />{t('وتفاصيل تحبينها.')}</h2>
+            <p>{t('مساحة صغيرة لكل ما يلفت قلبكِ.')}</p>
           </div>
         </aside>
       </div>

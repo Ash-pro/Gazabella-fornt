@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useEffect } from 'react'
 import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, fullTitle, OG_LOCALE, SITE_NAME } from '../content/seo'
 
@@ -52,8 +53,9 @@ function setJsonLd(data: Record<string, unknown> | null | undefined) {
 
 /** يطبّق العنوان والوصف وOpen Graph وcanonical وrobots — قيمة واحدة لكل صفحة */
 export function applySeo(options: SeoOptions) {
-  const title = fullTitle(options.title)
-  const description = options.description || DEFAULT_DESCRIPTION
+  // العنوان والوصف بلغة الواجهة (نصوص ROUTE_SEO عربية ومفاتيحها في en.ts)
+  const title = options.title ? fullTitle(t(options.title)) : t(fullTitle(null))
+  const description = t(options.description || DEFAULT_DESCRIPTION)
   const url = absoluteUrl(options.canonicalPath ?? window.location.pathname)
   const image = absoluteUrl(options.image || DEFAULT_OG_IMAGE)
   document.title = title

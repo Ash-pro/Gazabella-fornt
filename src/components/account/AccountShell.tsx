@@ -1,10 +1,11 @@
+import { t } from '../../i18n'
 import { useId, useRef, useState, type ReactNode } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { queryClient } from '../../lib/queryClient'
-import { formatPrice } from '../../lib/format'
+import { formatDate, formatPrice } from '../../lib/format'
 import { orderStatusLabel } from '../../lib/orderStatus'
 import { orderMatches, summarizeOrders } from '../../lib/orderSearch'
 import { orderPath, useAccountOrders } from '../../hooks/useAccountOrders'
@@ -17,7 +18,7 @@ type SearchProps =
 
 const memberSince = (iso?: string) => {
   const date = iso ? new Date(iso) : null
-  return date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat('ar-PS-u-nu-latn', { month: 'long', year: 'numeric' }).format(date) : null
+  return date && !Number.isNaN(date.getTime()) ? formatDate(date, { month: 'long', year: 'numeric' }) : null
 }
 
 function initials(name?: string | null) {
@@ -43,14 +44,14 @@ function AccountSearch(props: SearchProps) {
   const searchStore = () => navigate(`/products?search=${encodeURIComponent(term)}`)
 
   return (
-    <div className="acct-search" ref={wrapRef} role="search" aria-label="البحث في طلباتكِ"
+    <div className="acct-search" ref={wrapRef} role="search" aria-label={t('البحث في طلباتكِ')}
       onBlur={(e) => { if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false) }}
       onKeyDown={(e) => { if (e.key === 'Escape') { setOpen(false); if (!term) (e.target as HTMLElement).blur() } }}>
       <Icon name="search" className="acct-search__icon size-5" />
       <input
         type="search" inputMode="search" enterKeyHint="search" autoComplete="off"
-        aria-label="ابحثي برقم الطلب أو اسم المنتج"
-        placeholder="ابحثي برقم الطلب أو اسم المنتج…"
+        aria-label={t('ابحثي برقم الطلب أو اسم المنتج')}
+        placeholder={t('ابحثي برقم الطلب أو اسم المنتج…')}
         value={value}
         aria-controls={showPanel ? panelId : undefined}
         onFocus={() => setOpen(true)}
@@ -61,23 +62,23 @@ function AccountSearch(props: SearchProps) {
           if (props.mode === 'jump') navigate(matches.length ? `/orders?q=${encodeURIComponent(term)}` : `/products?search=${encodeURIComponent(term)}`)
         }}
       />
-      {!!value && <button type="button" className="acct-search__clear" aria-label="مسح البحث" onClick={() => setValue('')}><Icon name="close" className="size-4" /></button>}
+      {!!value && <button type="button" className="acct-search__clear" aria-label={t('مسح البحث')} onClick={() => setValue('')}><Icon name="close" className="size-4" /></button>}
       {showPanel && (
         <div className="acct-search__panel" id={panelId}>
-          <p className="acct-search__group">طلباتكِ</p>
-          {orders.isLoading ? <p className="acct-search__empty">نبحث في طلباتكِ…</p>
+          <p className="acct-search__group">{t('طلباتكِ')}</p>
+          {orders.isLoading ? <p className="acct-search__empty">{t('نبحث في طلباتكِ…')}</p>
             : matches.length ? matches.slice(0, 4).map((order) => (
               <Link key={order.id} className="acct-search__item" to={orderPath(order)}>
                 <Icon name="package" className="size-5 shrink-0 text-[var(--primary)]" />
-                <span className="min-w-0 flex-1"><b className="num" dir="ltr">{order.order_number}</b><small className="truncate">{order.items.map((i) => i.product_name).join('، ') || orderStatusLabel(order.status)}</small></span>
+                <span className="min-w-0 flex-1"><b className="num" dir="ltr">{order.order_number}</b><small className="truncate">{order.items.map((i) => i.product_name).join(t('، ')) || orderStatusLabel(order.status)}</small></span>
                 <span className="num text-xs font-bold">{formatPrice(order.total)}</span>
               </Link>))
-            : <p className="acct-search__empty">لا يوجد طلب مطابق لـ«{term}».</p>}
-          {matches.length > 4 && <Link className="acct-search__item" to={`/orders?q=${encodeURIComponent(term)}`}><Icon name="arrow" className="size-4" />عرض كل النتائج ({matches.length})</Link>}
-          <p className="acct-search__group">المتجر</p>
+            : <p className="acct-search__empty">{t('لا يوجد طلب مطابق لـ«')}{term}».</p>}
+          {matches.length > 4 && <Link className="acct-search__item" to={`/orders?q=${encodeURIComponent(term)}`}><Icon name="arrow" className="size-4 rtl:rotate-180" />{t('عرض كل النتائج (')}{matches.length})</Link>}
+          <p className="acct-search__group">{t('المتجر')}</p>
           <button type="button" className="acct-search__item" onClick={searchStore}>
             <Icon name="bag" className="size-5 shrink-0 text-[var(--primary)]" />
-            <span>ابحثي عن «<b>{term}</b>» في منتجات Gazabella</span>
+            <span>{t('ابحثي عن «')}<b>{term}</b>{t('» في منتجات Gazabella')}</span>
           </button>
         </div>
       )}
@@ -108,34 +109,34 @@ export function AccountShell({ active, search, children }: { active: 'orders' | 
 
   return (
     <div className="container-page acct-page">
-      <section className="acct-hero" aria-label="حسابي">
+      <section className="acct-hero" aria-label={t('حسابي')}>
         <div className="acct-hero__top">
           <div className="acct-hero__id">
             <span className="acct-avatar" aria-hidden="true">{initials(user?.name) ?? <Icon name="user" className="size-6" />}</span>
             <div className="min-w-0">
-              <h1 className="acct-hero__name">{firstName ? `أهلاً ${firstName}` : 'أهلاً بكِ'}</h1>
+              <h1 className="acct-hero__name">{firstName ? t('أهلاً {firstName}', { firstName: firstName }) : t('أهلاً بكِ')}</h1>
               <p className="acct-hero__sub">
                 {user?.phone && <bdi className="num" dir="ltr">{user.phone}</bdi>}
-                {since && <span>عضوة منذ {since}</span>}
+                {since && <span>{t('عضوة منذ')} {since}</span>}
               </p>
             </div>
           </div>
           <button type="button" className="acct-logout" disabled={logout.isPending} onClick={() => logout.mutate()}>
-            <Icon name="logout" className="size-4" />{logout.isPending ? 'جارٍ الخروج…' : 'تسجيل الخروج'}
+            <Icon name="logout" className="size-4" />{logout.isPending ? t('جارٍ الخروج…') : t('تسجيل الخروج')}
           </button>
         </div>
         {logout.isError && <p role="alert" className="field-error relative z-[1]">{getApiErrorMessage(logout.error)}</p>}
         <dl className="acct-stats">
-          <div className="acct-stat"><dt>كل الطلبات</dt><dd>{stat(summary.count)}</dd></div>
-          <div className="acct-stat"><dt>جارية الآن</dt><dd>{stat(summary.active)}</dd></div>
-          <div className="acct-stat"><dt>مجموع المشتريات</dt><dd>{orders.isLoading ? '—' : <span className="num">{formatPrice(summary.spent)}</span>}</dd></div>
+          <div className="acct-stat"><dt>{t('كل الطلبات')}</dt><dd>{stat(summary.count)}</dd></div>
+          <div className="acct-stat"><dt>{t('جارية الآن')}</dt><dd>{stat(summary.active)}</dd></div>
+          <div className="acct-stat"><dt>{t('مجموع المشتريات')}</dt><dd>{orders.isLoading ? '—' : <span className="num">{formatPrice(summary.spent)}</span>}</dd></div>
         </dl>
       </section>
 
       <div className="acct-toolbar">
-        <nav className="acct-tabs" aria-label="أقسام الحساب">
-          <Link to="/orders" className="acct-tab" aria-current={active === 'orders' ? 'page' : undefined}><Icon name="package" className="size-4" />طلباتي</Link>
-          <Link to="/profile" className="acct-tab" aria-current={active === 'profile' ? 'page' : undefined}><Icon name="user" className="size-4" />الملف الشخصي</Link>
+        <nav className="acct-tabs" aria-label={t('أقسام الحساب')}>
+          <Link to="/orders" className="acct-tab" aria-current={active === 'orders' ? 'page' : undefined}><Icon name="package" className="size-4" />{t('طلباتي')}</Link>
+          <Link to="/profile" className="acct-tab" aria-current={active === 'profile' ? 'page' : undefined}><Icon name="user" className="size-4" />{t('الملف الشخصي')}</Link>
         </nav>
         <AccountSearch {...search} />
       </div>

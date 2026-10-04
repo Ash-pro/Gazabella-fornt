@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { apiClient } from '../lib/apiClient'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { clearGuestUuid, getGuestUuid } from '../lib/guest'
@@ -10,7 +11,7 @@ export function normalizePhone(phone: string) {
   if (/^05\d{8}$/.test(digits)) return '+970' + digits.slice(1)
   if (/^5\d{8}$/.test(digits)) return '+970' + digits
   if (/^\+?9705\d{8}$/.test(digits)) return '+' + digits.replace(/^\+/, '')
-  throw new Error('أدخل رقمًا فلسطينيًا بصيغة 0591234567 أو +970591234567')
+  throw new Error(t('أدخل رقمًا فلسطينيًا بصيغة 0591234567 أو +970591234567'))
 }
 
 interface RawProduct {
@@ -42,12 +43,12 @@ export function normalizeMvp0Order(raw: Omit<Order, 'address' | 'payment_status'
   items: Array<Order['items'][number] & { thumbnail_url?: string }>
 }): Order {
   const amount = (value: unknown) => {
-    if ((typeof value !== 'number' && typeof value !== 'string') || value === '' || !Number.isFinite(Number(value)) || Number(value) < 0) throw new Error('مبالغ الطلب غير مكتملة.')
+    if ((typeof value !== 'number' && typeof value !== 'string') || value === '' || !Number.isFinite(Number(value)) || Number(value) < 0) throw new Error(t('مبالغ الطلب غير مكتملة.'))
     return String(value)
   }
-  if (!Array.isArray(raw.items) || !raw.order_number) throw new Error('تفاصيل الطلب غير مكتملة.')
+  if (!Array.isArray(raw.items) || !raw.order_number) throw new Error(t('تفاصيل الطلب غير مكتملة.'))
   const status = ({ unpaid: 'pending', completed: 'paid', pending: 'pending', failed: 'failed', refunded: 'refunded' } as const)[raw.payment_status as 'unpaid']
-  if (!status) throw new Error('حالة الدفع غير معروفة.')
+  if (!status) throw new Error(t('حالة الدفع غير معروفة.'))
   return { id: raw.id, order_number: raw.order_number, status: raw.status,
     items: raw.items.map(i => ({ id: i.id, product_name: i.product_name, variant_name: i.variant_name, quantity: i.quantity, unit_price: amount(i.unit_price), subtotal: amount(i.subtotal), image_url: i.thumbnail_url ?? null })),
     subtotal: amount(raw.subtotal), ...normalizeDeliveryFee(raw, amount), total: amount(raw.total),
@@ -65,7 +66,7 @@ async function ensureGuest() {
   await guestInit
 }
 const cart = (response: { data: { data: RawCart } }) => normalizeMvp0Cart(response.data.data)
-const unavailable = async (): Promise<never> => { throw new Error('هذه الخدمة غير متاحة في MVP0.') }
+const unavailable = async (): Promise<never> => { throw new Error(t('هذه الخدمة غير متاحة في MVP0.')) }
 
 export const mvp0Api = {
   async otpSend(phone: string) {
@@ -74,7 +75,7 @@ export const mvp0Api = {
   },
   async otpVerify(phone: string, otp: string, name?: string): Promise<AuthResponse> {
     const { data } = await apiClient.post<AuthResponse>('/auth/otp/verify', { phone: normalizePhone(phone), otp, ...(name ? { name } : {}) }, { headers: { 'X-Guest-UUID': getGuestUuid() } })
-    if (!data.token || !Number.isInteger(data.user?.id)) throw new Error('استجابة تسجيل الدخول غير مكتملة.')
+    if (!data.token || !Number.isInteger(data.user?.id)) throw new Error(t('استجابة تسجيل الدخول غير مكتملة.'))
     clearGuestUuid()
     return data
   },

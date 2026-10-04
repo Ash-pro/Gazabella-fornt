@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -38,23 +39,23 @@ function BannerSlider({ slides }: { slides: Banner[] }) {
     return () => window.clearTimeout(timer)
   }, [playing, index, slides.length])
   function select(next: number) { setPaused(true); setIndex((next + slides.length) % slides.length) }
-  return <section className="container-page banner-showcase" aria-label="مختارات Gazabella" aria-roledescription="عارض شرائح" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setPaused(true)}>
+  return <section className="container-page banner-showcase" aria-label={t('مختارات Gazabella')} aria-roledescription={t('عارض شرائح')} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setPaused(true)}>
     <div className="banner-stage" aria-live={playing ? 'off' : 'polite'}>
-      {slides.map((banner, position) => <div key={banner.id} className={`banner-slide ${position === active ? 'is-active' : ''} ${!banner.image_url ? 'banner-slide--text' : ''}`} aria-hidden={position !== active} inert={position !== active} role="group" aria-roledescription="شريحة" aria-label={`${position + 1} من ${slides.length}`}>
+      {slides.map((banner, position) => <div key={banner.id} className={`banner-slide ${position === active ? 'is-active' : ''} ${!banner.image_url ? 'banner-slide--text' : ''}`} aria-hidden={position !== active} inert={position !== active} role="group" aria-roledescription={t('شريحة')} aria-label={t('{v1} من {length}', { v1: position + 1, length: slides.length })}>
         <div className="banner-copy">
           <span className="banner-kicker"><span /> GAZABELLA EDIT</span>
-          <span className="banner-category">{banner.type === 'hero' ? 'جمال يرافق يومكِ' : 'للحظاتكِ المميزة'}</span>
+          <span className="banner-category">{banner.type === 'hero' ? t('جمال يرافق يومكِ') : t('للحظاتكِ المميزة')}</span>
           {position === 0 ? <h1>{banner.title}</h1> : <h2>{banner.title}</h2>}
           {banner.subtitle && <p>{banner.subtitle}</p>}
-          {bannerLink(banner.link_url) && <Link className="banner-cta" to={bannerLink(banner.link_url)!}>{banner.link_label || 'اكتشفي المنتجات'}<span><Icon name="arrow" className="size-5 rotate-180" /></span></Link>}
-          <span className="banner-signature">تفاصيل تختارينها. جمال يشبهكِ.</span>
+          {bannerLink(banner.link_url) && <Link className="banner-cta" to={bannerLink(banner.link_url)!}>{banner.link_label || t('اكتشفي المنتجات')}<span><Icon name="arrow" className="size-5 rtl:rotate-180" /></span></Link>}
+          <span className="banner-signature">{t('تفاصيل تختارينها. جمال يشبهكِ.')}</span>
         </div>
         {banner.image_url && <div className="banner-art" onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null }} onTouchEnd={(event) => { const end = event.changedTouches[0]?.clientX; if (touchStart.current !== null && end !== undefined && Math.abs(end - touchStart.current) > 55) select(active + (end > touchStart.current ? 1 : -1)); touchStart.current = null }} onTouchCancel={() => { touchStart.current = null }}><div className="banner-image-frame"><ProductVisual src={banner.image_url} alt={banner.title || ''} priority={position === 0} /></div><span className="banner-art-label" aria-hidden="true">THE BEAUTY OF EVERYDAY</span><span className="banner-edition" aria-hidden="true">{String(position + 1).padStart(2, '0')}<small>THE EDIT</small></span></div>}
       </div>)}
     </div>
     {slides.length > 1 && <div className="banner-navigation">
-      <div className="banner-selectors" aria-label="اختيار البانر">{slides.map((banner, position) => <button type="button" key={banner.id} aria-label={`عرض ${banner.title || `البانر ${position + 1}`}`} aria-current={position === active ? 'true' : undefined} className={position === active ? 'is-active' : ''} onClick={() => select(position)}><span className="banner-selector-number">{String(position + 1).padStart(2, '0')}</span><span>{banner.title || `البانر ${position + 1}`}</span></button>)}</div>
-      <div className="banner-controls"><button type="button" aria-label="البانر السابق" onClick={() => select(active - 1)}><Icon name="arrow" className="size-5" /></button><span className="banner-count" dir="ltr">{String(active + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</span><button type="button" aria-label="البانر التالي" onClick={() => select(active + 1)}><Icon name="arrow" className="size-5 rotate-180" /></button>{!reducedMotion && <button type="button" className="banner-play" aria-label={paused ? 'تشغيل التبديل التلقائي' : 'إيقاف التبديل التلقائي'} onClick={() => setPaused((value) => !value)}>{paused ? <span aria-hidden="true">▷</span> : <span aria-hidden="true">Ⅱ</span>}</button>}</div>
+      <div className="banner-selectors" aria-label={t('اختيار البانر')}>{slides.map((banner, position) => <button type="button" key={banner.id} aria-label={t('عرض {v1}', { v1: banner.title || `البانر ${position + 1}` })} aria-current={position === active ? 'true' : undefined} className={position === active ? 'is-active' : ''} onClick={() => select(position)}><span className="banner-selector-number">{String(position + 1).padStart(2, '0')}</span><span>{banner.title || t('البانر {v1}', { v1: position + 1 })}</span></button>)}</div>
+      <div className="banner-controls"><button type="button" aria-label={t('البانر السابق')} onClick={() => select(active - 1)}><Icon name="arrow" className="size-5 ltr:rotate-180" /></button><span className="banner-count" dir="ltr">{String(active + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</span><button type="button" aria-label={t('البانر التالي')} onClick={() => select(active + 1)}><Icon name="arrow" className="size-5 rtl:rotate-180" /></button>{!reducedMotion && <button type="button" className="banner-play" aria-label={paused ? t('تشغيل التبديل التلقائي') : t('إيقاف التبديل التلقائي')} onClick={() => setPaused((value) => !value)}>{paused ? <span aria-hidden="true">▷</span> : <span aria-hidden="true">Ⅱ</span>}</button>}</div>
     </div>}
   </section>
 }
@@ -63,11 +64,11 @@ export function ApiHome() {
   const banners = useQuery({ queryKey: ['banners'], queryFn: () => gazabellaApi.getBanners() })
   const collections = useQuery({ queryKey: ['collections'], queryFn: gazabellaApi.getCollections })
   // هيكل بنفس أبعاد العارض حتى لا يقفز باقي الصفحة عند وصول البانرات
-  if (banners.isPending) return <div className="container-page banner-showcase banner-skeleton" role="status" aria-label="نحمّل المختارات"><div /><span /></div>
+  if (banners.isPending) return <div className="container-page banner-showcase banner-skeleton" role="status" aria-label={t('نحمّل المختارات')}><div /><span /></div>
   if (banners.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(banners.error)} onRetry={() => void banners.refetch()} /></div>
   const slides = banners.data.filter((banner) => banner.type === 'hero' || banner.type === 'promo')
   return <>
     {!!slides.length && <BannerSlider key={slides.map((slide) => slide.id).join('-')} slides={slides} />}
-    {!!collections.data?.length && <nav className="container-page service-strip" aria-label="المجموعات">{collections.data.map((collection) => <Link key={collection.id} to={`/?collection=${collection.id}#products`}>{collection.name}</Link>)}</nav>}
+    {!!collections.data?.length && <nav className="container-page service-strip" aria-label={t('المجموعات')}>{collections.data.map((collection) => <Link key={collection.id} to={`/?collection=${collection.id}#products`}>{collection.name}</Link>)}</nav>}
   </>
 }

@@ -1,3 +1,5 @@
+import { t } from './i18n'
+import { useLocale } from './i18n'
 import { OrderLookupPage } from './pages/OrderLookupPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { CheckoutReceiptPage } from './pages/CheckoutReceiptPage'
@@ -37,7 +39,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation()
   const session = useQuery({ queryKey: ['session'], queryFn: gazabellaApi.getMe, enabled: !!token, retry: false })
   if (!token) return <Navigate to={`/auth?next=${encodeURIComponent(location.pathname + location.search)}`} replace />
-  if (session.isPending) return <PageLoader label="نتحقق من الجلسة…" />
+  if (session.isPending) return <PageLoader label={t('نتحقق من الجلسة…')} />
   if (session.isError) return <ErrorState message={getApiErrorMessage(session.error)} onRetry={() => void session.refetch()} />
   return children
 }
@@ -48,6 +50,7 @@ function OperationalPreview({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>
 }
 export default function App() {
+  useLocale() // تغيير اللغة يعيد رسم كل الشجرة
   return (
     <ErrorBoundary>
       <div className="flex min-h-screen flex-col font-sans">

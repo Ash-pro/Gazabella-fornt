@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -33,21 +34,21 @@ export function CartPage() {
   useEffect(() => { if (!cartViewed.current && cartQuery.data) { cartViewed.current = true; trackCartView(cartQuery.data) } }, [cartQuery.data])
   const busy = updateMutation.isPending || removeMutation.isPending || reserveMutation.isPending
 
-  if (cartQuery.isLoading) return <div className="container-page"><PageLoader label="نجهّز سلتك…" /></div>
+  if (cartQuery.isLoading) return <div className="container-page"><PageLoader label={t('نجهّز سلتك…')} /></div>
   if (cartQuery.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(cartQuery.error)} onRetry={() => void cartQuery.refetch()} /></div>
 
   const cart = cartQuery.data
   if (!cart?.items.length) {
-    return <div className="container-page"><EmptyState title="سلتك تنتظر اختياراتك" message="اكتشفي المجموعة وأضيفي ما تحبينه." /><div className="text-center"><Link className="btn-primary" to="/">ابدئي التسوق</Link></div></div>
+    return <div className="container-page"><EmptyState title={t('سلتك تنتظر اختياراتك')} message={t('اكتشفي المجموعة وأضيفي ما تحبينه.')} /><div className="text-center"><Link className="btn-primary" to="/">{t('ابدئي التسوق')}</Link></div></div>
   }
 
   return (
     <div className="container-page py-10 sm:py-14">
       <div className="mb-9">
         {(updateMutation.isError || removeMutation.isError) && <p className="field-error" role="alert">{getApiErrorMessage(updateMutation.error || removeMutation.error)}</p>}
-        <span className="eyebrow">اختياراتك</span>
-        <h1 className="section-title mt-2">سلة التسوق</h1>
-        <p className="mt-2 text-sm text-[var(--text-2)]">{cart.total_items === 1 ? 'قطعة واحدة في سلتكِ' : cart.total_items === 2 ? 'قطعتان في سلتكِ' : <><span className="num">{cart.total_items}</span> {cart.total_items <= 10 ? 'قطع' : 'قطعة'} في سلتكِ</>}</p>
+        <span className="eyebrow">{t('اختياراتك')}</span>
+        <h1 className="section-title mt-2">{t('سلة التسوق')}</h1>
+        <p className="mt-2 text-sm text-[var(--text-2)]">{cart.total_items === 1 ? t('قطعة واحدة في سلتكِ') : cart.total_items === 2 ? t('قطعتان في سلتكِ') : <><span className="num">{cart.total_items}</span> {cart.total_items <= 10 ? t('قطع') : t('قطعة')} {t('في سلتكِ')}</>}</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
@@ -59,14 +60,14 @@ export function CartPage() {
               </div>
               <div className="flex min-w-0 flex-col justify-between gap-4">
                 <div className="flex items-start justify-between gap-4">
-                  <div><h2 className="font-extrabold leading-6">{item.product_name}</h2>{item.variant_name && <p className="mt-1 text-xs text-[var(--text-2)]">الحجم: {item.variant_name}</p>}</div>
-                  <button type="button" className="text-[var(--text-3)] transition-colors hover:text-[var(--error)]" disabled={busy} onClick={() => removeMutation.mutate(item.id)} aria-label={`حذف ${item.product_name}`}><Icon name="trash" className="size-5" /></button>
+                  <div><h2 className="font-extrabold leading-6">{item.product_name}</h2>{item.variant_name && <p className="mt-1 text-xs text-[var(--text-2)]">{t('الحجم:')} {item.variant_name}</p>}</div>
+                  <button type="button" className="text-[var(--text-3)] transition-colors hover:text-[var(--error)]" disabled={busy} onClick={() => removeMutation.mutate(item.id)} aria-label={t('حذف {product_name}', { product_name: item.product_name })}><Icon name="trash" className="size-5" /></button>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="quantity-control quantity-control--small">
-                      <button type="button" aria-label={`تقليل كمية ${item.product_name}`} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
+                      <button type="button" aria-label={t('تقليل كمية {product_name}', { product_name: item.product_name })} disabled={item.quantity <= 1 || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity - 1 })}><Icon name="minus" className="size-3" /></button>
                       <span className="num">{item.quantity}</span>
-                      <button type="button" aria-label={`زيادة كمية ${item.product_name}`} disabled={item.quantity >= Math.min(10, item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
+                      <button type="button" aria-label={t('زيادة كمية {product_name}', { product_name: item.product_name })} disabled={item.quantity >= Math.min(10, item.stock) || busy} onClick={() => updateMutation.mutate({ id: item.id, quantity: item.quantity + 1 })}><Icon name="plus" className="size-3" /></button>
                     </div>
                     <p className="font-mono font-bold"><span className="num">{formatPrice(item.subtotal)}</span></p>
                   </div>
@@ -76,16 +77,16 @@ export function CartPage() {
           </div>
 
           <aside className="order-summary lg:sticky lg:top-40">
-            <h2 className="text-xl font-extrabold">ملخص الطلب</h2>
+            <h2 className="text-xl font-extrabold">{t('ملخص الطلب')}</h2>
             <div className="my-6 space-y-4 border-y border-[var(--border)] py-5 text-sm">
-              <div className="flex justify-between"><span className="text-[var(--text-2)]">المجموع الفرعي</span><span className="font-mono font-bold"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
-              <div className="flex justify-between"><span className="text-[var(--text-2)]">التوصيل</span><span>من <span className="num">{formatPrice(store.minDeliveryFee)}</span> حسب المنطقة</span></div>
+              <div className="flex justify-between"><span className="text-[var(--text-2)]">{t('المجموع الفرعي')}</span><span className="font-mono font-bold"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+              <div className="flex justify-between"><span className="text-[var(--text-2)]">{t('التوصيل')}</span><span>{t('من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة')}</span></div>
             </div>
-            <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">المجموع</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+            <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">{t('المجموع')}</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
             <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>
-            {reserveMutation.isPending ? 'جارٍ المتابعة…' : 'متابعة إلى التوصيل والدفع'}
+            {reserveMutation.isPending ? t('جارٍ المتابعة…') : t('متابعة إلى التوصيل والدفع')}
           </button>
-          <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[var(--text-2)]"><Icon name="clock" className="mt-1 size-4 shrink-0" />تُراجع الأسعار والكميات عند إتمام الطلب. إضافة المنتجات للسلة لا تحجز المخزون.</p>
+          <p className="mt-4 flex items-start gap-2 text-xs leading-6 text-[var(--text-2)]"><Icon name="clock" className="mt-1 size-4 shrink-0" />{t('تُراجع الأسعار والكميات عند إتمام الطلب. إضافة المنتجات للسلة لا تحجز المخزون.')}</p>
           {reserveMutation.isError && <p className="mt-4 rounded-lg bg-[var(--error-bg)] p-3 text-sm text-[var(--error)]">{getApiErrorMessage(reserveMutation.error)}</p>}
         </aside>
       </div>

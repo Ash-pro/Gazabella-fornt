@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../api/gazabella'
 import { resolveWhatsapp, STORE_INFO } from '../content/storeInfo'
@@ -10,7 +11,7 @@ export function useSupportContact() {
     phone: settings?.support?.phone ?? settings?.phone ?? null,
     email: settings?.support?.email ?? settings?.email ?? null,
     address: settings?.address ?? null,
-    supportHours: settings?.support?.hours || STORE_INFO.supportHours,
-    supportResponse: settings?.support?.response_time || STORE_INFO.supportResponse,
+    supportHours: settings?.support?.hours || t(STORE_INFO.supportHours),
+    supportResponse: settings?.support?.response_time || t(STORE_INFO.supportResponse),
   }
 }

@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AccountShell } from '../components/account/AccountShell'
@@ -43,27 +44,27 @@ export function OrdersPage() {
       {ordersQuery.isError ? (
         <ErrorState message={getApiErrorMessage(ordersQuery.error)} onRetry={() => void ordersQuery.refetch()} />
       ) : ordersQuery.isLoading ? (
-        <div className="acct-list" role="status" aria-label="نحمّل طلباتكِ">{[0, 1, 2].map((i) => <div key={i} className="acct-skel" />)}</div>
+        <div className="acct-list" role="status" aria-label={t('نحمّل طلباتكِ')}>{[0, 1, 2].map((i) => <div key={i} className="acct-skel" />)}</div>
       ) : !all.length ? (
         <div className="acct-empty">
           <span className="acct-empty__icon"><Icon name="bag" className="size-7" /></span>
-          <h2>لا توجد طلبات بعد</h2>
-          <p>عند إتمام أول طلب سيظهر هنا مع حالته خطوة بخطوة.</p>
-          <Link className="btn-primary" to="/products">ابدئي التسوق</Link>
+          <h2>{t('لا توجد طلبات بعد')}</h2>
+          <p>{t('عند إتمام أول طلب سيظهر هنا مع حالته خطوة بخطوة.')}</p>
+          <Link className="btn-primary" to="/products">{t('ابدئي التسوق')}</Link>
         </div>
       ) : (
         <>
-          <div className="acct-filters" role="group" aria-label="تصفية حسب الحالة">
+          <div className="acct-filters" role="group" aria-label={t('تصفية حسب الحالة')}>
             {ORDER_GROUPS.map((g) => (
               <button key={g.key} type="button" className="acct-chip" aria-pressed={group === g.key} onClick={() => setParam('status', g.key)}>
-                {g.label}<b className="num">{counts[g.key]}</b>
+                {t(g.label)}<b className="num">{counts[g.key]}</b>
               </button>
             ))}
           </div>
 
           <div className="acct-results" aria-live="polite">
-            <span>{term ? <>نتائج «<b>{term}</b>»: </> : null}<span className="num">{filtered.length}</span> {filtered.length === 1 ? 'طلب' : 'طلبات'}</span>
-            {(term || group !== 'all') && <button type="button" className="text-link" onClick={clearAll}>إلغاء التصفية</button>}
+            <span>{term ? <>{t('نتائج «')}<b>{term}</b>»: </> : null}<span className="num">{filtered.length}</span> {filtered.length === 1 ? t('طلب') : t('طلبات')}</span>
+            {(term || group !== 'all') && <button type="button" className="text-link" onClick={clearAll}>{t('إلغاء التصفية')}</button>}
           </div>
 
           {filtered.length ? (
@@ -73,11 +74,11 @@ export function OrdersPage() {
           ) : (
             <div className="acct-empty">
               <span className="acct-empty__icon"><Icon name="search" className="size-7" /></span>
-              <h2>لا يوجد طلب مطابق</h2>
-              <p>{term ? <>لم نجد «{term}» في {group === 'all' ? 'طلباتكِ' : 'هذه الحالة'}. جرّبي جزءاً من رقم الطلب أو اسم المنتج.</> : 'لا توجد طلبات بهذه الحالة حالياً.'}</p>
+              <h2>{t('لا يوجد طلب مطابق')}</h2>
+              <p>{term ? <>{t('لم نجد «')}{term}{t('» في')} {group === 'all' ? t('طلباتكِ') : t('هذه الحالة')}{t('. جرّبي جزءاً من رقم الطلب أو اسم المنتج.')}</> : t('لا توجد طلبات بهذه الحالة حالياً.')}</p>
               <div className="flex flex-wrap justify-center gap-2">
-                <button type="button" className="btn-ghost" onClick={clearAll}>عرض كل الطلبات</button>
-                {term && <Link className="btn-primary" to={`/products?search=${encodeURIComponent(term)}`}>ابحثي عنه في المتجر</Link>}
+                <button type="button" className="btn-ghost" onClick={clearAll}>{t('عرض كل الطلبات')}</button>
+                {term && <Link className="btn-primary" to={`/products?search=${encodeURIComponent(term)}`}>{t('ابحثي عنه في المتجر')}</Link>}
               </div>
             </div>
           )}
@@ -85,14 +86,14 @@ export function OrdersPage() {
           {filtered.length > visibleCount && (
             <div className="mt-6 flex justify-center">
               <button type="button" className="btn-ghost" onClick={() => setShown({ key: listKey, count: visibleCount + PAGE_SIZE })}>
-                عرض المزيد (<span className="num">{filtered.length - visibleCount}</span>)
+                {t('عرض المزيد (')}<span className="num">{filtered.length - visibleCount}</span>)
               </button>
             </div>
           )}
           {term && !!filtered.length && (
-            <p className="acct-store-hint"><Icon name="bag" className="size-4" />تبحثين عن منتج لإعادة طلبه؟ <Link className="text-link" to={`/products?search=${encodeURIComponent(term)}`}>ابحثي عن «{term}» في المتجر</Link></p>
+            <p className="acct-store-hint"><Icon name="bag" className="size-4" />{t('تبحثين عن منتج لإعادة طلبه؟')} <Link className="text-link" to={`/products?search=${encodeURIComponent(term)}`}>{t('ابحثي عن «')}{term}{t('» في المتجر')}</Link></p>
           )}
-          {ordersQuery.data?.truncated && <p className="acct-results">نعرض آخر <span className="num">{all.length}</span> طلباً من أصل <span className="num">{ordersQuery.data.total}</span>.</p>}
+          {ordersQuery.data?.truncated && <p className="acct-results">{t('نعرض آخر')} <span className="num">{all.length}</span> {t('طلباً من أصل')} <span className="num">{ordersQuery.data.total}</span>.</p>}
         </>
       )}
     </AccountShell>

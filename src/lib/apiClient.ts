@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import axios, { AxiosError } from 'axios'
 import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
@@ -5,6 +6,7 @@ import { isMvp0Api } from './apiContract'
 import { getGuestUuid } from './guest'
 import { captureMessage } from './monitoring'
 import { isOutage, serviceStatus } from './serviceStatus'
+import { getLocale } from '../i18n'
 
 // ── Cart Token (للمستخدم الضيف) ──────────────────────────────────────────
 const CART_TOKEN_KEY = `gz_cart_token:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
@@ -32,6 +34,7 @@ export const apiClient = axios.create({
 
 // ── Request Interceptor ───────────────────────────────────────────────────
 apiClient.interceptors.request.use((config) => {
+  config.headers.set('Accept-Language', getLocale())
   const token = useAuthStore.getState().token
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`)
@@ -74,22 +77,22 @@ export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
     // بدون رد: انتهت المهلة أو انقطع الاتصال — نميّز بينهما حتى يعرف المستخدم والفريق السبب
     if (!error.response) {
-      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') return 'استغرق الخادم وقتاً أطول من المعتاد. قد يكون الطلب تم فعلاً — راجعي «طلباتي» قبل إعادة المحاولة.'
-      return navigator.onLine === false ? 'لا يوجد اتصال بالإنترنت. تحققي من الشبكة ثم حاولي مجدداً.' : 'تعذّر الوصول إلى الخادم الآن. حاولي بعد قليل.'
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') return t('استغرق الخادم وقتاً أطول من المعتاد. قد يكون الطلب تم فعلاً — راجعي «طلباتي» قبل إعادة المحاولة.')
+      return navigator.onLine === false ? t('لا يوجد اتصال بالإنترنت. تحققي من الشبكة ثم حاولي مجدداً.') : t('تعذّر الوصول إلى الخادم الآن. حاولي بعد قليل.')
     }
     const status = error.response.status
     const requestId = (error.response.headers?.['x-request-id'] as string | undefined)?.slice(0, 8)
-    if (status >= 500) return `حدث خطأ في الخادم (رمز ${status}${requestId ? ` · ${requestId}` : ''}). حاولي بعد قليل، وإن تكرر تواصلي معنا.`
-    if (status === 401) return 'انتهت الجلسة. يرجى تسجيل الدخول مجددًا.'
-    if (status === 404) return 'لم نجد ما تبحثين عنه. ربما حُذف أو تغيّر الرابط.'
-    if (error.response?.status === 403) return 'لا تملك صلاحية تنفيذ هذا الإجراء.'
-    if (error.response?.status === 429) return 'طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.'
+    if (status >= 500) return t('حدث خطأ في الخادم (رمز {status}{v2}). حاولي بعد قليل، وإن تكرر تواصلي معنا.', { status: status, v2: requestId ? ` · ${requestId}` : '' })
+    if (status === 401) return t('انتهت الجلسة. يرجى تسجيل الدخول مجددًا.')
+    if (status === 404) return t('لم نجد ما تبحثين عنه. ربما حُذف أو تغيّر الرابط.')
+    if (error.response?.status === 403) return t('لا تملك صلاحية تنفيذ هذا الإجراء.')
+    if (error.response?.status === 429) return t('طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.')
     const messages = Object.values(error.response?.data?.errors ?? {}).flat().filter((message) => typeof message === 'string')
-    return messages.join(' — ') || error.response?.data?.message || 'تعذر الاتصال بالخادم. حاول مرة أخرى.'
+    return messages.join(' — ') || error.response?.data?.message || t('تعذر الاتصال بالخادم. حاول مرة أخرى.')
   }
   if (error instanceof Error) return error.message
   const mock = error as { response?: { data?: { message?: string } } }
-  return mock?.response?.data?.message || 'حدث خطأ غير متوقع. حاول مرة أخرى.'
+  return mock?.response?.data?.message || t('حدث خطأ غير متوقع. حاول مرة أخرى.')
 }
 
 // ── Image URL Helper ──────────────────────────────────────────────────────

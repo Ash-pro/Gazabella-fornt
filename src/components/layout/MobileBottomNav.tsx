@@ -1,3 +1,4 @@
+import { t } from '../../i18n'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../../api/gazabella'
@@ -20,7 +21,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      aria-label="التنقل السفلي للجوال"
+      aria-label={t('التنقل السفلي للجوال')}
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-white/95 backdrop-blur-lg lg:hidden pb-[env(safe-area-inset-bottom)]"
     >
       <div className="grid grid-cols-4 items-center h-16 px-2 text-center">
@@ -35,7 +36,7 @@ export function MobileBottomNav() {
           }
         >
           <Icon name="sparkle" className="size-5" />
-          <span>الرئيسية</span>
+          <span>{t('الرئيسية')}</span>
         </NavLink>
 
         {/* الفئات */}
@@ -43,7 +44,7 @@ export function MobileBottomNav() {
           className="flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold text-[var(--text-3)] hover:text-[var(--primary)] transition-colors"
         >
           <Icon name="filter" className="size-5" />
-          <span>الفئات</span>
+          <span>{t('الفئات')}</span>
         </Link>
 
         {/* السلة السريعة المنزلقة */}
@@ -51,7 +52,7 @@ export function MobileBottomNav() {
           type="button"
           onClick={openDrawer}
           className="relative flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold text-[var(--text-3)] hover:text-[var(--primary)] transition-colors"
-          aria-label={`السلة، ${cartCount} عناصر`}
+          aria-label={t('السلة، {cartCount} عناصر', { cartCount: cartCount })}
         >
           <div className="relative">
             <Icon name="bag" className="size-5" />
@@ -61,7 +62,7 @@ export function MobileBottomNav() {
               </span>
             )}
           </div>
-          <span>السلة</span>
+          <span>{t('السلة')}</span>
         </button>
 
         {/* طلباتي / حسابي */}
@@ -74,7 +75,7 @@ export function MobileBottomNav() {
           }
         >
           <Icon name="user" className="size-5" />
-          <span>{token ? 'طلباتي' : 'حسابي'}</span>
+          <span>{token ? t('طلباتي') : t('حسابي')}</span>
         </NavLink>
       </div>
     </nav>

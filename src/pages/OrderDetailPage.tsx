@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { JawwalReferenceForm } from '../components/checkout/JawwalReferenceForm'
 import { isCashOnDelivery, orderStatusLabel, paymentMethodLabel } from '../lib/orderStatus'
 import { DeliveryFeeValue } from '../components/checkout/DeliveryFee'
@@ -11,29 +12,29 @@ import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
-import { formatPrice } from '../lib/format'
+import { formatDate, formatPrice } from '../lib/format'
 import { demoDispute, demoOpenDispute } from '../mock/demoOperations'
 
 const payments: Record<string, string> = { pending: 'بانتظار التأكيد', paid: 'مدفوع', failed: 'لم يكتمل الدفع', refunded: 'تم استرداد المبلغ' }
-const date = (value: string) => new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) => formatDate(value, { dateStyle: 'medium', timeStyle: 'short' })
 
 function OrderConfirmModal({ orderId, paymentMethod, status, onClose }: { orderId: string; paymentMethod?: string | null; status?: string; onClose: () => void }) {
   // P1-FE-03 — رسالة النجاح حسب طريقة الدفع (COD مؤكد فوراً · جوال باي بانتظار الدفع)
   const cod = isCashOnDelivery(paymentMethod)
   const confirmed = status === 'confirmed' || status === 'processing'
-  const title = cod && confirmed ? 'تم تأكيد طلبكِ' : 'تم إنشاء طلبكِ'
+  const title = cod && confirmed ? t('تم تأكيد طلبكِ') : t('تم إنشاء طلبكِ')
   const body = cod
-    ? 'الدفع نقداً عند الاستلام. ستجدين كود التسليم في صفحة الطلب — أعطيه للمندوب فقط بعد فحص طلبكِ.'
+    ? t('الدفع نقداً عند الاستلام. ستجدين كود التسليم في صفحة الطلب — أعطيه للمندوب فقط بعد فحص طلبكِ.')
     : paymentMethod === 'jawwal_pay'
-      ? 'أكملي الدفع عبر جوال باي لتأكيد طلبكِ. حالة الطلب محفوظة هنا.'
-      : 'وصلنا طلبكِ بنجاح، سيتواصل معكِ فريق Gazabella قريبًا لتأكيد وقت التوصيل.'
+      ? t('أكملي الدفع عبر جوال باي لتأكيد طلبكِ. حالة الطلب محفوظة هنا.')
+      : t('وصلنا طلبكِ بنجاح، سيتواصل معكِ فريق Gazabella قريبًا لتأكيد وقت التوصيل.')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     timerRef.current = setTimeout(onClose, 6000)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [onClose])
   return (
-    <div className="order-confirm-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="تأكيد الطلب">
+    <div className="order-confirm-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label={t('تأكيد الطلب')}>
       <div className="order-confirm-modal" onClick={(e) => e.stopPropagation()}>
         {/* Sparkles */}
         <span className="oc-sparkle oc-sparkle--1" aria-hidden="true" />
@@ -49,18 +50,18 @@ function OrderConfirmModal({ orderId, paymentMethod, status, onClose }: { orderI
           </svg>
         </div>
         {/* Text */}
-        <p className="oc-eyebrow">يسعدنا خدمتكِ</p>
+        <p className="oc-eyebrow">{t('يسعدنا خدمتكِ')}</p>
         <h2 className="oc-title">{title}</h2>
         <p className="oc-body">{body}</p>
-        <div className="oc-order-num" dir="ltr" aria-label={`رقم الطلب ${orderId}`}>
-          <span className="oc-order-label">رقم الطلب</span>
+        <div className="oc-order-num" dir="ltr" aria-label={t('رقم الطلب {orderId}', { orderId: orderId })}>
+          <span className="oc-order-label">{t('رقم الطلب')}</span>
           <span className="num">{orderId}</span>
         </div>
         <button type="button" className="btn-primary oc-btn" onClick={onClose}>
           <Icon name="sparkle" className="size-4" />
-          رائع، شكراً لكم
+          {t('رائع، شكراً لكم')}
         </button>
-        <p className="oc-dismiss">يُغلق تلقائيًا خلال ثوانٍ</p>
+        <p className="oc-dismiss">{t('يُغلق تلقائيًا خلال ثوانٍ')}</p>
       </div>
     </div>
   )
@@ -81,11 +82,11 @@ export function OrderDetailPage() {
   const orderQuery = useQuery({ queryKey: ['order', orderId], queryFn: () => gazabellaApi.getOrder(orderId), enabled: Boolean(orderId), refetchInterval: (query) => ['pending','confirmed','processing','shipped'].includes(query.state.data?.status || '') ? 30_000 : false })
   const payment = useMutation({mutationFn:gazabellaApi.initPayment,onSuccess:(result) => {
     const url = new URL(result.payment_url,window.location.origin)
-    if (!['https:',...(isMockMode() ? ['http:'] : [])].includes(url.protocol)) throw new Error('رابط الدفع غير صالح.')
+    if (!['https:',...(isMockMode() ? ['http:'] : [])].includes(url.protocol)) throw new Error(t('رابط الدفع غير صالح.'))
     if (isMockMode()) { void client.invalidateQueries({queryKey:['order',orderId]}); void client.invalidateQueries({queryKey:['orders']}) } else window.location.assign(url.href)
   }})
   const dispute = useMutation({
-    mutationFn: async () => { if (!isMockMode()) throw new Error('هذه الخدمة تنتظر ربط الخادم.'); return demoOpenDispute(orderId, reason) },
+    mutationFn: async () => { if (!isMockMode()) throw new Error(t('هذه الخدمة تنتظر ربط الخادم.')); return demoOpenDispute(orderId, reason) },
     onSuccess: () => { setDisputeOpen(false); void client.invalidateQueries({queryKey:['order',orderId]}) },
   })
   if (orderQuery.isLoading) return <div className="container-page"><PageLoader /></div>
@@ -95,23 +96,23 @@ export function OrderDetailPage() {
   const withinDisputeWindow = order.status === 'delivered' && order.escrow_expires_at && Date.parse(order.escrow_expires_at) > now
   return <div className="container-page py-8 sm:py-12">
     {showConfirm && <OrderConfirmModal orderId={order.order_number} paymentMethod={order.payment_method} status={order.status} onClose={() => { try { sessionStorage.removeItem('gz_order_confirmed') } catch {}; setShowConfirm(false) }} />}
-    <Link to="/orders" className="text-link mb-7"><Icon name="arrow" className="size-4" /> كل الطلبات</Link>
-    {searchParams.get('payment') === 'failed' && order.payment_status !== 'paid' && <p className="demo-note mb-5" role="alert">لم تكتمل عملية الدفع. حالة طلبكِ محفوظة ويمكنكِ مراجعتها هنا.</p>}
-    <div className="flex flex-wrap items-center justify-between gap-4"><div className="flex flex-col items-start gap-2"><span className="eyebrow">كل التفاصيل في مكان واحد</span><h1 className="mt-2 text-2xl font-bold num" dir="ltr">{order.order_number}</h1><p className="mt-2 text-xs text-[var(--text-3)] num">{date(order.created_at)}</p></div><span className={'status-badge status-' + order.status}>{orderStatusLabel(order.status)}</span></div>
-    {(isMockMode() || isMvp0Api()) && order.payment_method === 'jawwal_pay' && ['pending','failed'].includes(order.payment_status) && order.status === 'pending' && <section className="checkout-card mt-6"><h2 className="text-lg font-bold">إتمام الدفع لهذا الطلب</h2><p className="my-3 text-sm">طلبكِ محفوظ. استئناف الدفع يستخدم الطلب نفسه.</p><button className="btn-primary" disabled={payment.isPending} onClick={() => payment.mutate(order.order_number)}>{payment.isPending ? 'جارٍ المتابعة…' : isMockMode() ? 'تأكيد الدفع التجريبي' : 'المتابعة إلى الدفع'}</button>{payment.isError && <p className="field-error" role="alert">{getApiErrorMessage(payment.error)}</p>}</section>}
+    <Link to="/orders" className="text-link mb-7"><Icon name="arrow" className="size-4 ltr:rotate-180" /> {t('كل الطلبات')}</Link>
+    {searchParams.get('payment') === 'failed' && order.payment_status !== 'paid' && <p className="demo-note mb-5" role="alert">{t('لم تكتمل عملية الدفع. حالة طلبكِ محفوظة ويمكنكِ مراجعتها هنا.')}</p>}
+    <div className="flex flex-wrap items-center justify-between gap-4"><div className="flex flex-col items-start gap-2"><span className="eyebrow">{t('كل التفاصيل في مكان واحد')}</span><h1 className="mt-2 text-2xl font-bold num" dir="ltr">{order.order_number}</h1><p className="mt-2 text-xs text-[var(--text-3)] num">{date(order.created_at)}</p></div><span className={'status-badge status-' + order.status}>{orderStatusLabel(order.status)}</span></div>
+    {(isMockMode() || isMvp0Api()) && order.payment_method === 'jawwal_pay' && ['pending','failed'].includes(order.payment_status) && order.status === 'pending' && <section className="checkout-card mt-6"><h2 className="text-lg font-bold">{t('إتمام الدفع لهذا الطلب')}</h2><p className="my-3 text-sm">{t('طلبكِ محفوظ. استئناف الدفع يستخدم الطلب نفسه.')}</p><button className="btn-primary" disabled={payment.isPending} onClick={() => payment.mutate(order.order_number)}>{payment.isPending ? t('جارٍ المتابعة…') : isMockMode() ? t('تأكيد الدفع التجريبي') : t('المتابعة إلى الدفع')}</button>{payment.isError && <p className="field-error" role="alert">{getApiErrorMessage(payment.error)}</p>}</section>}
     {!isMockMode() && !isMvp0Api() && <JawwalReferenceForm order={order} />}
     <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
-        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">رحلة طلبكِ</h2><ol className="order-timeline">{(order.tracking ?? []).map((event,index) => <li key={event.created_at + index}><b>{orderStatusLabel(event.status)}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
-        <section className="checkout-card"><h2 className="mb-5 text-lg font-bold">اختياراتكِ</h2><div className="space-y-4">{order.items.map((item) => <div key={item.id} className="flex items-center gap-3 border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"><div className="size-16 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.image_url} alt={item.product_name} /></div><div className="min-w-0 flex-1"><b className="text-sm">{item.product_name}</b><p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name} · الكمية <span className="num">{item.quantity}</span></p></div><b className="whitespace-nowrap text-sm"><span className="num">{formatPrice(item.subtotal)}</span></b></div>)}</div></section>
-        {order.status === 'delivered' && <section className="checkout-card"><h2 className="text-lg font-bold">متابعة ما بعد الاستلام</h2>{order.escrow_expires_at && <p className="mt-3 text-sm leading-7">تنتهي نافذة مراجعة الطلب في <span className="num">{date(order.escrow_expires_at)}</span>.</p>}{savedDispute ? <p className="demo-note mt-4" role="status">تم حفظ البلاغ التجريبي <span className="num">{savedDispute.id}</span> على هذا الجهاز. لم يُرسل إلى فريق الدعم.</p> : withinDisputeWindow && isMockMode() ? <><p className="my-3 text-sm text-[var(--text-2)]">يمكنكِ تجربة تسجيل مشكلة في الطلب خلال <span className="num">48</span> ساعة من التسليم.</p><button className="btn-ghost" onClick={() => setDisputeOpen(true)}>تسجيل مشكلة في الطلب</button></> : <p className="mt-3 text-sm text-[var(--text-2)]">{isMockMode() ? 'انتهت نافذة تسجيل المشكلة لهذا الطلب.' : 'خدمة متابعة المشكلات تنتظر الربط مع فريق الدعم.'}</p>}</section>}
+        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">{t('رحلة طلبكِ')}</h2><ol className="order-timeline">{(order.tracking ?? []).map((event,index) => <li key={event.created_at + index}><b>{orderStatusLabel(event.status)}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
+        <section className="checkout-card"><h2 className="mb-5 text-lg font-bold">{t('اختياراتكِ')}</h2><div className="space-y-4">{order.items.map((item) => <div key={item.id} className="flex items-center gap-3 border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"><div className="size-16 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.image_url} alt={item.product_name} /></div><div className="min-w-0 flex-1"><b className="text-sm">{item.product_name}</b><p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name} {t('· الكمية')} <span className="num">{item.quantity}</span></p></div><b className="whitespace-nowrap text-sm"><span className="num">{formatPrice(item.subtotal)}</span></b></div>)}</div></section>
+        {order.status === 'delivered' && <section className="checkout-card"><h2 className="text-lg font-bold">{t('متابعة ما بعد الاستلام')}</h2>{order.escrow_expires_at && <p className="mt-3 text-sm leading-7">{t('تنتهي نافذة مراجعة الطلب في')} <span className="num">{date(order.escrow_expires_at)}</span>.</p>}{savedDispute ? <p className="demo-note mt-4" role="status">{t('تم حفظ البلاغ التجريبي')} <span className="num">{savedDispute.id}</span> {t('على هذا الجهاز. لم يُرسل إلى فريق الدعم.')}</p> : withinDisputeWindow && isMockMode() ? <><p className="my-3 text-sm text-[var(--text-2)]">{t('يمكنكِ تجربة تسجيل مشكلة في الطلب خلال')} <span className="num">48</span> {t('ساعة من التسليم.')}</p><button className="btn-ghost" onClick={() => setDisputeOpen(true)}>{t('تسجيل مشكلة في الطلب')}</button></> : <p className="mt-3 text-sm text-[var(--text-2)]">{isMockMode() ? t('انتهت نافذة تسجيل المشكلة لهذا الطلب.') : t('خدمة متابعة المشكلات تنتظر الربط مع فريق الدعم.')}</p>}</section>}
       </div>
       <aside className="space-y-6">
-        <section className="order-summary"><h2 className="mb-5 text-lg font-bold">ملخص الطلب</h2><dl className="space-y-3 text-sm">{([['المنتجات',formatPrice(order.subtotal),true],['التوصيل',<DeliveryFeeValue fees={order} />,false],...(order.discount_amount ? [['الخصم',formatPrice(order.discount_amount),true] as const] : []),['طريقة الدفع',paymentMethodLabel(order.payment_method),false],['حالة الدفع',payments[order.payment_status] || payments.pending,false]] as const).map(([label,value,isNum]) => <div key={label} className="flex justify-between gap-4"><dt className="text-[var(--text-2)]">{label}</dt><dd className="font-bold">{isNum ? <span className="num">{value}</span> : value}</dd></div>)}</dl><div className="mt-5 flex justify-between border-t border-[var(--border)] pt-5"><b>الإجمالي</b><b className="text-xl text-[var(--primary)]"><span className="num">{formatPrice(order.total)}</span></b></div>{isMockMode() && <p className="mt-4 text-xs leading-6 text-[var(--text-3)]">هذا طلب تجريبي للعرض. لا توجد مدفوعات أو شحنات حقيقية.</p>}</section>
-        {order.status === 'shipped' && order.delivery_pin && <section className="checkout-card text-center"><h2 className="text-base font-bold">رمز استلام الطلب</h2><p className="my-4 text-3xl font-bold tracking-[.3em] text-[var(--primary)] num" dir="ltr">{order.delivery_pin}</p><p className="text-xs leading-6 text-[var(--text-2)]">أعطي الرمز للمندوب بعد استلام المنتجات والتأكد من طلبكِ.</p></section>}
-        {order.address && <section className="checkout-card"><h2 className="mb-4 text-lg font-bold">عنوان التوصيل</h2><div className="space-y-2 text-sm leading-7 text-[var(--text-2)]"><b className="text-[var(--text)]">{order.name}</b><p dir="ltr" className="text-right"><span className="num">{order.phone}</span></p><p>{order.address}</p></div>{order.notes && <p className="mt-3 border-t border-[var(--border)] pt-4 text-sm">ملاحظتكِ: {order.notes}</p>}</section>}
+        <section className="order-summary"><h2 className="mb-5 text-lg font-bold">{t('ملخص الطلب')}</h2><dl className="space-y-3 text-sm">{([[t('المنتجات'),formatPrice(order.subtotal),true],[t('التوصيل'),<DeliveryFeeValue fees={order} />,false],...(order.discount_amount ? [[t('الخصم'),formatPrice(order.discount_amount),true] as const] : []),[t('طريقة الدفع'),paymentMethodLabel(order.payment_method),false],[t('حالة الدفع'),t(payments[order.payment_status] || payments.pending),false]] as const).map(([label,value,isNum]) => <div key={label} className="flex justify-between gap-4"><dt className="text-[var(--text-2)]">{label}</dt><dd className="font-bold">{isNum ? <span className="num">{value}</span> : value}</dd></div>)}</dl><div className="mt-5 flex justify-between border-t border-[var(--border)] pt-5"><b>{t('الإجمالي')}</b><b className="text-xl text-[var(--primary)]"><span className="num">{formatPrice(order.total)}</span></b></div>{isMockMode() && <p className="mt-4 text-xs leading-6 text-[var(--text-3)]">{t('هذا طلب تجريبي للعرض. لا توجد مدفوعات أو شحنات حقيقية.')}</p>}</section>
+        {order.status === 'shipped' && order.delivery_pin && <section className="checkout-card text-center"><h2 className="text-base font-bold">{t('رمز استلام الطلب')}</h2><p className="my-4 text-3xl font-bold tracking-[.3em] text-[var(--primary)] num" dir="ltr">{order.delivery_pin}</p><p className="text-xs leading-6 text-[var(--text-2)]">{t('أعطي الرمز للمندوب بعد استلام المنتجات والتأكد من طلبكِ.')}</p></section>}
+        {order.address && <section className="checkout-card"><h2 className="mb-4 text-lg font-bold">{t('عنوان التوصيل')}</h2><div className="space-y-2 text-sm leading-7 text-[var(--text-2)]"><b className="text-[var(--text)]">{order.name}</b><p dir="ltr" className="text-start"><span className="num">{order.phone}</span></p><p>{order.address}</p></div>{order.notes && <p className="mt-3 border-t border-[var(--border)] pt-4 text-sm">{t('ملاحظتكِ:')} {order.notes}</p>}</section>}
       </aside>
     </div>
-    {disputeOpen && <Dialog title="تسجيل مشكلة في الطلب التجريبي" onClose={() => setDisputeOpen(false)}><form className="space-y-4 p-5" onSubmit={(event) => {event.preventDefault(); dispute.mutate()}}><p className="demo-note">تُحفظ هذه التجربة على الجهاز فقط، ولا ترسل بلاغًا حقيقيًا.</p><label className="field-label block">وصف المشكلة<textarea className="form-field mt-2" value={reason} onChange={(event) => setReason(event.target.value)} minLength={10} maxLength={1000} required rows={4} /></label>{dispute.isError && <p role="alert" className="field-error">{getApiErrorMessage(dispute.error)}</p>}<button className="btn-primary w-full" disabled={dispute.isPending}>حفظ البلاغ التجريبي</button></form></Dialog>}
+    {disputeOpen && <Dialog title={t('تسجيل مشكلة في الطلب التجريبي')} onClose={() => setDisputeOpen(false)}><form className="space-y-4 p-5" onSubmit={(event) => {event.preventDefault(); dispute.mutate()}}><p className="demo-note">{t('تُحفظ هذه التجربة على الجهاز فقط، ولا ترسل بلاغًا حقيقيًا.')}</p><label className="field-label block">{t('وصف المشكلة')}<textarea className="form-field mt-2" value={reason} onChange={(event) => setReason(event.target.value)} minLength={10} maxLength={1000} required rows={4} /></label>{dispute.isError && <p role="alert" className="field-error">{getApiErrorMessage(dispute.error)}</p>}<button className="btn-primary w-full" disabled={dispute.isPending}>{t('حفظ البلاغ التجريبي')}</button></form></Dialog>}
   </div>
 }

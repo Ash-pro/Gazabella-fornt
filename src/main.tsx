@@ -9,6 +9,7 @@ import './index.css'
 import { useAuthStore } from './stores/authStore'
 import { useCheckoutStore } from './stores/checkoutStore'
 import { initAnalytics } from './lib/analytics'
+import { initLocale, onLocaleChange } from './i18n'
 import { initMonitoring, installChunkReloadGuard, setMonitoringUser } from './lib/monitoring'
 
 initMonitoring()
@@ -27,10 +28,15 @@ useAuthStore.subscribe((state, previous) => {
 
 registerServiceWorker()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter><App /></BrowserRouter>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+// المحتوى القادم من الخادم (منتجات، تصنيفات، بانرات…) يُعاد جلبه بلغة الواجهة الجديدة
+onLocaleChange(() => { void queryClient.invalidateQueries() })
+
+void initLocale().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter><App /></BrowserRouter>
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+})
