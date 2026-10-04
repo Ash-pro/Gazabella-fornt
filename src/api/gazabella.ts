@@ -423,13 +423,19 @@ const legacyGazabellaApi = {
       ? mockServices.getProducts(filters)
       : apiClient.get<ApiList<ProductBrief>>('/products', { params: toApiProductParams(filters) }).then((r) => r.data),
 
-  // «قد يعجبكِ أيضاً»: نفس التصنيف أولاً ثم نُكمل بالمميّزة — إلى أن يتوفر مسار توصيات في الخادم
-  getRelatedProducts: async (product: { id: number; category?: { id: number; name: string; slug?: string } | null }, limit = 4): Promise<ProductBrief[]> => {
+  // «قد يعجبكِ أيضاً»: مسار التوصيات في الخادم (اشتُري معه ← نفس التصنيف ← نفس الماركة ← مميّز).
+  // احتياط إن تعذّر المسار: نفس التصنيف ثم المميّزة من قائمة المنتجات.
+  getRelatedProducts: async (product: { id: number; slug: string; category?: { id: number; name: string; slug?: string } | null }, limit = 4): Promise<ProductBrief[]> => {
     const picked = new Map<number, ProductBrief>()
     const take = (list: ProductBrief[]) => { for (const p of list) if (p.id !== product.id && p.in_stock !== false && picked.size < limit) picked.set(p.id, p) }
+    if (!isMockMode()) {
+      try {
+        take((await apiClient.get<ApiData<ProductBrief[]>>(`/products/${encodeURIComponent(product.slug)}/related`, { params: { limit } })).data.data ?? [])
+        return [...picked.values()]
+      } catch { /* نكمل بالاحتياط */ }
+    }
     if (product.category) take((await gazabellaApi.getProducts({ category_id: product.category.id, category_slug: product.category.slug, in_stock: true, per_page: limit + 1 })).data)
     if (picked.size < limit) take((await gazabellaApi.getProducts({ featured: true, in_stock: true, per_page: limit * 2 + 1 })).data)
-    if (picked.size < limit) take((await gazabellaApi.getProducts({ in_stock: true, per_page: limit * 2 + 1 })).data)
     return [...picked.values()]
   },
 

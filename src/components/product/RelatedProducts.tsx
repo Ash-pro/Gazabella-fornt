@@ -7,13 +7,8 @@ import { ProductCard } from './ProductCard'
 
 const LIMIT = 4
 
-/**
- * «قد يعجبكِ أيضاً» في صفحة المنتج.
- * لا يوجد حالياً مسار توصيات في الخادم، فنعتمد: منتجات متوفرة من نفس التصنيف،
- * وإن لم تكفِ نُكمل من المنتجات المميّزة. عند توفّر /products/{slug}/related
- * يكفي تبديل getRelatedProducts في طبقة الـ API.
- */
-export function RelatedProducts({ product }: { product: { id: number; category?: { id: number; name: string; slug?: string } | null } }) {
+/** «قد يعجبكِ أيضاً» في صفحة المنتج — من مسار التوصيات /products/{slug}/related */
+export function RelatedProducts({ product }: { product: { id: number; slug: string; category?: { id: number; name: string; slug?: string } | null } }) {
   const query = useQuery({
     queryKey: ['products', 'related', product.id],
     queryFn: () => gazabellaApi.getRelatedProducts(product, LIMIT),
