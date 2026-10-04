@@ -7,13 +7,14 @@ import { Mvp0CheckoutPage } from './Mvp0CheckoutPage'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { LegalConsent } from '../components/checkout/LegalConsent'
 import { lineItems, track, trackPurchase } from '../lib/analytics'
 import { z } from 'zod'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
-import { getApiErrorMessage } from '../lib/apiClient'
+import { getApiErrorMessage, getImageUrl } from '../lib/apiClient'
+import { Icon } from '../components/ui/Icon'
 import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
 import { formatPrice, money } from '../lib/format'
@@ -101,6 +102,28 @@ export function CheckoutPage() {
   return isMvp0Api() ? <Mvp0CheckoutPage /> : <LegacyCheckoutPage />
 }
 
+type Step = 'details' | 'review'
+
+/** شريط التقدّم: السلة ← بياناتكِ ← المراجعة والتأكيد */
+function CheckoutSteps({ step, onBack }: { step: Step; onBack: () => void }) {
+  const review = step === 'review'
+  return (
+    <nav className="co-steps" aria-label="خطوات إتمام الطلب">
+      <p className="co-steps__mobile"><b>الخطوة <span className="num">{review ? 2 : 1}</span> من <span className="num">2</span></b> · {review ? 'المراجعة والتأكيد' : 'بياناتكِ'}</p>
+      <div className="co-steps__bar" aria-hidden="true"><i style={{ width: review ? '100%' : '50%' }} /></div>
+      <ol>
+        <li className="done"><Link to="/cart"><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>السلة</Link></li>
+        <li className={review ? 'done' : 'current'} aria-current={review ? undefined : 'step'}>
+          {review
+            ? <button type="button" onClick={onBack}><span className="co-steps__dot"><Icon name="check" className="size-3.5" /></span>بياناتكِ</button>
+            : <span><span className="co-steps__dot num">1</span>بياناتكِ</span>}
+        </li>
+        <li className={review ? 'current' : undefined} aria-current={review ? 'step' : undefined}><span><span className="co-steps__dot num">2</span>المراجعة والتأكيد</span></li>
+      </ol>
+    </nav>
+  )
+}
+
 function LegacyCheckoutPage() {
   const navigate = useNavigate()
   const submitting = useRef(false)
@@ -112,6 +135,11 @@ function LegacyCheckoutPage() {
   const paymentMethod = paymentOptions.some((o) => o.code === chosenMethod) ? chosenMethod : paymentOptions[0].code
   const user = useAuthStore((s) => s.user)
 
+  // الخطوة في الرابط (?step=review) حتى يعمل زر الرجوع في المتصفح؛ لا تُفتح المراجعة قبل نجاح التحقق
+  const [params, setParams] = useSearchParams()
+  const [reviewReady, setReviewReady] = useState(false)
+  const step: Step = reviewReady && params.get('step') === 'review' ? 'review' : 'details'
+
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
   const checkoutTracked = useRef(false)
   useEffect(() => {
@@ -119,6 +147,8 @@ function LegacyCheckoutPage() {
     checkoutTracked.current = true
     track('begin_checkout', lineItems(cartQuery.data.items))
   }, [cartQuery.data])
+
+  useEffect(() => { if (reviewReady) window.scrollTo({ top: 0 }) }, [step, reviewReady])
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -135,23 +165,25 @@ function LegacyCheckoutPage() {
   })
 
   const errs = form.formState.errors
-  const selectedCity = useWatch({ control: form.control, name: 'city' })
+  const values = useWatch({ control: form.control })
+  const selectedCity = values.city ?? ''
+  const fullAddress = [values.city, values.neighborhood, values.street].map((v) => v?.trim()).filter(Boolean).join('، ')
 
   const checkout = useMutation({
-    mutationFn: (values: Values) => {
-      const { city, neighborhood, street, ...rest } = values
+    mutationFn: (v: Values) => {
+      const { city, neighborhood, street, ...rest } = v
       const zoneId = store.deliveryZones.find((z) => z.name === city)?.id
       return gazabellaApi.checkout({
         ...rest,
         address: `${city}، ${neighborhood}، ${street}`,
         payment_method: paymentMethod,
-        // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها (يُتجاهل إن لم يدعمه بعد)
+        // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها
         ...(zoneId ? { delivery_zone_id: zoneId } : {}),
       })
     },
-    onSuccess: (order, values) => {
+    onSuccess: (order, v) => {
       trackPurchase(order)
-      saveLastOrder(order, values.phone)
+      saveLastOrder(order, v.phone, `${v.city}، ${v.neighborhood}، ${v.street}`)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
       queryClient.setQueryData(['order', String(isMockMode() ? order.order_number : order.id)], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -164,14 +196,34 @@ function LegacyCheckoutPage() {
       const status = (error as { response?: { status?: number } }).response?.status
       track('checkout_error', { stage: 'submit', status: status ?? 0 })
       if (!status || status >= 500 || status === 408) setUncertain(true)
+      // 409/422: قد يكون السعر أو المخزون تغيّر — نحدّث السلة لتظهر القيم الحالية في المراجعة
+      else void queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
     onSettled: () => { submitting.current = false },
   })
 
-  function submit(values: Values) {
+  function submit(v: Values) {
     if (submitting.current || uncertain) return
     submitting.current = true
-    checkout.mutate(values)
+    checkout.mutate(v)
+  }
+
+  function goReview(v: Values) {
+    // المنطقة يجب أن تكون من مناطق التوصيل الحالية حتى يكون الإجمالي في المراجعة نهائياً
+    if (!store.deliveryZones.some((z) => z.name === v.city)) {
+      form.setError('city', { message: 'اختاري منطقة التوصيل' }, { shouldFocus: true })
+      return
+    }
+    setReviewReady(true)
+    if (cartQuery.data) track('checkout_review', lineItems(cartQuery.data.items))
+    setParams((prev) => { const next = new URLSearchParams(prev); next.set('step', 'review'); return next })
+  }
+
+  /** رجوع لخطوة البيانات (نفس إدخال التاريخ الذي أضفناه) مع التركيز على الحقل المطلوب */
+  function editDetails(focus?: keyof Values) {
+    checkout.reset()
+    navigate(-1)
+    if (focus) window.setTimeout(() => form.setFocus(focus), 320)
   }
 
   // ── Loading / Error / Empty states
@@ -198,244 +250,204 @@ function LegacyCheckoutPage() {
       </div>
     )
 
-  const isSubmitting = checkout.isPending || submitting.current
+  const isSubmitting = checkout.isPending
   const zone = store.deliveryZones.find((z) => z.name === selectedCity) ?? null
   const freeDelivery = Boolean(store.freeDeliveryThreshold && Number(cart.subtotal) >= store.freeDeliveryThreshold)
-  const estimatedTotal = Number(cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
+  const total = Number(cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
+  const itemsCount = cart.items.reduce((n, i) => n + i.quantity, 0)
+  const cod = paymentMethod === 'cod'
+  const paymentLabel = paymentOptions.find((o) => o.code === paymentMethod)?.label ?? ''
+  const totalLabel = zone ? formatPrice(total) : <>{money(cart.subtotal)} <span className="co-plus">+ التوصيل</span></>
+  const confirmLabel = isSubmitting ? 'جارٍ تأكيد طلبكِ…'
+    : isMockMode() ? 'إنشاء طلب تجريبي'
+    : <>{cod ? 'تأكيد الطلب' : 'إنشاء الطلب والدفع'} · <span className="num">{formatPrice(total)}</span></>
+
+  const deliveryRow = (
+    <div className="flex justify-between gap-3 text-sm">
+      <span className="text-[var(--text-2)]">التوصيل{zone ? ` (${zone.name})` : ''}</span>
+      {zone
+        ? <b>{freeDelivery ? <><s className="font-normal text-[var(--text-3)]">{formatPrice(zone.fee)}</s> مجاني</> : formatPrice(zone.fee)}</b>
+        : <span className="text-[var(--text-3)]">يُحسب بعد اختيار المنطقة</span>}
+    </div>
+  )
+
+  const banners = (
+    <>
+      {uncertain && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3" role="alert">
+          <span className="mt-0.5 text-base text-amber-500">⚠</span>
+          <div className="text-sm leading-relaxed text-amber-800">
+            <b className="mb-1 block">لم نتأكد من إتمام الطلب</b>
+            ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي{' '}
+            <Link className="font-bold underline" to="/orders" target="_blank" rel="noopener">طلباتي</Link>{' '}
+            أولاً لتجنب تكرار الطلب.
+            <button type="button" className="mt-2 block font-bold underline" onClick={() => { setUncertain(false); checkout.reset() }}>
+              تحققت ولم أجد الطلب — أعيدي المحاولة
+            </button>
+          </div>
+        </div>
+      )}
+      {checkout.isError && !uncertain && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3" role="alert">
+          <span className="mt-0.5 text-base text-red-500">✕</span>
+          <p className="text-sm leading-snug text-red-700">{getApiErrorMessage(checkout.error)}</p>
+        </div>
+      )}
+    </>
+  )
 
   return (
-    <div className="container-page py-10">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-2 text-sm text-[var(--text-3)]">
-        <Link to="/" className="hover:text-[var(--primary)]">الرئيسية</Link>
-        <span>/</span>
-        <Link to="/cart" className="hover:text-[var(--primary)]">السلة</Link>
-        <span>/</span>
-        <span className="font-semibold text-[var(--text)]">إتمام الطلب</span>
-      </nav>
+    <div className="container-page co-page">
+      <CheckoutSteps step={step} onBack={() => editDetails()} />
+      <h1 className="section-title co-title">{step === 'review' ? 'راجعي طلبكِ قبل التأكيد' : 'إتمام الطلب'}</h1>
 
-      <h1 className="section-title mb-8">إتمام الطلب</h1>
+      <form onSubmit={(event) => void form.handleSubmit(step === 'review' ? submit : goReview)(event)} noValidate>
+        <div key={step} className={`co-pane ${step === 'review' ? 'co-pane--fwd' : reviewReady ? 'co-pane--back' : ''}`}>
+          {step === 'details' ? (
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+              <div className="space-y-5">
+                {/* ملخص مصغّر قابل للفتح — موبايل فقط */}
+                <details className="co-mini lg:hidden">
+                  <summary><span><span className="num">{itemsCount}</span> {itemsCount === 1 ? 'منتج' : 'منتجات'}</span><b className="num">{totalLabel}</b><Icon name="chevron" className="size-4" /></summary>
+                  <ul>
+                    {cart.items.map((item) => <li key={item.id}><span>{item.product_name} × <span className="num">{item.quantity}</span></span><b className="num">{money(item.subtotal)}</b></li>)}
+                  </ul>
+                </details>
 
-      <form onSubmit={form.handleSubmit(submit)} noValidate>
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-
-          {/* ── Main form column ─────────────────────────── */}
-          <div className="space-y-5">
-
-            {/* Section 1 — Contact info */}
-            <div className="checkout-card">
-              <SectionHeader step={1} title="معلومات التواصل" />
-              <div className="space-y-4">
-
-                <Field id="name" label="الاسم الكامل" error={errs.name?.message}>
-                  {(inputProps) => (
-                    <input
-                      id="name"
-                      type="text"
-                      autoComplete="name"
-                      placeholder="مثال: سارة أحمد"
-                      disabled={isSubmitting}
-                      {...inputProps}
-                      {...form.register('name')}
-                    />
-                  )}
-                </Field>
-
-                <Field id="phone" label="رقم الجوال" error={errs.phone?.message}>
-                  {(inputProps) => (
-                    <div className="relative">
-                      <input
-                        id="phone"
-                        type="tel"
-                        autoComplete="tel"
-                        placeholder="05XXXXXXXX"
-                        dir="ltr"
-                        disabled={isSubmitting}
-                        {...inputProps}
-                        className={`${inputProps.className} ps-10`}
-                        {...form.register('phone')}
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-base">
-                        📱
-                      </span>
-                    </div>
-                  )}
-                </Field>
-
-              </div>
-            </div>
-
-            {/* Section 2 — Delivery address */}
-            <div className="checkout-card">
-              <SectionHeader step={2} title="عنوان التوصيل" />
-              <div className="space-y-4">
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field id="city" label="منطقة التوصيل" error={errs.city?.message}>
-                    {(inputProps) => (
-                      <select
-                        id="city"
-                        autoComplete="address-level2"
-                        disabled={isSubmitting}
-                        {...inputProps}
-                        {...form.register('city')}
-                      >
-                        <option value="">اختاري منطقة التوصيل</option>
-                        {store.deliveryZones.map((z) => (
-                          <option key={z.name} value={z.name}>{z.name} — {formatPrice(z.fee)}</option>
-                        ))}
-                      </select>
-                    )}
-                  </Field>
-
-                  <Field id="neighborhood" label="الحي / المنطقة" error={errs.neighborhood?.message}>
-                    {(inputProps) => (
-                      <input
-                        id="neighborhood"
-                        type="text"
-                        autoComplete="address-level3"
-                        placeholder="مثال: الكتيبة"
-                        disabled={isSubmitting}
-                        {...inputProps}
-                        {...form.register('neighborhood')}
-                      />
-                    )}
-                  </Field>
-                </div>
-
-                <Field id="street" label="الشارع / أقرب معلم" error={errs.street?.message}>
-                  {(inputProps) => (
-                    <input
-                      id="street"
-                      type="text"
-                      autoComplete="street-address"
-                      placeholder="مثال: شارع جلال، بجانب صيدلية النور"
-                      disabled={isSubmitting}
-                      {...inputProps}
-                      {...form.register('street')}
-                    />
-                  )}
-                </Field>
-
-                <Field id="notes" label="ملاحظات التوصيل" required={false} error={errs.notes?.message}>
-                  {(inputProps) => (
-                    <input
-                      id="notes"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="أي تعليمات خاصة للمندوب (اختياري)"
-                      disabled={isSubmitting}
-                      {...inputProps}
-                      {...form.register('notes')}
-                    />
-                  )}
-                </Field>
-
-              </div>
-            </div>
-
-            {/* Section 3 — Payment */}
-            <div className="checkout-card">
-              <SectionHeader step={3} title="طريقة الدفع" />
-              <PaymentMethodPicker options={paymentOptions} value={paymentMethod} onChange={setPaymentMethod} />
-            </div>
-
-          </div>
-
-          {/* ── Sidebar ──────────────────────────────────── */}
-          <aside className="space-y-4 self-start lg:sticky lg:top-6">
-
-            {/* Order summary card */}
-            <div className="order-summary space-y-3">
-              <h2 className="text-base font-bold">ملخص الطلب</h2>
-              <div className="space-y-2">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="flex justify-between gap-3 text-sm">
-                    <span className="text-[var(--text-2)]">
-                      {item.product_name}
-                      <span className="ms-1 text-[var(--text-3)]">× {item.quantity}</span>
-                    </span>
-                    <b className="flex-none text-[var(--text)]">{money(item.subtotal)}</b>
+                <div className="checkout-card">
+                  <SectionHeader step={1} title="معلومات التواصل" />
+                  <div className="space-y-4">
+                    <Field id="name" label="الاسم الكامل" error={errs.name?.message}>
+                      {(inputProps) => <input id="name" type="text" autoComplete="name" placeholder="مثال: سارة أحمد" {...inputProps} {...form.register('name')} />}
+                    </Field>
+                    <Field id="phone" label="رقم الجوال" error={errs.phone?.message}>
+                      {(inputProps) => (
+                        <div className="relative">
+                          <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="05XXXXXXXX" dir="ltr" {...inputProps} className={`${inputProps.className} ps-10`} {...form.register('phone')} />
+                          <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-base">📱</span>
+                        </div>
+                      )}
+                    </Field>
                   </div>
-                ))}
-              </div>
-              <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm">
-                <span className="text-[var(--text-2)]">قيمة المنتجات</span>
-                <b>{money(cart.subtotal)}</b>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--text-2)]">رسوم التوصيل{zone ? ` (${zone.name})` : ''}</span>
-                {zone ? <b>{freeDelivery ? <><s className="text-[var(--text-3)] font-normal">{formatPrice(zone.fee)}</s> مجاني</> : formatPrice(zone.fee)}</b> : <span className="text-[var(--text-3)]">من {formatPrice(store.minDeliveryFee)}</span>}
-              </div>
-              <div className="flex justify-between border-t border-[var(--border)] pt-3">
-                <span className="font-bold">{zone ? 'الإجمالي المتوقع' : 'الإجمالي'}</span>
-                <b className="text-[var(--primary)]">{zone ? formatPrice(estimatedTotal) : money(cart.subtotal)}</b>
-              </div>
-              <p className="rounded-lg bg-[var(--primary-dim)] px-3 py-2 text-xs leading-relaxed text-[var(--text-2)]">
-                {zone ? <>التوصيل {formatEta(zone.etaMinutes)} تقريباً. المبلغ النهائي يظهر في صفحة الطلب بعد التأكيد.</> : 'اختاري منطقة التوصيل لعرض الرسوم والإجمالي.'}
-              </p>
-            </div>
+                </div>
 
-            {/* Info note — حسب طريقة الدفع */}
-            {!isMockMode() && paymentMethod === 'jawwal_pay' && (
-              <div className="flex items-start gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--text-2)]">
-                <span className="mt-px text-sm">ℹ️</span>
-                <p>بعد إنشاء الطلب ستنتقلين لخطوة الدفع عبر جوال باي — لا يُخصم مبلغ الآن.</p>
-              </div>
-            )}
-            {!isMockMode() && paymentMethod === 'cod' && (
-              <div className="flex items-start gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--text-2)]">
-                <span className="mt-px text-sm">💵</span>
-                <p>تدفعين {zone ? <b className="num">{formatPrice(estimatedTotal)}</b> : 'قيمة الطلب'} نقداً للمندوب عند الاستلام — لا يُخصم أي مبلغ الآن.</p>
-              </div>
-            )}
-            {isMockMode() && (
-              <p className="demo-note text-xs">عرض تجريبي — لا يُرسل طلب حقيقي.</p>
-            )}
+                <div className="checkout-card">
+                  <SectionHeader step={2} title="عنوان التوصيل" />
+                  <div className="space-y-4">
+                    <Field id="city" label="منطقة التوصيل" error={errs.city?.message}>
+                      {(inputProps) => (
+                        <select id="city" autoComplete="address-level2" {...inputProps} {...form.register('city')}>
+                          <option value="">اختاري منطقة التوصيل</option>
+                          {store.deliveryZones.map((z) => <option key={z.name} value={z.name}>{z.name} — {formatPrice(z.fee)}</option>)}
+                        </select>
+                      )}
+                    </Field>
+                    {zone && (
+                      <p className="co-zone" role="status"><Icon name="truck" className="size-4 shrink-0" />التوصيل <b className="num">{freeDelivery ? 'مجاني' : formatPrice(zone.fee)}</b> · {formatEta(zone.etaMinutes)} تقريباً</p>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field id="neighborhood" label="الحي / المنطقة" error={errs.neighborhood?.message}>
+                        {(inputProps) => <input id="neighborhood" type="text" autoComplete="address-level3" placeholder="مثال: الكتيبة" {...inputProps} {...form.register('neighborhood')} />}
+                      </Field>
+                      <Field id="street" label="الشارع / أقرب معلم" error={errs.street?.message}>
+                        {(inputProps) => <input id="street" type="text" autoComplete="street-address" placeholder="مثال: شارع جلال، بجانب صيدلية النور" {...inputProps} {...form.register('street')} />}
+                      </Field>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Uncertain / API error banners */}
-            {uncertain && (
-              <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <span className="mt-0.5 text-base text-amber-500">⚠</span>
-                <div className="text-sm leading-relaxed text-amber-800">
-                  <b className="block mb-1">لم نتأكد من إتمام الطلب</b>
-                  ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي{' '}
-                  <Link className="underline font-bold" to="/orders" target="_blank" rel="noopener">طلباتي</Link>{' '}
-                  أولاً لتجنب تكرار الطلب.
-                  <button type="button" className="mt-2 block font-bold underline" onClick={() => { setUncertain(false); checkout.reset() }}>
-                    تحققت ولم أجد الطلب — أعيدي المحاولة
-                  </button>
+                <div className="checkout-card" id="co-payment">
+                  <SectionHeader step={3} title="طريقة الدفع" />
+                  <PaymentMethodPicker options={paymentOptions} value={paymentMethod} onChange={setPaymentMethod} />
                 </div>
               </div>
-            )}
 
-            {checkout.isError && (
-              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                <span className="mt-0.5 text-base text-red-500">✕</span>
-                <p className="text-sm leading-snug text-red-700">
-                  {getApiErrorMessage(checkout.error)}
-                </p>
+              <aside className="hidden space-y-4 self-start lg:sticky lg:top-6 lg:block">
+                <div className="order-summary space-y-3">
+                  <h2 className="text-base font-bold">ملخص الطلب</h2>
+                  <div className="space-y-2">
+                    {cart.items.map((item) => (
+                      <div key={item.id} className="flex justify-between gap-3 text-sm">
+                        <span className="text-[var(--text-2)]">{item.product_name}<span className="ms-1 text-[var(--text-3)]">× {item.quantity}</span></span>
+                        <b className="flex-none text-[var(--text)]">{money(item.subtotal)}</b>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm"><span className="text-[var(--text-2)]">قيمة المنتجات</span><b>{money(cart.subtotal)}</b></div>
+                  {deliveryRow}
+                  <div className="flex items-baseline justify-between border-t border-[var(--border)] pt-3"><span className="font-bold">الإجمالي</span><b className="text-[var(--primary)]">{totalLabel}</b></div>
+                </div>
+                <button type="submit" className="btn-primary w-full">متابعة للمراجعة</button>
+                <p className="co-hint">لن يُرسل الطلب الآن — ستراجعين كل التفاصيل في الخطوة التالية.</p>
+                {isMockMode() && <p className="demo-note text-xs">عرض تجريبي — لا يُرسل طلب حقيقي.</p>}
+              </aside>
+
+              <div className="co-sticky">
+                <div><span>الإجمالي</span><b className="num">{totalLabel}</b></div>
+                <button type="submit" className="btn-primary">متابعة للمراجعة</button>
               </div>
-            )}
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+              <div className="space-y-5">
+                <section className="checkout-card co-review" aria-labelledby="co-r-delivery">
+                  <header><h2 id="co-r-delivery"><Icon name="truck" className="size-5" />التوصيل إلى</h2><button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails('name')}>تعديل</button></header>
+                  <dl>
+                    <div><dt>الاسم</dt><dd>{values.name}</dd></div>
+                    <div><dt>الجوال</dt><dd><bdi className="num" dir="ltr">{values.phone}</bdi></dd></div>
+                    <div><dt>العنوان</dt><dd>{fullAddress}</dd></div>
+                    {zone && <div><dt>مدة التوصيل</dt><dd>{formatEta(zone.etaMinutes)} تقريباً</dd></div>}
+                  </dl>
+                  <details className="co-note" open={Boolean(values.notes)}>
+                    <summary>إضافة ملاحظة للمندوب <span>(اختياري)</span></summary>
+                    <Field id="notes" label="ملاحظة للمندوب" required={false} error={errs.notes?.message}>
+                      {(inputProps) => <input id="notes" type="text" autoComplete="off" maxLength={500} placeholder="مثال: الاتصال قبل الوصول" disabled={isSubmitting} {...inputProps} {...form.register('notes')} />}
+                    </Field>
+                  </details>
+                </section>
 
-            {/* CTA */}
-            <button
-              type="submit"
-              className="btn-primary w-full"
-              disabled={isSubmitting || uncertain}
-            >
-              {isSubmitting
-                ? 'جارٍ إرسال الطلب…'
-                : isMockMode()
-                ? 'إنشاء طلب تجريبي'
-                : paymentMethod === 'jawwal_pay'
-                ? 'إنشاء الطلب والدفع'
-                : 'تأكيد الطلب'}
-            </button>
+                <section className="checkout-card co-review" aria-labelledby="co-r-pay">
+                  <header><h2 id="co-r-pay"><Icon name="dollar" className="size-5" />طريقة الدفع</h2>{paymentOptions.length > 1 && <button type="button" className="text-link" disabled={isSubmitting} onClick={() => editDetails()}>تعديل</button>}</header>
+                  <p className="co-review__pay"><b>{paymentLabel}</b>{cod ? ' — لا يُخصم أي مبلغ الآن، تدفعين للمندوب عند الاستلام.' : ' — بعد إنشاء الطلب تنتقلين لخطوة الدفع.'}</p>
+                </section>
 
-            <LegalConsent />
+                <section className="checkout-card co-review" aria-labelledby="co-r-items">
+                  <header><h2 id="co-r-items"><Icon name="bag" className="size-5" />المنتجات (<span className="num">{itemsCount}</span>)</h2><Link className="text-link" to="/cart">تعديل السلة</Link></header>
+                  <ul className="co-items">
+                    {cart.items.map((item) => {
+                      const src = getImageUrl(item.image_url)
+                      return (
+                        <li key={item.id}>
+                          <span className="co-items__thumb">{src ? <img src={src} alt="" loading="lazy" /> : <Icon name="package" className="size-5" />}</span>
+                          <span className="co-items__name">{item.product_name}<small>الكمية: <span className="num">{item.quantity}</span></small></span>
+                          <b className="num">{money(item.subtotal)}</b>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              </div>
 
-          </aside>
+              <aside className="space-y-4 self-start lg:sticky lg:top-6">
+                <div className="order-summary space-y-3">
+                  <h2 className="text-base font-bold">الحساب</h2>
+                  <div className="flex justify-between text-sm"><span className="text-[var(--text-2)]">قيمة المنتجات</span><b>{money(cart.subtotal)}</b></div>
+                  {deliveryRow}
+                  <div className="co-total"><span>{cod ? 'المبلغ عند الاستلام' : 'الإجمالي'}</span><strong className="num">{formatPrice(total)}</strong></div>
+                </div>
+                {banners}
+                <button type="submit" className="btn-primary co-desktop-only w-full" disabled={isSubmitting || uncertain}>{confirmLabel}</button>
+                <LegalConsent />
+                <button type="button" className="btn-ghost co-desktop-only w-full" disabled={isSubmitting} onClick={() => editDetails()}>رجوع لتعديل البيانات</button>
+                {isMockMode() && <p className="demo-note text-xs">عرض تجريبي — لا يُرسل طلب حقيقي.</p>}
+              </aside>
+
+              <div className="co-sticky co-sticky--confirm">
+                <button type="button" className="btn-ghost" disabled={isSubmitting} onClick={() => editDetails()} aria-label="رجوع لتعديل البيانات">رجوع</button>
+                <button type="submit" className="btn-primary" disabled={isSubmitting || uncertain}>{confirmLabel}</button>
+              </div>
+            </div>
+          )}
         </div>
       </form>
     </div>

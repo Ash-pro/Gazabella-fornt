@@ -27,6 +27,8 @@ export interface AnalyticsEvents {
   remove_from_cart: Items
   view_cart: Items
   begin_checkout: Items
+  /** وصلت خطوة «المراجعة والتأكيد» — لقياس التسرّب بين الخطوتين */
+  checkout_review: Items
   purchase: Items & { transaction_id: string; shipping: number; payment_type: string; delivery_waived: boolean }
   checkout_error: { stage: 'reserve' | 'quote' | 'create' | 'submit'; status: number }
   login: { method: 'otp' }

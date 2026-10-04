@@ -50,12 +50,13 @@ export function CheckoutReceiptPage() {
   const cod = isCashOnDelivery(order.payment_method)
   const paid = order.payment_status === 'paid'
   const phone = saved?.order.order_number === order.order_number ? saved.phone : order.phone
+  const address = order.address || (saved?.order.order_number === order.order_number ? saved.address : '') || ''
   const detailsPath = orderPath(order)
   const trackTo = loggedIn ? detailsPath : `/auth?next=${encodeURIComponent(detailsPath)}&from=order`
   const help = store.whatsapp ? whatsappLink(store.whatsapp, `مرحباً Gazabella، أستفسر عن طلبي رقم ${order.order_number}`) : null
   const steps: Array<{ icon: 'clock' | 'truck' | 'dollar'; title: string; text: string }> = [
     { icon: 'clock', title: 'نراجع طلبكِ ونؤكده', text: `عادةً خلال ${store.acceptanceWindowMinutes} دقيقة في أوقات الدوام.` },
-    { icon: 'truck', title: 'نجهّزه ونرسله مع المندوب', text: order.address ? `إلى: ${order.address}` : 'إلى العنوان الذي أدخلتِه.' },
+    { icon: 'truck', title: 'نجهّزه ونرسله مع المندوب', text: address ? `إلى: ${address}` : 'إلى العنوان الذي أدخلتِه.' },
     cod
       ? { icon: 'dollar', title: 'تدفعين عند الاستلام', text: `جهّزي ${money(order.total)} نقداً، وافحصي المنتجات قبل الدفع.` }
       : { icon: 'dollar', title: paid ? 'تم تأكيد الدفع' : 'أكملي الدفع', text: paid ? 'وصلنا دفعكِ، شكراً لكِ.' : 'حوّلي المبلغ ثم أدخلي مرجع الدفع في الأسفل ليُؤكَّد الطلب.' },

@@ -11,11 +11,13 @@ const TTL_MS = 6 * 60 * 60 * 1000
 export interface LastOrder {
   order: Order
   phone: string
+  /** العنوان كما أدخلته الزبونة — احتياط إن لم يرجعه الخادم نصاً */
+  address?: string
   savedAt: number
 }
 
-export function saveLastOrder(order: Order, phone: string) {
-  try { sessionStorage.setItem(KEY, JSON.stringify({ order, phone, savedAt: Date.now() } satisfies LastOrder)) } catch { /* تخزين غير متاح */ }
+export function saveLastOrder(order: Order, phone: string, address?: string) {
+  try { sessionStorage.setItem(KEY, JSON.stringify({ order, phone, address, savedAt: Date.now() } satisfies LastOrder)) } catch { /* تخزين غير متاح */ }
 }
 
 export function loadLastOrder(): LastOrder | null {
@@ -32,7 +34,7 @@ export function loadLastOrder(): LastOrder | null {
 
 export function updateLastOrder(order: Order) {
   const current = loadLastOrder()
-  if (current && current.order.order_number === order.order_number) saveLastOrder(order, current.phone)
+  if (current && current.order.order_number === order.order_number) saveLastOrder(order, current.phone, current.address)
 }
 
 /** 0599123456 → 059•••3456 */
