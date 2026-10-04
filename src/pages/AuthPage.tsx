@@ -1,7 +1,7 @@
 import { isMvp0Api } from '../lib/apiContract'
 // AuthPage.tsx — full replacement
 import { useState, useEffect, type FormEvent } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { LegalConsent } from '../components/checkout/LegalConsent'
 import { track } from '../lib/analytics'
@@ -21,6 +21,8 @@ export function AuthPage() {
   const [params] = useSearchParams()
   // قادمة من صفحة الشكر: نعرض سياق الطلب ونعبّئ رقم الجوال من الجلسة (لا نضعه في الرابط)
   const [lastOrder] = useState(() => (params.get('from') === 'order' ? loadLastOrder() : null))
+  const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: gazabellaApi.getSettings })
+  const jawwalEnabled = Boolean(settings?.policies?.payment_methods?.includes('jawwal_pay'))
   const [step, setStep] = useState<Step>('phone')
   const [phone, setPhone] = useState(lastOrder?.phone ?? '')
   const [name, setName] = useState('')
@@ -93,7 +95,7 @@ export function AuthPage() {
       </Link>
       <div className="auth-layout auth-layout--refined">
         <div className="auth-form">
-          {!isMvp0Api() && <Link className="text-link mb-4" to="/orders/lookup">لديكِ مرجع دفع؟ تابعي طلبكِ هنا</Link>}
+          {!isMvp0Api() && jawwalEnabled && <Link className="text-link mb-4" to="/orders/lookup">لديكِ مرجع دفع؟ تابعي طلبكِ هنا</Link>}
           {lastOrder ? (
             <p className="auth-context" role="status">
               <Icon name="check" className="size-5 shrink-0" />

@@ -41,7 +41,7 @@ export function CheckoutReceiptPage() {
             <Link className="btn-primary" to={loggedIn ? '/orders' : '/auth?next=%2Forders'}>{loggedIn ? 'طلباتي' : 'تسجيل الدخول لمتابعة طلباتي'}</Link>
             <Link className="btn-ghost" to="/">متابعة التسوق</Link>
           </div>
-          <Link className="text-link" to="/orders/lookup">لديكِ مرجع دفع؟ ابحثي به</Link>
+          {store.paymentMethods?.includes('jawwal_pay') && <Link className="text-link" to="/orders/lookup">لديكِ مرجع دفع؟ ابحثي به</Link>}
         </section>
       </div>
     )

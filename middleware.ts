@@ -156,7 +156,9 @@ async function botPreview(request: Request): Promise<Response | null> {
   const origin = env('SITE_URL') || env('VITE_SITE_URL') || url.origin
   const path = url.pathname.replace(/\/+$/, '') || '/'
 
-  const base: Meta = { title: fullTitle(null), description: DEFAULT_DESCRIPTION, image: `${origin}${DEFAULT_OG_IMAGE}`, url: `${origin}${path}`, type: 'website', noindex: isPrivatePath(path) }
+  // صفحة التصنيف (‎/?category=slug‎ وحدها) لها canonical خاص — مطابق لـ sitemap.xml
+  const categorySlug = path === '/' && [...url.searchParams.keys()].every((k) => k === 'category') ? url.searchParams.get('category') : null
+  const base: Meta = { title: fullTitle(null), description: DEFAULT_DESCRIPTION, image: `${origin}${DEFAULT_OG_IMAGE}`, url: categorySlug ? `${origin}/?category=${encodeURIComponent(categorySlug)}` : `${origin}${path}`, type: 'website', noindex: isPrivatePath(path) }
   const route = ROUTE_SEO[path]
   if (route) Object.assign(base, { title: fullTitle(route.title), description: route.description, noindex: Boolean(route.noindex) })
   const slug = /^\/products\/([^/]+)$/.exec(path)?.[1]

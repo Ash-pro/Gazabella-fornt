@@ -207,3 +207,20 @@ test('public cache: stores only non-null data, expires after 7 days, survives br
     assert.ok(c.PUBLIC_QUERY_KEYS.includes('categories') && !c.PUBLIC_QUERY_KEYS.includes('cart') && !c.PUBLIC_QUERY_KEYS.includes('orders'))
   } finally { delete globalThis.localStorage }
 })
+
+test('middleware: category page gets its own canonical for bots; filtered pages do not', async () => {
+  const mod = await server.ssrLoadModule('/middleware.ts')
+  const realFetch = globalThis.fetch
+  const saved = { SITE_URL: process.env.SITE_URL, VITE_SITE_URL: process.env.VITE_SITE_URL }
+  delete process.env.SITE_URL; delete process.env.VITE_SITE_URL
+  globalThis.fetch = async () => new Response('<html><head><title>x</title></head><body></body></html>', { status: 200 })
+  try {
+    const html = async (url) => (await mod.default(new Request(url, { headers: { 'user-agent': 'Googlebot' } }))).text()
+    assert.match(await html('https://shop.example.com/?category=perfumes'), /<link rel="canonical" href="https:\/\/shop\.example\.com\/\?category=perfumes" \/>/)
+    assert.match(await html('https://shop.example.com/?category=perfumes&sort=price'), /<link rel="canonical" href="https:\/\/shop\.example\.com\/" \/>/)
+    assert.match(await html('https://shop.example.com/'), /<link rel="canonical" href="https:\/\/shop\.example\.com\/" \/>/)
+  } finally {
+    globalThis.fetch = realFetch
+    for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v }
+  }
+})

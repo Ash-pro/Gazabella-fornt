@@ -26,7 +26,7 @@ export function Footer() {
         <div>
           <h2>تجربتكِ مع Gazabella</h2>
           <Link to="/orders">حسابي وطلباتي</Link>
-          <Link to="/orders/lookup">تتبع طلب</Link>
+          {settings?.policies?.payment_methods?.includes('jawwal_pay') && <Link to="/orders/lookup">تتبع طلب بمرجع الدفع</Link>}
           <Link to="/delivery-info">التوصيل والرسوم</Link>
           <Link to="/returns">الاسترجاع والاستبدال</Link>
           <Link to="/faq">الأسئلة الشائعة</Link>

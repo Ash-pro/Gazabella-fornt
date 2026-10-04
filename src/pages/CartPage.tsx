@@ -9,9 +9,11 @@ import { getApiErrorMessage } from '../lib/apiClient'
 import { syncCart, trackCartRemoval, trackCartView, useProceedToCheckout } from '../hooks/useCartActions'
 import { formatPrice } from '../lib/format'
 import type { Cart } from '../types/api'
+import { useStoreInfo } from '../hooks/useStoreInfo'
 
 export function CartPage() {
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart })
+  const store = useStoreInfo()
 
   function updateCache(cart: Cart) {
     syncCart(cart)
@@ -45,7 +47,7 @@ export function CartPage() {
         {(updateMutation.isError || removeMutation.isError) && <p className="field-error" role="alert">{getApiErrorMessage(updateMutation.error || removeMutation.error)}</p>}
         <span className="eyebrow">اختياراتك</span>
         <h1 className="section-title mt-2">سلة التسوق</h1>
-        <p className="mt-2 text-sm text-[var(--text-2)]"><span className="num">{cart.total_items}</span> قطع في سلتك</p>
+        <p className="mt-2 text-sm text-[var(--text-2)]">{cart.total_items === 1 ? 'قطعة واحدة في سلتكِ' : cart.total_items === 2 ? 'قطعتان في سلتكِ' : <><span className="num">{cart.total_items}</span> {cart.total_items <= 10 ? 'قطع' : 'قطعة'} في سلتكِ</>}</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
@@ -77,7 +79,7 @@ export function CartPage() {
             <h2 className="text-xl font-extrabold">ملخص الطلب</h2>
             <div className="my-6 space-y-4 border-y border-[var(--border)] py-5 text-sm">
               <div className="flex justify-between"><span className="text-[var(--text-2)]">المجموع الفرعي</span><span className="font-mono font-bold"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
-              <div className="flex justify-between"><span className="text-[var(--text-2)]">التوصيل</span><span>يُحدد لاحقًا</span></div>
+              <div className="flex justify-between"><span className="text-[var(--text-2)]">التوصيل</span><span>من <span className="num">{formatPrice(store.minDeliveryFee)}</span> حسب المنطقة</span></div>
             </div>
             <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">المجموع</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
             <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>

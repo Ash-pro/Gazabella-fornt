@@ -81,6 +81,7 @@ export function getApiErrorMessage(error: unknown): string {
     const requestId = (error.response.headers?.['x-request-id'] as string | undefined)?.slice(0, 8)
     if (status >= 500) return `حدث خطأ في الخادم (رمز ${status}${requestId ? ` · ${requestId}` : ''}). حاولي بعد قليل، وإن تكرر تواصلي معنا.`
     if (status === 401) return 'انتهت الجلسة. يرجى تسجيل الدخول مجددًا.'
+    if (status === 404) return 'لم نجد ما تبحثين عنه. ربما حُذف أو تغيّر الرابط.'
     if (error.response?.status === 403) return 'لا تملك صلاحية تنفيذ هذا الإجراء.'
     if (error.response?.status === 429) return 'طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم حاول مجددًا.'
     const messages = Object.values(error.response?.data?.errors ?? {}).flat().filter((message) => typeof message === 'string')

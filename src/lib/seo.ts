@@ -7,6 +7,8 @@ export interface SeoOptions {
   image?: string | null
   type?: 'website' | 'product' | 'article'
   noindex?: boolean
+  /** مسار canonical إن اختلف عن pathname (مثل صفحة التصنيف ‎/?category=slug‎) */
+  canonicalPath?: string
   /** بيانات منظمة schema.org — تُحقن كـ JSON-LD */
   jsonLd?: Record<string, unknown> | null
   /** سعر المنتج لمعاينات فيسبوك/واتساب */
@@ -52,7 +54,7 @@ function setJsonLd(data: Record<string, unknown> | null | undefined) {
 export function applySeo(options: SeoOptions) {
   const title = fullTitle(options.title)
   const description = options.description || DEFAULT_DESCRIPTION
-  const url = absoluteUrl(window.location.pathname)
+  const url = absoluteUrl(options.canonicalPath ?? window.location.pathname)
   const image = absoluteUrl(options.image || DEFAULT_OG_IMAGE)
   document.title = title
   setMeta('name', 'description', description)

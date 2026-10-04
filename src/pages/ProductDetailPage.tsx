@@ -14,6 +14,8 @@ import { money } from '../lib/format'
 import { productPricing } from '../lib/productPricing'
 import { productItem, track } from '../lib/analytics'
 import { useSeo } from '../lib/seo'
+import { useStoreInfo } from '../hooks/useStoreInfo'
+import { formatPrice } from '../lib/format'
 import { toMetaDescription } from '../content/seo'
 import { getImageUrl } from '../lib/apiClient'
 
@@ -34,6 +36,8 @@ function ProductContent({ slug }: { slug: string }) {
     enabled: !!slug,
   })
   const product = query.data
+  const store = useStoreInfo()
+  const zoneNames = store.deliveryZones.map((z) => z.name).join('، ')
 
   const variant = product?.variants?.find(v => v.id === variantId) ?? product?.variants?.find(v => v.available_quantity > 0) ?? product?.variants?.[0]
   const limit = Math.min(10, variant?.available_quantity ?? product?.stock ?? 0)
@@ -56,7 +60,8 @@ function ProductContent({ slug }: { slug: string }) {
 
   const seoPrice = product ? productPricing(product, variant).current : 0
   const seoImage = product ? getImageUrl((product.images ?? []).find((i) => i.is_primary)?.url ?? (product.images ?? [])[0]?.url ?? null) : null
-  useSeo(product ? {
+  const notFound = (query.error as { response?: { status?: number } } | null)?.response?.status === 404
+  useSeo(notFound ? { title: 'المنتج غير متوفر', noindex: true } : product ? {
     title: product.name,
     description: toMetaDescription(product.description, `${product.name} — ${product.category?.name ?? 'منتجات التجميل'} من Gazabella بسعر ${seoPrice} ₪. توصيل في خان يونس ودفع عند الاستلام.`),
     image: seoImage,
@@ -100,6 +105,15 @@ function ProductContent({ slug }: { slug: string }) {
     </div>
   )
 
+  if (notFound)
+    return (
+      <div className="container-page py-20 text-center">
+        <span className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-[var(--primary-dim)] text-[var(--primary)]"><Icon name="search" className="size-7" /></span>
+        <h1 className="text-2xl font-extrabold">هذا المنتج غير متوفر</h1>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--text-2)]">ربما نفد أو أُزيل من المتجر، أو أن الرابط غير صحيح. تصفّحي بقية المختارات.</p>
+        <Link className="btn-primary mt-7" to="/#products">تصفّح المنتجات</Link>
+      </div>
+    )
   if (query.isError || !product)
     return (
       <div className="container-page">
@@ -202,7 +216,7 @@ function ProductContent({ slug }: { slug: string }) {
           )}
 
           <div className="detail-benefits">
-            <p><Icon name="truck" className="size-4" /> تُحدد إمكانية التوصيل عند إتمام الطلب</p>
+            <p><Icon name="truck" className="size-4" /> توصيل من <span className="num">{formatPrice(store.minDeliveryFee)}</span> · دفع عند الاستلام</p>
             <p><Icon name="clock" className="size-4" /> إضافة المنتج للسلة لا تحجز المخزون</p>
           </div>
 
@@ -212,7 +226,7 @@ function ProductContent({ slug }: { slug: string }) {
           </details>
           <details className="product-information">
             <summary>التوصيل والاستلام</summary>
-            <p>إتمام الطلب متاح بعد تأكيد إمكانية التوصيل ورسومه.</p>
+            <p>نوصّل إلى: {zoneNames}. رسوم التوصيل من <span className="num">{formatPrice(store.minDeliveryFee)}</span> حسب المنطقة وتظهر قبل تأكيد الطلب، والدفع نقداً عند الاستلام. <Link className="text-link" to="/delivery-info">تفاصيل التوصيل</Link></p>
           </details>
         </div>
       </div>
