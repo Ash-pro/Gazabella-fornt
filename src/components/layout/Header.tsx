@@ -21,7 +21,7 @@ export function Header() {
   const announcement = banners?.find((b) => b.type === 'announcement')
   const searchField = <SearchBox />
   return <>
-    {announcement?.title && <div className="announcement">{announcement.title}</div>}
+    {announcement?.title && <aside className="announcement" aria-label="إعلان">{announcement.title}</aside>}
     <header className="store-header">
       <div className="container-page header-main">
         <button className="icon-button menu-trigger" aria-label="فتح التصنيفات" onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>

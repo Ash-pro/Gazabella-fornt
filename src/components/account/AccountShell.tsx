@@ -43,7 +43,7 @@ function AccountSearch(props: SearchProps) {
   const searchStore = () => navigate(`/products?search=${encodeURIComponent(term)}`)
 
   return (
-    <div className="acct-search" ref={wrapRef} role="search"
+    <div className="acct-search" ref={wrapRef} role="search" aria-label="البحث في طلباتكِ"
       onBlur={(e) => { if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false) }}
       onKeyDown={(e) => { if (e.key === 'Escape') { setOpen(false); if (!term) (e.target as HTMLElement).blur() } }}>
       <Icon name="search" className="acct-search__icon size-5" />
@@ -52,8 +52,7 @@ function AccountSearch(props: SearchProps) {
         aria-label="ابحثي برقم الطلب أو اسم المنتج"
         placeholder="ابحثي برقم الطلب أو اسم المنتج…"
         value={value}
-        aria-expanded={props.mode === 'jump' ? showPanel : undefined}
-        aria-controls={props.mode === 'jump' ? panelId : undefined}
+        aria-controls={showPanel ? panelId : undefined}
         onFocus={() => setOpen(true)}
         onChange={(e) => { setValue(e.target.value); setOpen(true) }}
         onKeyDown={(e) => {

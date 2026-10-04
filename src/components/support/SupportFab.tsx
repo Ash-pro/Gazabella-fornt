@@ -19,6 +19,7 @@ export function SupportFab() {
   const { whatsapp } = useSupportContact()
   if (!whatsapp || HIDDEN_ON.some((re) => re.test(pathname))) return null
   return (
+    <aside aria-label="الدعم">
     <a
       className="support-fab"
       href={whatsappLink(whatsapp, contextMessage(pathname))}
@@ -33,5 +34,6 @@ export function SupportFab() {
       </svg>
       <span className="support-fab__label">واتساب</span>
     </a>
+    </aside>
   )
 }

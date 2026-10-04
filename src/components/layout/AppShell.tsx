@@ -42,7 +42,7 @@ export function AppShell() {
       <Header />
       <CartDrawer />
       <CartToast />
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="flex-1" tabIndex={-1}>
         <Suspense fallback={<div className="container-page"><PageLoader /></div>}>
           <Outlet />
         </Suspense>
