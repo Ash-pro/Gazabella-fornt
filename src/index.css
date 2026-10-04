@@ -1471,3 +1471,16 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .footer-grid p.flex svg { margin-top: 5px; }
 @media (min-width: 1024px) { .footer-grid { grid-template-columns: minmax(260px, 1.1fr) 1.2fr 1fr; gap: 56px; } }
 [dir="rtl"] .footer-grid a[dir="ltr"] { text-align: right; }
+
+/* ===== صفحة المنتج: قد يعجبكِ أيضاً ===== */
+.related { margin-top: 64px; padding-top: 44px; border-top: 1px solid var(--border); }
+.related-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+@media (max-width: 1023px) {
+  .related { margin-top: 40px; padding-top: 28px; }
+  /* شريط أفقي بالسحب: يظهر جزء من البطاقة التالية كإشارة أن هناك المزيد */
+  .related-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; padding-bottom: 6px; scrollbar-width: none; }
+  .related-rail::-webkit-scrollbar { display: none; }
+  .related-rail > * { flex: 0 0 min(58%, 240px); scroll-snap-align: start; min-width: 0; }
+}
+/* زر واتساب يرتفع فوق شريط الشراء الثابت في صفحة المنتج على الجوال */
+@media (max-width: 1023px) { body:has(.product-sticky) .support-fab { bottom: calc(64px + 76px + env(safe-area-inset-bottom) + 12px); } }

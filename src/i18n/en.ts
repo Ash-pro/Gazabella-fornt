@@ -884,6 +884,9 @@ const en: Record<string, string> = {
   'تواصلي مع خدمة عميلات Gazabella عبر واتساب أو الهاتف.': 'Contact Gazabella customer care by WhatsApp or phone.',
   'تم استلام طلبكِ': 'Order received',
   'تتبعي حالة طلبكِ برقم المرجع.': 'Track your order status with the reference number.',
+  'قد يعجبكِ أيضاً': 'You may also like',
+  'مختارات تكمّل اختياركِ': 'Picks that go with your choice',
+  'كل منتجات {name}': 'All {name}',
 }
 
 export default en

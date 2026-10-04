@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
 import { useCartStore } from '../stores/cartStore'
 import { queryClient } from '../lib/queryClient'
+import { RelatedProducts } from '../components/product/RelatedProducts'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { ErrorState } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
@@ -231,6 +232,8 @@ function ProductContent({ slug }: { slug: string }) {
           </details>
         </div>
       </div>
+
+      <RelatedProducts product={product} />
 
       <div className="product-sticky">
         <div>
