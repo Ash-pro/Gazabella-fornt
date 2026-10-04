@@ -4,7 +4,7 @@ import { whatsappLink } from '../../content/storeInfo'
 import { track } from '../../lib/analytics'
 
 /** مسارات لا يظهر فيها الزر حتى لا يزاحم زر الإجراء الأساسي */
-const HIDDEN_ON = [/^\/checkout(\/|$)/, /^\/auth(\/|$)/]
+const HIDDEN_ON = [/^\/checkout(\/|$)/, /^\/auth(\/|$)/, /^\/profile(\/|$)/]
 
 function contextMessage(pathname: string): string {
   const order = /^\/orders\/([^/]+)$/.exec(pathname)?.[1]

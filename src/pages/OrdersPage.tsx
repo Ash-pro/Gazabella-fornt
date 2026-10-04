@@ -1,54 +1,100 @@
-import { isMvp0Api } from '../lib/apiContract'
-import { orderStatusLabel } from '../lib/orderStatus'
 import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { useAuthStore } from '../stores/authStore'
-import { gazabellaApi, isMockMode } from '../api/gazabella'
-import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
+import { Link, useSearchParams } from 'react-router-dom'
+import { AccountShell } from '../components/account/AccountShell'
+import { OrderCard } from '../components/account/OrderCard'
+import { ErrorState } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
+import { useAccountOrders } from '../hooks/useAccountOrders'
+import { useStoreInfo } from '../hooks/useStoreInfo'
 import { getApiErrorMessage } from '../lib/apiClient'
-import { formatPrice } from '../lib/format'
+import { ORDER_GROUPS, countByGroup, isOrderGroup, orderGroup, orderMatches, type OrderGroup } from '../lib/orderSearch'
+
+const PAGE_SIZE = 8
 
 export function OrdersPage() {
-  const [page, setPage] = useState(1)
-  const logout = useMutation({mutationFn: gazabellaApi.logout, onSuccess: () => useAuthStore.getState().clearSession()})
-  const ordersQuery = useQuery({ queryKey: ['orders', page], queryFn: () => gazabellaApi.getOrders(page) })
-  if (ordersQuery.isLoading) return <div className="container-page"><PageLoader label="نحمّل طلباتك…" /></div>
-  if (ordersQuery.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(ordersQuery.error)} onRetry={() => void ordersQuery.refetch()} /></div>
+  const [params, setParams] = useSearchParams()
+  const query = params.get('q') ?? ''
+  const statusParam = params.get('status')
+  const group: OrderGroup = isOrderGroup(statusParam) ? statusParam : 'all'
+  const ordersQuery = useAccountOrders()
+  const store = useStoreInfo()
+
+  const listKey = `${query.trim()}|${group}`
+  const [shown, setShown] = useState({ key: listKey, count: PAGE_SIZE })
+  const visibleCount = shown.key === listKey ? shown.count : PAGE_SIZE
+
+  const setParam = (key: 'q' | 'status', value: string) => setParams((prev) => {
+    const next = new URLSearchParams(prev)
+    if (value && !(key === 'status' && value === 'all')) next.set(key, value)
+    else next.delete(key)
+    return next
+  }, { replace: true })
+
+  const all = ordersQuery.data?.orders ?? []
+  const matched = all.filter((o) => orderMatches(o, query))
+  const counts = countByGroup(matched)
+  const filtered = group === 'all' ? matched : matched.filter((o) => orderGroup(o.status) === group)
+  const visible = filtered.slice(0, visibleCount)
+  const term = query.trim()
+  const clearAll = () => setParams(new URLSearchParams(), { replace: true })
 
   return (
-    <div className="container-page py-10 sm:py-14">
-      <span className="eyebrow">حسابك ومشترياتك</span>
-      <div className="flex items-center justify-between"><h1 className="section-title mt-2">طلباتي</h1>{!isMockMode() && !isMvp0Api() && <Link className="text-link" to="/profile">الملف الشخصي</Link>}<button className="btn-ghost" disabled={logout.isPending} onClick={() => logout.mutate()}>تسجيل الخروج</button></div>{logout.isError && <p className="field-error">{getApiErrorMessage(logout.error)}</p>}
-      <div className="mt-8 grid gap-4">
-        {!ordersQuery.data?.data.length && <EmptyState title="لا توجد طلبات بعد" message="عندما تتمين أول طلب سيظهر هنا بكل تفاصيله." />}
-        {ordersQuery.data?.data.map((order) => (
-          <Link to={`/orders/${(isMockMode() || isMvp0Api()) ? order.order_number : order.id}`} key={order.id} className="order-card hover:border-[var(--primary)] transition-all">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-3">
-                <p className="font-mono text-base font-black text-[var(--primary)] num" dir="ltr">{order.order_number}</p>
-                {order.status === 'shipped' && order.delivery_pin && (
-                  <span className="rounded-md border border-[var(--primary)]/30 bg-[var(--primary-dim)] px-2 py-0.5 font-mono text-xs font-bold text-[var(--primary)] num" dir="ltr">
-                    PIN: {order.delivery_pin}
-                  </span>
-                )}
+    <AccountShell active="orders" search={{ mode: 'filter', value: query, onChange: (v) => setParam('q', v) }}>
+      {ordersQuery.isError ? (
+        <ErrorState message={getApiErrorMessage(ordersQuery.error)} onRetry={() => void ordersQuery.refetch()} />
+      ) : ordersQuery.isLoading ? (
+        <div className="acct-list" role="status" aria-label="نحمّل طلباتكِ">{[0, 1, 2].map((i) => <div key={i} className="acct-skel" />)}</div>
+      ) : !all.length ? (
+        <div className="acct-empty">
+          <span className="acct-empty__icon"><Icon name="bag" className="size-7" /></span>
+          <h2>لا توجد طلبات بعد</h2>
+          <p>عند إتمام أول طلب سيظهر هنا مع حالته خطوة بخطوة.</p>
+          <Link className="btn-primary" to="/products">ابدئي التسوق</Link>
+        </div>
+      ) : (
+        <>
+          <div className="acct-filters" role="group" aria-label="تصفية حسب الحالة">
+            {ORDER_GROUPS.map((g) => (
+              <button key={g.key} type="button" className="acct-chip" aria-pressed={group === g.key} onClick={() => setParam('status', g.key)}>
+                {g.label}<b className="num">{counts[g.key]}</b>
+              </button>
+            ))}
+          </div>
+
+          <div className="acct-results" aria-live="polite">
+            <span>{term ? <>نتائج «<b>{term}</b>»: </> : null}<span className="num">{filtered.length}</span> {filtered.length === 1 ? 'طلب' : 'طلبات'}</span>
+            {(term || group !== 'all') && <button type="button" className="text-link" onClick={clearAll}>إلغاء التصفية</button>}
+          </div>
+
+          {filtered.length ? (
+            <div className="acct-list">
+              {visible.map((order) => <OrderCard key={order.id} order={order} query={term} whatsapp={store.whatsapp} acceptanceMinutes={store.acceptanceWindowMinutes} />)}
+            </div>
+          ) : (
+            <div className="acct-empty">
+              <span className="acct-empty__icon"><Icon name="search" className="size-7" /></span>
+              <h2>لا يوجد طلب مطابق</h2>
+              <p>{term ? <>لم نجد «{term}» في {group === 'all' ? 'طلباتكِ' : 'هذه الحالة'}. جرّبي جزءاً من رقم الطلب أو اسم المنتج.</> : 'لا توجد طلبات بهذه الحالة حالياً.'}</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button type="button" className="btn-ghost" onClick={clearAll}>عرض كل الطلبات</button>
+                {term && <Link className="btn-primary" to={`/products?search=${encodeURIComponent(term)}`}>ابحثي عنه في المتجر</Link>}
               </div>
-              <p className="text-xs text-[var(--text-2)]">
-                {new Intl.DateTimeFormat('ar-PS-u-nu-latn', { dateStyle: 'medium' }).format(new Date(order.created_at))} · <span className="num">{order.items_count ?? order.items.length}</span> منتجات
-              </p>
-              <p className="mt-3 text-sm">{order.items.length > 0 ? <>{order.items.slice(0, 2).map((item, idx) => <span key={item.id || idx}>{idx > 0 && '، '}{item.product_name} × <span className="num">{item.quantity}</span></span>)}{order.items.length > 2 && <> و<span className="num">{order.items.length - 2}</span> منتجات أخرى</>}</> : <span className="text-[var(--text-3)]">{order.items_count ?? 0} منتج</span>}</p>
-              <span className="text-link mt-3">تفاصيل الطلب</span>
             </div>
-            <div className="mr-auto text-left flex flex-col items-end">
-              <span className={`status-badge status-${order.status}`}>{orderStatusLabel(order.status)}</span>
-              <p className="mt-2 font-mono text-lg font-bold text-[var(--text)]"><span className="num">{formatPrice(order.total)}</span></p>
+          )}
+
+          {filtered.length > visibleCount && (
+            <div className="mt-6 flex justify-center">
+              <button type="button" className="btn-ghost" onClick={() => setShown({ key: listKey, count: visibleCount + PAGE_SIZE })}>
+                عرض المزيد (<span className="num">{filtered.length - visibleCount}</span>)
+              </button>
             </div>
-            <Icon name="chevron" className="size-5 text-[var(--text-3)] shrink-0" />
-          </Link>
-        ))}
-      </div>
-      {ordersQuery.data && ordersQuery.data.meta.last_page > 1 && <nav aria-label="صفحات الطلبات" className="flex justify-center gap-4 mt-6"><button className="btn-ghost" disabled={page <= 1 || ordersQuery.isFetching} onClick={() => setPage(page - 1)}>السابق</button><span>{page} / {ordersQuery.data.meta.last_page}</span><button className="btn-ghost" disabled={page >= ordersQuery.data.meta.last_page || ordersQuery.isFetching} onClick={() => setPage(page + 1)}>التالي</button></nav>}
-    </div>
+          )}
+          {term && !!filtered.length && (
+            <p className="acct-store-hint"><Icon name="bag" className="size-4" />تبحثين عن منتج لإعادة طلبه؟ <Link className="text-link" to={`/products?search=${encodeURIComponent(term)}`}>ابحثي عن «{term}» في المتجر</Link></p>
+          )}
+          {ordersQuery.data?.truncated && <p className="acct-results">نعرض آخر <span className="num">{all.length}</span> طلباً من أصل <span className="num">{ordersQuery.data.total}</span>.</p>}
+        </>
+      )}
+    </AccountShell>
   )
 }
