@@ -2,7 +2,12 @@ import { useAuthStore } from '../stores/authStore'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
-import { mockServices } from '../mock/mockServices'
+// بيانات العرض التجريبي تُحمَّل عند الطلب فقط — لا تدخل ملفات الموقع الحي (كل دوالها async)
+type MockServices = typeof import('../mock/mockServices').mockServices
+const mockServices = new Proxy({} as MockServices, {
+  get: (_target, key: string) => (...args: unknown[]) =>
+    import('../mock/mockServices').then((m) => (m.mockServices as unknown as Record<string, (...a: unknown[]) => unknown>)[key](...args)),
+})
 import { isMvp0Api } from '../lib/apiContract'
 import { mvp0Api } from './mvp0'
 import type {

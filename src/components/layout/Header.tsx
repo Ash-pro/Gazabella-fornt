@@ -25,7 +25,7 @@ export function Header() {
     <header className="store-header">
       <div className="container-page header-main">
         <button className="icon-button menu-trigger" aria-label="فتح التصنيفات" onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
-        <Link to="/" aria-label="Gazabella — الرئيسية" className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings?.tagline}</small></span></Link>
+        <Link to="/" aria-label="Gazabella — الرئيسية" className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" width="44" height="44" decoding="async" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings ? settings.tagline : 'الجمال، أقرب إليكِ'}</small></span></Link>
         <div className="desktop-search">{searchField}</div>
         <div className="header-actions"><Link className="icon-button" to={token ? '/orders' : '/auth'} aria-label={token ? 'حسابي وطلباتي' : 'تسجيل الدخول'}><Icon name="user" className="size-5" /></Link><button className="icon-button relative" onClick={openDrawer} aria-label={`السلة، ${cart?.total_items ?? 0} عناصر`}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
       </div>

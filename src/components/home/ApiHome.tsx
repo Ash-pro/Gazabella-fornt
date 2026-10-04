@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { ProductVisual } from '../product/ProductVisual'
-import { ErrorState, PageLoader } from '../ui/AsyncState'
+import { ErrorState } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
 import type { Banner } from '../../types/api'
 
@@ -62,7 +62,8 @@ function BannerSlider({ slides }: { slides: Banner[] }) {
 export function ApiHome() {
   const banners = useQuery({ queryKey: ['banners'], queryFn: () => gazabellaApi.getBanners() })
   const collections = useQuery({ queryKey: ['collections'], queryFn: gazabellaApi.getCollections })
-  if (banners.isPending) return <div className="container-page"><PageLoader /></div>
+  // هيكل بنفس أبعاد العارض حتى لا يقفز باقي الصفحة عند وصول البانرات
+  if (banners.isPending) return <div className="container-page banner-showcase banner-skeleton" role="status" aria-label="نحمّل المختارات"><div /><span /></div>
   if (banners.isError) return <div className="container-page"><ErrorState message={getApiErrorMessage(banners.error)} onRetry={() => void banners.refetch()} /></div>
   const slides = banners.data.filter((banner) => banner.type === 'hero' || banner.type === 'promo')
   return <>

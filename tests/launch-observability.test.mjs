@@ -190,3 +190,20 @@ test('middleware: robots.txt + sitemap.xml (static pages, API products/categorie
     for (const k of ['VITE_API_BASE_URL', 'SITE_URL', 'VITE_SITE_URL']) { if (k in realEnv) process.env[k] = realEnv[k]; else delete process.env[k] }
   }
 })
+
+test('public cache: stores only non-null data, expires after 7 days, survives broken storage', async () => {
+  const store = new Map()
+  globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => { store.set(k, String(v)) }, removeItem: (k) => { store.delete(k) } }
+  try {
+    const c = await server.ssrLoadModule('/src/lib/publicCache.ts')
+    assert.equal(c.readPublicCache('banners'), undefined)
+    c.writePublicCache('banners', [{ id: 1 }], 1000)
+    assert.deepEqual(c.readPublicCache('banners', 2000), [{ id: 1 }])
+    assert.equal(c.readPublicCache('banners', 1000 + 8 * 24 * 60 * 60 * 1000), undefined)
+    c.writePublicCache('settings', null)
+    assert.equal(c.readPublicCache('settings'), undefined)
+    store.set([...store.keys()][0], '{broken')
+    assert.equal(c.readPublicCache('banners', 2000), undefined)
+    assert.ok(c.PUBLIC_QUERY_KEYS.includes('categories') && !c.PUBLIC_QUERY_KEYS.includes('cart') && !c.PUBLIC_QUERY_KEYS.includes('orders'))
+  } finally { delete globalThis.localStorage }
+})

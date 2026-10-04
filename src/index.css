@@ -1411,3 +1411,12 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 }
 @media (min-width: 1024px) { .co-sticky { display: none; } }
 @media (max-width: 1023px) { .co-desktop-only { display: none !important; } }
+
+/* ===== Loading skeletons that reserve final layout (CLS) ===== */
+.banner-skeleton { display: grid; }
+.banner-skeleton > div { min-height: 490px; border-radius: 24px 24px 0 0; background: #f4eae5; animation: soft-pulse 1.6s ease-in-out infinite; }
+.banner-skeleton > span { display: block; height: 62px; border: 1px solid #eee3db; border-top: 0; border-radius: 0 0 24px 24px; background: #fbf7f3; }
+@media (max-width: 767px) { .banner-skeleton > div { min-height: 590px; } .banner-skeleton > span { height: 120px; } }
+.category-tile--skeleton > div { background: #ece5df; animation: soft-pulse 1.6s ease-in-out infinite; }
+.category-tile--skeleton > span { display: block; width: 60%; height: 12px; margin: 0 auto; border-radius: 6px; background: #ece5df; }
+@media (prefers-reduced-motion: reduce) { .banner-skeleton > div, .category-tile--skeleton > div { animation: none; } }
