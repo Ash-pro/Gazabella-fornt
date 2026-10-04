@@ -18,6 +18,7 @@ import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
 import { formatPrice, money } from '../lib/format'
 import { useStoreInfo } from '../hooks/useStoreInfo'
+import { saveLastOrder } from '../lib/lastOrder'
 import { formatEta } from '../content/storeInfo'
 
 // ─── Schema (no email — phone is the primary identifier) ───────────────────
@@ -146,8 +147,9 @@ function LegacyCheckoutPage() {
         ...(zoneId ? { delivery_zone_id: zoneId } : {}),
       })
     },
-    onSuccess: (order) => {
+    onSuccess: (order, values) => {
       trackPurchase(order)
+      saveLastOrder(order, values.phone)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
       queryClient.setQueryData(['order', String(isMockMode() ? order.order_number : order.id)], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
