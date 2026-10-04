@@ -30,9 +30,7 @@ export function MobileBottomNav() {
           to="/"
           end
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold transition-colors ${
-              isActive ? 'text-[var(--primary)]' : 'text-[var(--text-3)] hover:text-[var(--text)]'
-            }`
+            `mbn-item${isActive ? ' is-active' : ''}`
           }
         >
           <Icon name="sparkle" className="size-5" />
@@ -41,7 +39,7 @@ export function MobileBottomNav() {
 
         {/* الفئات */}
         <Link to="/#categories"
-          className="flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold text-[var(--text-3)] hover:text-[var(--primary)] transition-colors"
+          className="mbn-item"
         >
           <Icon name="filter" className="size-5" />
           <span>{t('الفئات')}</span>
@@ -51,13 +49,13 @@ export function MobileBottomNav() {
         <button
           type="button"
           onClick={openDrawer}
-          className="relative flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold text-[var(--text-3)] hover:text-[var(--primary)] transition-colors"
+          className="mbn-item relative"
           aria-label={t('السلة، {cartCount} عناصر', { cartCount: cartCount })}
         >
           <div className="relative">
             <Icon name="bag" className="size-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 grid min-w-[1.1rem] h-[1.1rem] place-items-center rounded-full bg-[var(--primary)] px-1 font-mono text-[9px] font-black text-white">
+              <span className="absolute -top-1.5 -end-2 grid min-w-[1.1rem] h-[1.1rem] place-items-center rounded-full bg-[var(--primary)] px-1 font-mono text-[9px] font-black text-white">
                 {cartCount}
               </span>
             )}
@@ -69,9 +67,7 @@ export function MobileBottomNav() {
         <NavLink
           to={token ? '/orders' : '/auth'}
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-1 py-1 text-[11px] font-extrabold transition-colors ${
-              isActive ? 'text-[var(--primary)]' : 'text-[var(--text-3)] hover:text-[var(--text)]'
-            }`
+            `mbn-item${isActive ? ' is-active' : ''}`
           }
         >
           <Icon name="user" className="size-5" />

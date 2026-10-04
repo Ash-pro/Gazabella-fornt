@@ -169,7 +169,7 @@ test('Jawwal confirmation and reference lookup use the new contracts',async()=>{
       assert.deepEqual(JSON.parse(config.data),{order_number:rawOrder.order_number,reference:'ref-123'})
     } else {
       assert.equal(config.url,'/orders/lookup-by-reference')
-      assert.deepEqual(config.params,{reference:'ref-123'})
+      assert.deepEqual(config.params,{reference:'ref-123',lang:'ar'})
     }
     return respond({data:{...rawOrder,payment_status:'paid',payment_reference:'ref-123',store_id:2,commission_amount:3}},config)
   }

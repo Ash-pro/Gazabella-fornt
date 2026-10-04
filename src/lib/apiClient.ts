@@ -28,13 +28,16 @@ export const apiClient = axios.create({
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json',
-    'Accept-Language': 'ar',
   },
 })
 
 // ── Request Interceptor ───────────────────────────────────────────────────
 apiClient.interceptors.request.use((config) => {
-  config.headers.set('Accept-Language', getLocale())
+  // اللغة في الترويسة وفي الرابط معاً: الـCDN يخزّن الردود حسب الرابط فقط (لا Vary: Accept-Language)،
+  // فبدون ?lang= يرجع الرد المخزَّن بلغة أول طلب مهما كانت لغة الواجهة.
+  const locale = getLocale()
+  config.headers.set('Accept-Language', locale)
+  if ((config.method ?? 'get').toLowerCase() === 'get') config.params = { ...(config.params ?? {}), lang: locale }
   const token = useAuthStore.getState().token
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`)

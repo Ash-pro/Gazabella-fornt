@@ -1335,7 +1335,7 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .auth-context { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; padding: 12px 14px; border: 1px solid #bfe3cf; border-radius: 12px; background: var(--success-bg); font-size: 13px !important; line-height: 1.8; color: var(--success) !important; }
 .auth-context--plain { border-color: var(--border); background: var(--surface2); color: var(--text-2) !important; }
 /* زر واتساب العائم لا يغطي روابط أسفل الفوتر على الشاشات المتوسطة */
-@media (min-width: 1024px) { .footer-bottom { padding-inline-end: max(0px, calc(170px - (100vw - 1240px) / 2)); } }
+@media (min-width: 1024px) { .footer-bottom { padding-inline-end: max(0px, calc(190px - (100vw - 1240px) / 2)); } }
 
 /* ===== Service status banner ===== */
 .service-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 10px 16px; background: #fff4e5; border-bottom: 1px solid #f1d9b0; font-size: 13px; line-height: 1.7; color: #7a4b00; text-align: center; }
@@ -1432,6 +1432,42 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 [dir="ltr"] .co-pane--back { animation-name: co-in-fwd; }
 [dir="ltr"] .co-mini summary svg { transform: rotate(90deg); }
 [dir="ltr"] .co-mini[open] summary svg { transform: rotate(-90deg); }
-.lang-switch { display: inline-grid; place-items: center; min-width: 40px; height: 40px; padding: 0 8px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font-size: 12px; font-weight: 800; color: var(--primary); transition: .2s; }
-.lang-switch:hover { background: var(--surface2); }
+/* زر اللغة: بنفس ارتفاع أيقونات الهيدر، بلا إطار ثقيل، يفصله خط رفيع عن الحساب والسلة */
+.header-actions { align-items: center; gap: 4px; }
+.lang-switch { display: inline-flex; align-items: center; gap: 7px; height: 2.6rem; padding-inline: 12px; border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1; color: var(--text); white-space: nowrap; transition: .2s ease; position: relative; margin-inline-end: 13px; }
+.lang-switch::after { content: ""; position: absolute; inset-inline-end: -7px; top: 50%; width: 1px; height: 20px; transform: translateY(-50%); background: var(--border); }
+.lang-switch svg { color: var(--text-3); transition: color .2s; }
+.lang-switch:hover { background: var(--surface2); color: var(--primary); }
+.lang-switch:hover svg { color: var(--primary); }
 .lang-switch:disabled { opacity: .6; }
+.lang-switch[lang="ar"] { font-family: var(--font-ar, inherit); font-size: 14px; }
+.lang-switch__short { display: none; }
+@media (max-width: 1023px) {
+  .header-actions { gap: 0; }
+  .lang-switch { padding-inline: 8px; gap: 5px; margin-inline-end: 0; font-size: 12px; font-weight: 700; }
+  .lang-switch::after { display: none; }
+  .lang-switch__full { display: none; }
+  .lang-switch__short { display: inline; }
+}
+/* الهيدر: ثلاثة أعمدة متوازنة — الشعار، البحث في المنتصف تماماً، الإجراءات */
+@media (min-width: 1024px) {
+  .header-main { display: grid; grid-template-columns: 1fr minmax(280px, 460px) 1fr; }
+  .header-main .menu-trigger { display: none; }
+  .header-main .brand-lockup { justify-self: start; }
+  .header-main .desktop-search { width: 100%; max-width: none; margin: 0; }
+  .header-main .header-actions { justify-self: end; margin: 0; }
+  .header-nav { gap: 6px; }
+  .header-nav a { padding-inline: 14px; white-space: nowrap; }
+}
+[dir="ltr"] .brand-lockup small { font-size: 8.5px; letter-spacing: 1.4px; text-transform: uppercase; }
+[dir="ltr"] .footer-grid h2 { letter-spacing: .01em; }
+
+/* الشريط السفلي للجوال: عناصر موحّدة (رابط أو زر) بنفس الخط واللون */
+.mbn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding-block: 4px; font-size: 11px; font-weight: 800; line-height: 1.2; color: var(--text-3); transition: color .2s; }
+.mbn-item:hover, .mbn-item.is-active { color: var(--primary); }
+/* الفوتر: الأيقونات لا تنكمش عند التفاف النص، والعمود الأول لا يترك فراغاً واسعاً */
+.footer-grid p svg { flex-shrink: 0; }
+.footer-grid p.flex { align-items: flex-start; }
+.footer-grid p.flex svg { margin-top: 5px; }
+@media (min-width: 1024px) { .footer-grid { grid-template-columns: minmax(260px, 1.1fr) 1.2fr 1fr; gap: 56px; } }
+[dir="rtl"] .footer-grid a[dir="ltr"] { text-align: right; }
