@@ -2,6 +2,8 @@
  * Vercel Routing Middleware — معاينات الروابط لروبوتات المشاركة (واتساب، فيسبوك، تيليجرام…)
  * هذه الروبوتات لا تشغّل JavaScript، فتقرأ index.html فقط. للزوار العاديين: لا تدخّل إطلاقاً.
  *
+ * ويولّد أيضاً /robots.txt و /sitemap.xml (المنتجات والتصنيفات من ‎/sitemap‎ في الـ API).
+ *
  * Env على Vercel (Runtime): OG_API_BASE_URL · OG_STORAGE_URL · SITE_URL
  * (ويقرأ VITE_API_BASE_URL / VITE_STORAGE_URL / VITE_SITE_URL كبديل)
  */
@@ -57,7 +59,7 @@ function toMetaDescription(text: string | null | undefined, fallback = DEFAULT_D
 
 export const config = {
   // كل المسارات بدون امتداد ملف، ما عدا الأصول الثابتة
-  matcher: ['/((?!assets/|brand/|images/|payments/|api/|.*\\.[a-zA-Z0-9]+$).*)'],
+  matcher: ['/robots.txt', '/sitemap.xml', '/((?!assets/|brand/|images/|payments/|api/|.*\\.[a-zA-Z0-9]+$).*)'],
 }
 
 const BOTS = /facebookexternalhit|facebot|whatsapp|telegrambot|twitterbot|slackbot|linkedinbot|discordbot|pinterest|skypeuripreview|vkshare|redditbot|snapchat|applebot|googlebot|bingbot|yandex|duckduckbot|embedly|iframely|viber/i
@@ -141,7 +143,7 @@ function render(html: string, m: Meta): string {
 
 export default async function middleware(request: Request): Promise<Response> {
   try {
-    return (await botPreview(request)) ?? next()
+    return (await seoFile(request)) ?? (await botPreview(request)) ?? next()
   } catch {
     // أي خطأ هنا يجب ألا يُسقط الموقع — نمرّر الطلب كما هو
     return next()
@@ -169,5 +171,83 @@ async function botPreview(request: Request): Promise<Response | null> {
   return new Response(html, {
     status: 200,
     headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400', vary: 'user-agent' },
+  })
+}
+
+// ── robots.txt + sitemap.xml ─────────────────────────────────────────────────
+
+/** مسارات خاصة لا تُزحف. ‎/delivery‎ بـ $ حتى لا تُحجب ‎/delivery-info‎ (المطابقة بالبادئة) */
+const ROBOTS_DISALLOW = ['/cart', '/checkout', '/auth', '/profile', '/orders', '/merchant', '/delivery$', '/delivery/', '/*?search=']
+
+/** الصفحات الثابتة القابلة للفهرسة = كل ما في ROUTE_SEO بدون noindex */
+const staticPages = (): string[] => Object.keys(ROUTE_SEO).filter((path) => !ROUTE_SEO[path].noindex)
+
+/** نفهرس فقط على النطاق الرسمي: إن ضُبط SITE_URL وكان الطلب من نطاق آخر (معاينات Vercel) نمنع الزحف كلياً */
+function isCanonicalHost(requestUrl: URL): boolean {
+  const site = env('SITE_URL') || env('VITE_SITE_URL')
+  if (!site) return true
+  try { return new URL(site).host === requestUrl.host } catch { return true }
+}
+
+function robotsTxt(origin: string, indexable: boolean): string {
+  if (!indexable) return 'User-agent: *\nDisallow: /\n'
+  return ['User-agent: *', 'Allow: /', ...ROBOTS_DISALLOW.map((path) => `Disallow: ${path}`), '', `Sitemap: ${origin}/sitemap.xml`, ''].join('\n')
+}
+
+interface SitemapEntry { type?: string; slug?: string; updated_at?: string | null }
+
+/** null = تعذّر الوصول للـ API (نرجع الصفحات الثابتة فقط بكاش قصير) */
+async function fetchSitemapEntries(): Promise<SitemapEntry[] | null> {
+  const api = env('OG_API_BASE_URL') || env('VITE_API_BASE_URL')
+  if (!api) return null
+  try {
+    const res = await fetch(`${api}/sitemap`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) })
+    if (!res.ok) return null
+    const body = (await res.json()) as { data?: { entries?: SitemapEntry[] } | SitemapEntry[] }
+    const entries = Array.isArray(body.data) ? body.data : body.data?.entries
+    return Array.isArray(entries) ? entries : null
+  } catch {
+    return null
+  }
+}
+
+function sitemapXml(origin: string, entries: SitemapEntry[]): string {
+  const seen = new Set<string>()
+  const urls: string[] = []
+  const add = (loc: string, lastmod?: string | null) => {
+    if (seen.has(loc) || urls.length >= 50000) return
+    seen.add(loc)
+    const date = lastmod && !Number.isNaN(Date.parse(lastmod)) ? `<lastmod>${new Date(lastmod).toISOString()}</lastmod>` : ''
+    urls.push(`  <url><loc>${esc(loc)}</loc>${date}</url>`)
+  }
+  for (const path of staticPages()) add(`${origin}${path === '/' ? '/' : path}`)
+  for (const entry of entries) {
+    if (!entry?.slug || typeof entry.slug !== 'string') continue
+    const slug = encodeURIComponent(entry.slug)
+    if (entry.type === 'product') add(`${origin}/products/${slug}`, entry.updated_at)
+    else if (entry.type === 'category') add(`${origin}/?category=${slug}`, entry.updated_at)
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`
+}
+
+async function seoFile(request: Request): Promise<Response | null> {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null
+  const url = new URL(request.url)
+  if (url.pathname !== '/robots.txt' && url.pathname !== '/sitemap.xml') return null
+  const origin = env('SITE_URL') || env('VITE_SITE_URL') || url.origin
+  const indexable = isCanonicalHost(url)
+
+  if (url.pathname === '/robots.txt') {
+    return new Response(robotsTxt(origin, indexable), { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=0, s-maxage=3600' } })
+  }
+  const entries = indexable ? await fetchSitemapEntries() : []
+  return new Response(sitemapXml(origin, entries ?? []), {
+    status: 200,
+    headers: {
+      'content-type': 'application/xml; charset=utf-8',
+      // فشل الـ API: كاش قصير حتى تعود المنتجات سريعاً
+      'cache-control': entries ? 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400' : 'public, max-age=0, s-maxage=120',
+      ...(indexable ? {} : { 'x-robots-tag': 'noindex' }),
+    },
   })
 }

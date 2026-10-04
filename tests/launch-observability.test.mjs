@@ -135,3 +135,58 @@ test('service status: outage detection + status URL + payment methods from setti
   assert.deepEqual(p.paymentOptionsFromCodes(null).map((o) => o.code), ['cod'])
   assert.deepEqual(p.paymentOptionsFromCodes([]).map((o) => o.code), ['cod'])
 })
+
+test('middleware: robots.txt + sitemap.xml (static pages, API products/categories, canonical host only, API failure)', async () => {
+  const mod = await server.ssrLoadModule('/middleware.ts')
+  const realFetch = globalThis.fetch
+  const realEnv = { ...process.env }
+  const get = async (url) => { const r = await mod.default(new Request(url, { headers: { 'user-agent': 'Googlebot' } })); return { r, text: await r.text() } }
+  try {
+    process.env.VITE_API_BASE_URL = 'https://api.example.com/api/v1'
+    delete process.env.SITE_URL; delete process.env.VITE_SITE_URL
+    globalThis.fetch = async (u) => {
+      assert.equal(String(u), 'https://api.example.com/api/v1/sitemap')
+      return new Response(JSON.stringify({ success: true, data: { entries: [
+        { type: 'product', slug: 'rose-serum', updated_at: '2026-10-04T07:59:31+00:00' },
+        { type: 'product', slug: 'rose-serum', updated_at: null },
+        { type: 'category', slug: 'skincare', updated_at: 'not-a-date' },
+        { type: 'weird', slug: 'x' }, { type: 'product' },
+        { type: 'product', slug: 'a&b <c>' },
+      ] } }), { status: 200 })
+    }
+    const robots = await get('https://shop.example.com/robots.txt')
+    assert.match(robots.r.headers.get('content-type'), /text\/plain/)
+    assert.match(robots.text, /^User-agent: \*\nAllow: \/\n/)
+    assert.match(robots.text, /Disallow: \/checkout\n/)
+    assert.match(robots.text, /Disallow: \/delivery\$\n/)
+    assert.ok(!/Disallow: \/delivery\n/.test(robots.text), '/delivery-info must stay crawlable')
+    assert.match(robots.text, /Sitemap: https:\/\/shop\.example\.com\/sitemap\.xml\n$/)
+
+    const map = await get('https://shop.example.com/sitemap.xml')
+    assert.match(map.r.headers.get('content-type'), /application\/xml/)
+    assert.match(map.r.headers.get('cache-control'), /s-maxage=3600/)
+    assert.ok(map.text.startsWith('<?xml version="1.0" encoding="UTF-8"?>'))
+    for (const loc of ['https://shop.example.com/', 'https://shop.example.com/faq', 'https://shop.example.com/delivery-info', 'https://shop.example.com/products/rose-serum', 'https://shop.example.com/?category=skincare', 'https://shop.example.com/products/a%26b%20%3Cc%3E'])
+      assert.ok(map.text.includes(`<loc>${loc}</loc>`), `missing ${loc}`)
+    assert.equal(map.text.split('/products/rose-serum<').length - 1, 1, 'duplicates removed')
+    assert.ok(map.text.includes('<lastmod>2026-10-04T07:59:31.000Z</lastmod>'))
+    assert.ok(!/checkout|\/cart|\/orders|\/auth|weird|not-a-date/.test(map.text))
+
+    // نطاق غير الرسمي (معاينة): لا زحف ولا روابط
+    process.env.SITE_URL = 'https://gazabella.ps'
+    const preview = await get('https://preview-abc.vercel.app/robots.txt')
+    assert.equal(preview.text, 'User-agent: *\nDisallow: /\n')
+    const official = await get('https://gazabella.ps/sitemap.xml')
+    assert.ok(official.text.includes('<loc>https://gazabella.ps/products/rose-serum</loc>'))
+
+    // فشل الـ API: خريطة صالحة بالصفحات الثابتة فقط وبكاش قصير
+    globalThis.fetch = async () => { throw new Error('down') }
+    const degraded = await get('https://gazabella.ps/sitemap.xml')
+    assert.equal(degraded.r.status, 200)
+    assert.ok(degraded.text.includes('<loc>https://gazabella.ps/faq</loc>') && !degraded.text.includes('/products/'))
+    assert.match(degraded.r.headers.get('cache-control'), /s-maxage=120/)
+  } finally {
+    globalThis.fetch = realFetch
+    for (const k of ['VITE_API_BASE_URL', 'SITE_URL', 'VITE_SITE_URL']) { if (k in realEnv) process.env[k] = realEnv[k]; else delete process.env[k] }
+  }
+})
