@@ -11,21 +11,24 @@ import { getApiErrorMessage } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
 import { useAuthStore } from '../stores/authStore'
 import type { User } from '../types/api'
+import { loadLastOrder } from '../lib/lastOrder'
 
 type Step = 'phone' | 'otp'
 
 const PHONE_REGEX = /^(\+?(970|972))?0?5\d{8}$/
 
 export function AuthPage() {
+  const [params] = useSearchParams()
+  // قادمة من صفحة الشكر: نعرض سياق الطلب ونعبّئ رقم الجوال من الجلسة (لا نضعه في الرابط)
+  const [lastOrder] = useState(() => (params.get('from') === 'order' ? loadLastOrder() : null))
   const [step, setStep] = useState<Step>('phone')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(lastOrder?.phone ?? '')
   const [name, setName] = useState('')
   const [otp, setOtp] = useState('')
   const [isNewUser, setIsNewUser] = useState(false)
   const [phoneError, setPhoneError] = useState('')
   const [otpError, setOtpError] = useState('')
   const [countdown, setCountdown] = useState(0)
-  const [params] = useSearchParams()
   const navigate = useNavigate()
 
   const next = params.get('next') || '/orders'
@@ -91,6 +94,17 @@ export function AuthPage() {
       <div className="auth-layout auth-layout--refined">
         <div className="auth-form">
           {!isMvp0Api() && <Link className="text-link mb-4" to="/orders/lookup">لديكِ مرجع دفع؟ تابعي طلبكِ هنا</Link>}
+          {lastOrder ? (
+            <p className="auth-context" role="status">
+              <Icon name="check" className="size-5 shrink-0" />
+              <span>طلبكِ <b className="num" dir="ltr">{lastOrder.order.order_number}</b> مسجّل عندنا. ادخلي بنفس رقم الجوال لمتابعة حالته — نرسل لكِ كود تحقق فقط.</span>
+            </p>
+          ) : safeNext.startsWith('/orders') && (
+            <p className="auth-context auth-context--plain" role="status">
+              <Icon name="package" className="size-5 shrink-0" />
+              <span>سجّلي الدخول برقم الجوال الذي طلبتِ به لعرض طلباتكِ ومتابعتها.</span>
+            </p>
+          )}
           <span className="eyebrow">مساحتكِ في Gazabella</span>
           <h1>{step === 'phone' ? 'أهلًا بكِ.' : 'تحقّقي من جوالكِ'}</h1>
           <p>
