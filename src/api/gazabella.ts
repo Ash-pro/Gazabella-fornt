@@ -1,4 +1,12 @@
 import { t } from '../i18n'
+import axios from 'axios'
+import { loadLastOrder } from '../lib/lastOrder'
+import { phoneDigits, samePhone, trackedFromOrder, trackedFromResponse, type TrackedOrder } from '../lib/orderTracking'
+
+export class TrackError extends Error {
+  kind: 'not_found' | 'unavailable' | 'rate_limited'
+  constructor(kind: 'not_found' | 'unavailable' | 'rate_limited') { super(kind); this.kind = kind }
+}
 import { useAuthStore } from '../stores/authStore'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
@@ -499,6 +507,33 @@ const legacyGazabellaApi = {
       order_number: orderNumber, reference,
     })
     return normalizeOrder(data.data)
+  },
+
+  /**
+   * تتبع الطلب للضيف برقم الطلب + رقم الجوال (بدون تسجيل).
+   * POST حتى لا يظهر الجوال في الرابط. إن لم يكن المسار مفعّلاً في الخادم بعد
+   * أو كنا في الوضع التجريبي، نعرض لقطة الطلب المحفوظة على هذا الجهاز إن طابقت.
+   */
+  async trackOrder(orderNumber: string, phone: string): Promise<TrackedOrder> {
+    const saved = loadLastOrder()
+    const local = saved && saved.order.order_number.toUpperCase() === orderNumber && samePhone(saved.phone, phone) ? trackedFromOrder(saved.order, true) : null
+    if (isMockMode()) {
+      if (local) return local
+      throw new TrackError('not_found')
+    }
+    try {
+      const { data } = await apiClient.post<ApiData<Record<string, unknown>>>('/orders/track', { order_number: orderNumber, phone: phoneDigits(phone) })
+      return trackedFromResponse(data.data)
+    } catch (error) {
+      if (!axios.isAxiosError(error) || !error.response) throw error
+      const status = error.response.status
+      const message = String((error.response.data as { message?: string } | undefined)?.message ?? '')
+      const routeMissing = (status === 404 && /route .*could not be found/i.test(message)) || status === 405
+      if (routeMissing) { if (local) return local; throw new TrackError('unavailable') }
+      if (status === 404) throw new TrackError('not_found')
+      if (status === 429) throw new TrackError('rate_limited')
+      throw error
+    }
   },
 
   async lookupOrderByReference(reference: string): Promise<Order> {

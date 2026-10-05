@@ -24,7 +24,7 @@ export function MobileBottomNav() {
       aria-label={t('التنقل السفلي للجوال')}
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-white/95 backdrop-blur-lg lg:hidden pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="grid grid-cols-4 items-center h-16 px-2 text-center">
+      <div className="grid grid-cols-5 items-center h-16 px-2 text-center">
         {/* الرئيسية */}
         <NavLink
           to="/"
@@ -62,6 +62,12 @@ export function MobileBottomNav() {
           </div>
           <span>{t('السلة')}</span>
         </button>
+
+        {/* تتبع الطلب — بدون تسجيل */}
+        <NavLink to="/track" className={({ isActive }) => `mbn-item${isActive ? ' is-active' : ''}`}>
+          <Icon name="package" className="size-5" />
+          <span>{t('تتبع')}</span>
+        </NavLink>
 
         {/* طلباتي / حسابي */}
         <NavLink

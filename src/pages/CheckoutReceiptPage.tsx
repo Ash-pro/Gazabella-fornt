@@ -53,7 +53,7 @@ export function CheckoutReceiptPage() {
   const phone = saved?.order.order_number === order.order_number ? saved.phone : order.phone
   const address = order.address || (saved?.order.order_number === order.order_number ? saved.address : '') || ''
   const detailsPath = orderPath(order)
-  const trackTo = loggedIn ? detailsPath : `/auth?next=${encodeURIComponent(detailsPath)}&from=order`
+  const trackTo = loggedIn ? detailsPath : `/track?order=${encodeURIComponent(order.order_number)}`
   const help = store.whatsapp ? whatsappLink(store.whatsapp, t('مرحباً Gazabella، أستفسر عن طلبي رقم {order_number}', { order_number: order.order_number })) : null
   const steps: Array<{ icon: 'clock' | 'truck' | 'dollar'; title: string; text: string }> = [
     { icon: 'clock', title: t('نراجع طلبكِ ونؤكده'), text: t('عادةً خلال {acceptanceWindowMinutes} دقيقة في أوقات الدوام.', { acceptanceWindowMinutes: store.acceptanceWindowMinutes }) },
@@ -79,7 +79,7 @@ export function CheckoutReceiptPage() {
           <Link className="btn-ghost" to="/">{t('متابعة التسوق')}</Link>
         </div>
         {!loggedIn && (
-          <p className="thx-hint"><Icon name="shield" className="size-4 shrink-0 mt-0.5" /><span>{t('للمتابعة نرسل كود تحقق إلى نفس رقم الجوال الذي طلبتِ به — بدون كلمة سر. احتفظي برقم الطلب للرجوع إليه.')}</span></p>
+          <p className="thx-hint"><Icon name="shield" className="size-4 shrink-0 mt-0.5" /><span>{t('تابعي طلبكِ في أي وقت من «تتبع طلبك» برقم الطلب ورقم جوالكِ — بدون تسجيل وبدون كود. احتفظي برقم الطلب.')}</span></p>
         )}
       </section>
 

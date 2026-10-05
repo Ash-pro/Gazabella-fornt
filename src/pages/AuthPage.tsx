@@ -96,6 +96,7 @@ export function AuthPage() {
       </Link>
       <div className="auth-layout auth-layout--refined">
         <div className="auth-form">
+          <Link className="auth-track" to="/track"><Icon name="package" className="size-4" />{t('تريدين فقط متابعة طلب؟ تتبّعيه بدون تسجيل')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
           {!isMvp0Api() && jawwalEnabled && <Link className="text-link mb-4" to="/orders/lookup">{t('لديكِ مرجع دفع؟ تابعي طلبكِ هنا')}</Link>}
           {lastOrder ? (
             <p className="auth-context" role="status">

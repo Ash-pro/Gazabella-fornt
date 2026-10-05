@@ -30,6 +30,7 @@ const ROUTE_SEO: Record<string, SeoEntry> = {
   '/terms': { title: 'شروط الاستخدام', description: 'شروط استخدام Gazabella: الطلب والتأكيد، الأسعار والدفع، الاستلام والإلغاء.' },
   '/faq': { title: 'الأسئلة الشائعة', description: 'أجوبة سريعة عن الطلب والدفع والتوصيل وكود التسليم والاسترجاع.' },
   '/contact': { title: 'تواصلي معنا', description: 'تواصلي مع خدمة عميلات Gazabella عبر واتساب أو الهاتف.' },
+  '/track': { title: 'تتبع الطلب', description: 'تتبّعي حالة طلبكِ من Gazabella برقم الطلب ورقم الجوال — بدون تسجيل دخول.' },
   '/cart': { title: 'سلة التسوق', description: DEFAULT_DESCRIPTION, noindex: true },
   '/checkout': { title: 'إتمام الطلب', description: DEFAULT_DESCRIPTION, noindex: true },
   '/checkout/receipt': { title: 'تم استلام طلبكِ', description: DEFAULT_DESCRIPTION, noindex: true },

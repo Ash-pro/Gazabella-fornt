@@ -32,6 +32,7 @@ const PrivacyPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({
 const TermsPage = lazy(() => import('./pages/info/PolicyPages').then((m) => ({ default: m.TermsPage })))
 const FaqPage = lazy(() => import('./pages/info/SupportPages').then((m) => ({ default: m.FaqPage })))
 const ContactPage = lazy(() => import('./pages/info/SupportPages').then((m) => ({ default: m.ContactPage })))
+const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage').then((module) => ({ default: module.TrackOrderPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -66,6 +67,7 @@ export default function App() {
               <Route path="checkout" element={<Suspense fallback={<PageLoader />}>{isMvp0Api() ? <ProtectedRoute><CheckoutPage /></ProtectedRoute> : <CheckoutPage />}</Suspense>} />
               <Route path="checkout/receipt" element={<CheckoutReceiptPage />} />
               <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="track" element={<Suspense fallback={<PageLoader />}><TrackOrderPage /></Suspense>} />
               <Route path="orders/lookup" element={<OrderLookupPage />} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
               <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
