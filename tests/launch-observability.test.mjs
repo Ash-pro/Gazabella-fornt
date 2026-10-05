@@ -145,7 +145,7 @@ test('middleware: robots.txt + sitemap.xml (static pages, API products/categorie
     process.env.VITE_API_BASE_URL = 'https://api.example.com/api/v1'
     delete process.env.SITE_URL; delete process.env.VITE_SITE_URL
     globalThis.fetch = async (u) => {
-      assert.equal(String(u), 'https://api.example.com/api/v1/sitemap')
+      assert.equal(String(u), 'https://api.example.com/api/v1/sitemap?lang=ar')
       return new Response(JSON.stringify({ success: true, data: { entries: [
         { type: 'product', slug: 'rose-serum', updated_at: '2026-10-04T07:59:31+00:00' },
         { type: 'product', slug: 'rose-serum', updated_at: null },
