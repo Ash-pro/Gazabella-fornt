@@ -1740,3 +1740,9 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .account-chip__caret.is-open { transform: rotate(-90deg); }
 
 .trk-note--warn { background: #fdf5e6; color: #7a5a17; }
+
+.trk-recent { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 6px; padding: 12px 14px; border: 1px dashed #d9bcc6; border-radius: 12px; background: var(--primary-dim, #f7ecef); font-size: 13px; text-align: start; color: var(--text-2); transition: border-color .2s; }
+.trk-recent:hover { border-color: var(--primary); }
+.trk-recent span { flex: 1; min-width: 0; }
+.trk-recent bdi { font-weight: 700; color: var(--text); }
+.trk-recent b { color: var(--primary); white-space: nowrap; }

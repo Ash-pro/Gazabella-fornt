@@ -56,14 +56,21 @@ export function TrackOrderPage() {
   // من صفحة الشكر على نفس الجهاز: نعبّئ ونعرض مباشرة بدون أي كتابة
   const [saved] = useState(loadLastOrder)
   const paramNumber = cleanOrderNumber(params.get('order') ?? '')
-  const savedMatches = !!saved && (!paramNumber || paramNumber === saved.order.order_number.toUpperCase())
+  // الفتح التلقائي فقط عندما يحدد الرابط الطلب (?order=) — زر «تتبع طلبك» العادي يفتح النموذج فارغاً
+  const savedMatches = !!saved && !!paramNumber && paramNumber === saved.order.order_number.toUpperCase()
   // آخر تتبع ناجح في هذا التبويب: يبقى ظاهراً بعد تحديث الصفحة أو عند رفض مؤقت من الخادم
-  const [tracked] = useState(() => (savedMatches ? null : loadTracked(paramNumber || undefined)))
+  const [tracked] = useState(() => (savedMatches || !paramNumber ? null : loadTracked(paramNumber)))
   const known = savedMatches ? { number: saved.order.order_number.toUpperCase(), phone: saved.phone } : tracked ? { number: tracked.order.order_number.toUpperCase(), phone: tracked.phone } : null
-  const [number, setNumber] = useState(paramNumber || known?.number || '')
+  const [number, setNumber] = useState(paramNumber || '')
   const [phone, setPhone] = useState(known?.phone ?? '')
   const [lookup, setLookup] = useState<{ number: string; phone: string } | null>(known)
   const [touched, setTouched] = useState(false)
+  // اختصار لآخر طلب على هذا الجهاز (من صفحة الشكر أو آخر تتبع ناجح) بدل فتحه تلقائياً
+  const [recent] = useState(() => {
+    if (saved) return { number: saved.order.order_number.toUpperCase(), phone: saved.phone }
+    const last = loadTracked()
+    return last ? { number: last.order.order_number.toUpperCase(), phone: last.phone } : null
+  })
 
   const query = useQuery({
     queryKey: ['track', lookup?.number, lookup?.phone],
@@ -84,7 +91,9 @@ export function TrackOrderPage() {
   const lookupPhone = lookup?.phone
   useEffect(() => { if (fresh && lookupPhone) saveTracked(fresh, lookupPhone) }, [fresh, lookupPhone])
   // فشل التحديث (مثلاً حد المحاولات) لا يُخفي الطلب: نُبقي آخر ما لدينا — رد الخادم السابق أو اللقطة المحفوظة
-  const order: TrackedOrder | null = query.data ?? (lookup ? snapshot : null)
+  // النتيجة تُعرض فقط ما دام الرابط يحمل نفس رقم الطلب؛ الضغط على «تتبع طلبك» (بلا رقم) يعيد النموذج
+  const showing = !!lookup && paramNumber === lookup.number
+  const order: TrackedOrder | null = showing ? (query.data ?? snapshot) : null
   const staleReason = order && query.isError ? errorText(query.error, true) : null
 
   const numberOk = cleanOrderNumber(number).length >= 6
@@ -98,7 +107,7 @@ export function TrackOrderPage() {
     setNumber(clean)
     setParams({ order: clean }, { replace: true })
     track('order_track', { source: 'form' })
-    if (lookup?.number === clean && lookup.phone === phone) void query.refetch()
+    if (lookup?.number === clean && lookup.phone === phone) { if (!query.data || query.isError) void query.refetch() }
     else setLookup({ number: clean, phone })
   }
 
@@ -118,6 +127,11 @@ export function TrackOrderPage() {
           <h1 id="trk-title">{t('تتبّعي طلبكِ')}</h1>
           <p className="trk-lead">{t('أدخلي رقم الطلب ورقم الجوال الذي طلبتِ به، وشاهدي أين وصل طلبكِ الآن.')}</p>
 
+          {recent && !showing && (
+            <button type="button" className="trk-recent" onClick={() => { setNumber(recent.number); setPhone(recent.phone); setLookup(recent); setParams({ order: recent.number }, { replace: true }) }}>
+              <Icon name="clock" className="size-4 shrink-0" /><span>{t('طلبكِ الأخير')} <bdi className="num" dir="ltr">{recent.number}</bdi></span><b>{t('عرض الحالة')}</b>
+            </button>
+          )}
           <form onSubmit={submit} noValidate>
             <label className="field-label" htmlFor="trk-number">{t('رقم الطلب')}</label>
             <div className="trk-input">
