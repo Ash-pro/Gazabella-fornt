@@ -1738,3 +1738,5 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 @media (max-width: 479px) { .account-pop { position: fixed; top: 64px; inset-inline: 12px; width: auto; } }
 .account-chip__caret { transform: rotate(90deg); }
 .account-chip__caret.is-open { transform: rotate(-90deg); }
+
+.trk-note--warn { background: #fdf5e6; color: #7a5a17; }

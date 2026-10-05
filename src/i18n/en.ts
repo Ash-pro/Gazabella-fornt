@@ -1026,6 +1026,8 @@ const en: Record<string, string> = {
   "لوحتي": "My dashboard",
   "قائمة حسابي": "Account menu",
   "المساعدة والتواصل": "Help & contact",
+  "تعذّر تحديث الحالة الآن لكثرة المحاولات — هذه آخر حالة لدينا. حاولي التحديث بعد دقائق.": "We couldn't refresh the status right now (too many attempts) — this is the latest we have. Try again in a few minutes.",
+  "تعذّر تحديث الحالة الآن — هذه آخر حالة محفوظة لدينا.": "We couldn't refresh the status right now — this is the last status we have saved.",
 }
 
 export default en

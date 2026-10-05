@@ -37,8 +37,9 @@ const TIPS: Array<{ icon: IconName; title: string; text: string }> = [
   { icon: 'shield', title: 'بدون تسجيل وبدون كود', text: 'الرقمان معاً يكفيان، ولا نعرض عنوانكِ هنا حفاظاً على خصوصيتكِ.' },
 ]
 
-function errorText(error: unknown): string {
+function errorText(error: unknown, whileShowing = false): string {
   if (error instanceof TrackError) {
+    if (whileShowing) return error.kind === 'rate_limited' ? t('تعذّر تحديث الحالة الآن لكثرة المحاولات — هذه آخر حالة لدينا. حاولي التحديث بعد دقائق.') : t('تعذّر تحديث الحالة الآن — هذه آخر حالة محفوظة لدينا.')
     if (error.kind === 'not_found') return t('لم نجد طلباً بهذه البيانات. تأكدي من رقم الطلب ورقم الجوال.')
     if (error.kind === 'rate_limited') return t('محاولات كثيرة. انتظري دقيقة ثم حاولي مجدداً.')
     return t('التتبع السريع يُفعَّل قريباً. يمكنكِ الآن متابعة طلبكِ بتسجيل الدخول برقم جوالكِ.')
@@ -68,11 +69,16 @@ export function TrackOrderPage() {
     retry: false,
     staleTime: 20_000,
     gcTime: 60_000,
-    refetchInterval: (q) => (q.state.data && orderStepIndex(q.state.data.status) >= 0 && q.state.data.status !== 'delivered' && !q.state.data.local ? 60_000 : false),
+    // الخادم يحدّ المحاولات (5/دقيقة لكل جهاز و10/ساعة لكل طلب): تحديث هادئ كل 10 دقائق، ولا نعيد الطلب عند كل رجوع للتبويب
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: (q) => (q.state.data && !q.state.error && orderStepIndex(q.state.data.status) >= 0 && q.state.data.status !== 'delivered' && !q.state.data.local ? 600_000 : false),
   })
   // أثناء أول تحميل نعرض اللقطة المحفوظة فوراً بدل هيكل فارغ
   const snapshot = lookup && saved && saved.order.order_number.toUpperCase() === lookup.number ? trackedFromOrder(saved.order, true) : null
-  const order: TrackedOrder | null = query.data ?? (query.isPending && lookup ? snapshot : null)
+  // فشل التحديث (مثلاً حد المحاولات) لا يُخفي الطلب: نُبقي آخر ما لدينا — رد الخادم السابق أو اللقطة المحفوظة
+  const order: TrackedOrder | null = query.data ?? (lookup ? snapshot : null)
+  const staleReason = order && query.isError ? errorText(query.error, true) : null
 
   const numberOk = cleanOrderNumber(number).length >= 6
   const phoneOk = isTrackablePhone(phone)
@@ -94,7 +100,7 @@ export function TrackOrderPage() {
     setParams({}, { replace: true })
   }
 
-  if (order) return <Result order={order} phone={lookup?.phone ?? ''} refreshing={query.isFetching} onRefresh={() => void query.refetch()} onReset={reset} whatsapp={store.whatsapp} loggedIn={loggedIn} />
+  if (order) return <Result order={order} phone={lookup?.phone ?? ''} refreshing={query.isFetching} onRefresh={() => void query.refetch()} onReset={reset} whatsapp={store.whatsapp} loggedIn={loggedIn} staleReason={staleReason} />
 
   return (
     <div className="container-page trk-page">
@@ -156,7 +162,7 @@ export function TrackOrderPage() {
   )
 }
 
-function Result({ order, phone, refreshing, onRefresh, onReset, whatsapp, loggedIn }: { order: TrackedOrder; phone: string; refreshing: boolean; onRefresh: () => void; onReset: () => void; whatsapp: string | null; loggedIn: boolean }) {
+function Result({ order, phone, refreshing, onRefresh, onReset, whatsapp, loggedIn, staleReason }: { order: TrackedOrder; phone: string; refreshing: boolean; onRefresh: () => void; onReset: () => void; whatsapp: string | null; loggedIn: boolean; staleReason: string | null }) {
   const [copied, setCopied] = useState(false)
   const cancelled = orderStepIndex(order.status) < 0
   const delivered = order.status === 'delivered'
@@ -188,7 +194,8 @@ function Result({ order, phone, refreshing, onRefresh, onReset, whatsapp, logged
           <div><dt>{t('الإجمالي')}</dt><dd className="num trk-total">{formatPrice(order.total)}</dd></div>
         </dl>
 
-        {order.local && <p className="trk-note"><Icon name="clock" className="size-4 shrink-0" />{t('هذه آخر حالة محفوظة على جهازكِ. اضغطي «تحديث» لأحدث حالة.')}</p>}
+        {staleReason && !refreshing && <p className="trk-note trk-note--warn" role="status"><Icon name="alert" className="size-4 shrink-0" />{staleReason}</p>}
+        {order.local && !staleReason && <p className="trk-note"><Icon name="clock" className="size-4 shrink-0" />{t('هذه آخر حالة محفوظة على جهازكِ. اضغطي «تحديث» لأحدث حالة.')}</p>}
       </section>
 
       <div className="trk-grid">
