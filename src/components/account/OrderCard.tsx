@@ -96,7 +96,7 @@ export function OrderCard({ order, query, whatsapp, acceptanceMinutes }: { order
       <footer className="acct-order__foot">
         <div className="acct-order__total"><span>{t('الإجمالي')}</span><strong className="num">{formatPrice(order.total)}</strong></div>
         <div className="acct-order__actions">
-          {help && <a className="btn-ghost" href={help} target="_blank" rel="noopener noreferrer" aria-label={t('مساعدة بخصوص الطلب {order_number} عبر واتساب', { order_number: order.order_number })}>{t('مساعدة')}</a>}
+          {help && <a className="btn-whatsapp" href={help} target="_blank" rel="noopener noreferrer" aria-label={t('مساعدة بخصوص الطلب {order_number} عبر واتساب', { order_number: order.order_number })}><Icon name="whatsapp" className="size-5" />{t('مساعدة عبر واتساب')}</a>}
           {orderGroup(order.status) !== 'active' && <ReorderButton order={order} />}
           <Link className="btn-primary" to={orderPath(order)}>{t('تفاصيل الطلب')}</Link>
         </div>

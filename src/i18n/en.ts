@@ -957,6 +957,7 @@ const en: Record<string, string> = {
   "منتجات حفظتِها لوقت لاحق": "Products you saved for later",
   "راسلينا على واتساب": "Message us on WhatsApp",
   "مرحباً Gazabella، أحتاج مساعدة": "Hello Gazabella, I need help",
+  'مساعدة عبر واتساب': 'Help on WhatsApp',
 }
 
 export default en

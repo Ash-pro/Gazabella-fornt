@@ -1623,3 +1623,10 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
   .acct-tab { flex: 1; padding: 0 8px; }
 }
 @media (min-width: 1024px) { .dash { margin-top: 18px; } .dash-actions { margin-top: 38px; } }
+
+/* زر مساعدة واتساب: أخضر واتساب مع الأيقونة ليُفهم أنه يفتح محادثة */
+.btn-whatsapp { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 8px 16px; border: 1.5px solid #bfe3cf; border-radius: 8px; background: #eef8f2; color: #17663f; font-size: 13px; font-weight: 700; white-space: nowrap; transition: background .2s, border-color .2s, color .2s; }
+.btn-whatsapp:hover { background: #1f7a4d; border-color: #1f7a4d; color: #fff; }
+.btn-whatsapp:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.acct-order__actions .btn-whatsapp { min-height: 42px; }
+@media (max-width: 479px) { .acct-order__foot { flex-wrap: wrap; } .acct-order__actions { width: 100%; } .acct-order__actions > a, .acct-order__actions > button { flex: 1; } }
