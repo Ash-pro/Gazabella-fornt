@@ -470,6 +470,28 @@ const legacyGazabellaApi = {
       ? mockServices.getCart()
       : fetchCart(),
 
+  /**
+   * «اطلبيها مرة أخرى»: طلب واحد للخادم يضيف المتوفر من الطلب للسلة بالأسعار الحالية.
+   * احتياط (الوضع التجريبي أو تعذّر المسار): نضيف المنتجات واحداً واحداً.
+   */
+  async reorder(order: Pick<Order, 'id' | 'items'>): Promise<{ added: number; missing: number }> {
+    if (!isMockMode()) {
+      try {
+        const { data } = await apiClient.post<ApiData<{ added?: unknown[]; skipped?: unknown[] }>>(`/orders/${encodeURIComponent(order.id)}/reorder`)
+        return { added: data.data.added?.length ?? 0, missing: data.data.skipped?.length ?? 0 }
+      } catch (error) {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined
+        if (status !== 404 && status !== 405) throw error
+      }
+    }
+    let added = 0
+    for (const item of order.items) {
+      if (!item.product_id) continue
+      try { await gazabellaApi.addToCart(item.product_id, item.quantity || 1); added += 1 } catch { /* غير متوفر — نكمل بالباقي */ }
+    }
+    return { added, missing: order.items.length - added }
+  },
+
   addToCart: (product_id: number, quantity: number): Promise<Cart> =>
     isMockMode()
       ? mockServices.addToCart(product_id, quantity)

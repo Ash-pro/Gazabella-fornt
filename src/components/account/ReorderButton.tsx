@@ -2,6 +2,7 @@ import { t } from '../../i18n'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
+import { getApiErrorMessage } from '../../lib/apiClient'
 import { queryClient } from '../../lib/queryClient'
 import { useCartStore } from '../../stores/cartStore'
 import { track } from '../../lib/analytics'
@@ -13,14 +14,7 @@ export function ReorderButton({ order, className = 'btn-ghost' }: { order: Order
   const navigate = useNavigate()
   const openDrawer = useCartStore((s) => s.openDrawer)
   const reorder = useMutation({
-    mutationFn: async () => {
-      const items = order.items.filter((i) => i.product_id)
-      let added = 0
-      for (const item of items) {
-        try { await gazabellaApi.addToCart(item.product_id!, item.quantity || 1); added += 1 } catch { /* غير متوفر أو حُذف — نكمل بالباقي */ }
-      }
-      return { added, missing: order.items.length - added }
-    },
+    mutationFn: () => gazabellaApi.reorder(order),
     onSuccess: ({ added }) => {
       track('reorder', { added, total: order.items.length })
       if (!added) return
@@ -44,6 +38,7 @@ export function ReorderButton({ order, className = 'btn-ghost' }: { order: Order
         <Icon name="refresh" className={`size-4 ${reorder.isPending ? 'animate-spin' : ''}`} />
         {reorder.isPending ? t('نضيفها للسلة…') : t('اطلبيها مرة أخرى')}
       </button>
+      {reorder.isError && <p className="reorder-note is-error" role="alert">{getApiErrorMessage(reorder.error)}</p>}
       {result && (
         <p className={`reorder-note ${result.added ? '' : 'is-error'}`} role="status">
           {!result.added ? t('هذه المنتجات غير متوفرة حالياً.')
