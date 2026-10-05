@@ -10,14 +10,13 @@ import { Icon } from '../ui/Icon'
 import { SearchBox } from './SearchBox'
 import { Dialog } from '../ui/Dialog'
 import { LanguageSwitch } from './LanguageSwitch'
+import { AccountMenu } from './AccountMenu'
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchParams] = useSearchParams()
   const token = useAuthStore((s) => s.token)
   const openDrawer = useCartStore((s) => s.openDrawer)
-  const userName = useAuthStore((s) => s.user?.name)
-  const firstName = token && userName && !/^\+?\d/.test(userName.trim()) ? userName.trim().split(/\s+/)[0] : null
   const { data: cart } = useQuery({ queryKey: ['cart'], queryFn: gazabellaApi.getCart, staleTime: 30_000 })
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: 300_000 })
   const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: gazabellaApi.getSettings })
@@ -31,7 +30,7 @@ export function Header() {
         <button className="icon-button menu-trigger" aria-label={t('فتح التصنيفات')} onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
         <Link to="/" aria-label={t('Gazabella — الرئيسية')} className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" width="44" height="44" decoding="async" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings ? settings.tagline : t('الجمال، أقرب إليكِ')}</small></span></Link>
         <div className="desktop-search">{searchField}</div>
-        <div className="header-actions"><Link className="track-link" to="/track"><Icon name="package" className="size-[18px]" /><span>{t('تتبع طلبك')}</span></Link><LanguageSwitch />{token ? <Link className="account-chip" to="/account" aria-label={t('حسابي وطلباتي')}><span className="account-chip__avatar" aria-hidden="true">{firstName ? firstName.charAt(0) : <Icon name="user" className="size-4" />}</span><span className="account-chip__text">{firstName ? t('أهلاً {firstName}', { firstName: firstName }) : t('حسابي')}</span></Link> : <Link className="icon-button" to="/auth" aria-label={t('تسجيل الدخول')}><Icon name="user" className="size-5" /></Link>}<button className="icon-button relative" onClick={openDrawer} aria-label={t('السلة، {v1} عناصر', { v1: cart?.total_items ?? 0 })}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
+        <div className="header-actions"><Link className="track-link" to="/track"><Icon name="package" className="size-[18px]" /><span>{t('تتبع طلبك')}</span></Link><LanguageSwitch />{token ? <AccountMenu /> : <Link className="icon-button" to="/auth" aria-label={t('تسجيل الدخول')}><Icon name="user" className="size-5" /></Link>}<button className="icon-button relative" onClick={openDrawer} aria-label={t('السلة، {v1} عناصر', { v1: cart?.total_items ?? 0 })}><Icon name="bag" className="size-5" />{!!cart?.total_items && <span className="cart-count">{cart.total_items}</span>}</button></div>
       </div>
       <div className="container-page mobile-search">{searchField}</div>
       <nav className="container-page header-nav" aria-label={t('التصنيفات الرئيسية')}><Link to="/#products" className={!searchParams.get('category') ? 'active' : ''}>{t('جميع المنتجات')}</Link>{categories?.map((category) => <Link key={category.id} className={searchParams.get('category') === category.slug ? 'active' : ''} to={`/?category=${category.slug}#products`}>{category.name}</Link>)}</nav>

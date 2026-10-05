@@ -16,7 +16,7 @@ export function savedAddressFrom(profile: { city?: string | null; address?: stri
   const city = (cityKey && zoneNames.find((z) => norm(z) === cityKey || norm(z).includes(cityKey) || cityKey.includes(norm(z))))
     || zoneNames.find((z) => norm(address).includes(norm(z))) || ''
   // الفواصل الشائعة: ، , - – — / |
-  let parts = address.split(/\s*[،,\/|–—]\s*|\s+-\s+/).map((p) => p.trim()).filter(Boolean)
+  let parts = address.split(/\s*[،,/|–—]\s*|\s+-\s+/).map((p) => p.trim()).filter(Boolean)
   // نحذف المدينة إن تكررت داخل العنوان
   if (parts.length > 1) parts = parts.filter((p) => norm(p) !== norm(city || rawCity) || !norm(p))
   if (parts.length <= 1) return { city, neighborhood: '', street: parts[0] ?? '' }

@@ -1023,6 +1023,9 @@ const en: Record<string, string> = {
   "هدية إلى": "Gift to",
   "رسالة الهدية": "Gift message",
   "عنوان المستلم": "Recipient's address",
+  "لوحتي": "My dashboard",
+  "قائمة حسابي": "Account menu",
+  "المساعدة والتواصل": "Help & contact",
 }
 
 export default en
