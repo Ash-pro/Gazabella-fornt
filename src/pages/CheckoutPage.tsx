@@ -22,6 +22,7 @@ import { formatPrice, money } from '../lib/format'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { saveLastOrder } from '../lib/lastOrder'
 import { formatEta } from '../content/storeInfo'
+import { savedAddressFrom } from '../lib/savedAddress'
 
 // ─── Schema (no email — phone is the primary identifier) ───────────────────
 const schema = z.object({
@@ -37,7 +38,17 @@ const schema = z.object({
   neighborhood: z.string().trim().min(2, 'أدخل اسم الحي أو المنطقة'),
   street: z.string().trim().min(3, 'أدخل اسم الشارع أو أقرب معلم'),
   notes: z.string().trim().max(500, 'الملاحظات لا تتجاوز ٥٠٠ حرف').optional(),
+  // إرسال الطلب كهدية: بيانات المستلم إلزامية فقط عند تفعيل الخيار
+  is_gift: z.boolean(),
+  recipient_name: z.string().trim().optional(),
+  recipient_phone: z.string().trim().optional(),
+  gift_message: z.string().trim().max(200, 'رسالة الهدية لا تتجاوز ٢٠٠ حرف').optional(),
+}).superRefine((v, ctx) => {
+  if (!v.is_gift) return
+  if ((v.recipient_name ?? '').length < 3) ctx.addIssue({ code: 'custom', path: ['recipient_name'], message: 'أدخلي اسم مستلم الهدية' })
+  if (!/^(\+?(970|972))?0?5\d{8}$/.test(v.recipient_phone ?? '')) ctx.addIssue({ code: 'custom', path: ['recipient_phone'], message: 'أدخلي رقم جوال مستلم الهدية بصيغة 05XXXXXXXX' })
 })
+type AddressMode = 'saved' | 'other' | 'gift'
 type Values = z.infer<typeof schema>
 
 // ─── Shared UI helpers ──────────────────────────────────────────────────────
@@ -162,8 +173,39 @@ function LegacyCheckoutPage() {
       neighborhood: '',
       street: '',
       notes: '',
+      is_gift: false,
+      recipient_name: '',
+      recipient_phone: '',
+      gift_message: '',
     },
   })
+
+  // العنوان المحفوظ في الملف الشخصي يُعبَّأ تلقائياً، مع إمكانية اختيار عنوان آخر أو الإرسال كهدية
+  const token = useAuthStore((s) => s.token)
+  const session = useQuery({ queryKey: ['session'], queryFn: gazabellaApi.getMe, enabled: !!token && !isMockMode(), retry: false, staleTime: 60_000 })
+  const zoneNames = store.deliveryZones.map((z) => z.name).join('|')
+  const profile = session.data ?? user
+  const saved = savedAddressFrom(profile, zoneNames ? zoneNames.split('|') : [])
+  const savedKey = saved ? `${saved.city}|${saved.neighborhood}|${saved.street}` : ''
+  const [choice, setChoice] = useState<AddressMode | null>(null)
+  const mode: AddressMode = choice ?? (saved ? 'saved' : 'other')
+  const prefilled = useRef('')
+  useEffect(() => {
+    if (!saved || choice || prefilled.current === savedKey) return
+    const current = form.getValues()
+    if (current.neighborhood || current.street) return
+    prefilled.current = savedKey
+    form.setValue('city', saved.city); form.setValue('neighborhood', saved.neighborhood); form.setValue('street', saved.street)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedKey, choice])
+
+  function chooseMode(next: AddressMode) {
+    setChoice(next)
+    const fill = next === 'saved' && saved ? saved : { city: '', neighborhood: '', street: '' }
+    form.setValue('city', fill.city); form.setValue('neighborhood', fill.neighborhood); form.setValue('street', fill.street)
+    form.setValue('is_gift', next === 'gift')
+    form.clearErrors(['city', 'neighborhood', 'street', 'recipient_name', 'recipient_phone'])
+  }
 
   const errs = form.formState.errors
   const values = useWatch({ control: form.control })
@@ -172,10 +214,15 @@ function LegacyCheckoutPage() {
 
   const checkout = useMutation({
     mutationFn: (v: Values) => {
-      const { city, neighborhood, street, ...rest } = v
+      const { city, neighborhood, street, is_gift, recipient_name, recipient_phone, gift_message, notes, ...rest } = v
       const zoneId = store.deliveryZones.find((z) => z.name === city)?.id
+      // إلى أن يدعم الخادم حقول الهدية: نكتبها أيضاً في الملاحظات حتى تصل للمتجر والمندوب من الآن
+      const giftNote = is_gift ? `هدية إلى: ${recipient_name} — جوال المستلم: ${recipient_phone}${gift_message ? ` — رسالة الهدية: ${gift_message}` : ''}` : ''
+      const allNotes = [giftNote, notes].filter(Boolean).join(' | ').slice(0, 500)
       return gazabellaApi.checkout({
         ...rest,
+        ...(allNotes ? { notes: allNotes } : {}),
+        ...(is_gift ? { is_gift: true, recipient_name, recipient_phone, ...(gift_message ? { gift_message } : {}) } : {}),
         address: `${city}، ${neighborhood}، ${street}`,
         payment_method: paymentMethod,
         // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها
@@ -333,8 +380,30 @@ function LegacyCheckoutPage() {
                 </div>
 
                 <div className="checkout-card">
-                  <SectionHeader step={2} title={t('عنوان التوصيل')} />
+                  <SectionHeader step={2} title={mode === 'gift' ? t('عنوان مستلم الهدية') : t('عنوان التوصيل')} />
                   <div className="space-y-4">
+                    <div className="co-modes" role="radiogroup" aria-label={t('إلى أين نوصل الطلب؟')}>
+                      {saved && <button type="button" role="radio" aria-checked={mode === 'saved'} className="co-mode" onClick={() => chooseMode('saved')}><Icon name="check" className="size-4" /><span><b>{t('عنواني المحفوظ')}</b><small>{[saved.city, saved.neighborhood, saved.street].filter(Boolean).join(t('، '))}</small></span></button>}
+                      <button type="button" role="radio" aria-checked={mode === 'other'} className="co-mode" onClick={() => chooseMode('other')}><Icon name="truck" className="size-4" /><span><b>{saved ? t('عنوان آخر') : t('عنواني')}</b><small>{t('أنا المستلمة في مكان مختلف')}</small></span></button>
+                      <button type="button" role="radio" aria-checked={mode === 'gift'} className="co-mode co-mode--gift" onClick={() => chooseMode('gift')}><Icon name="sparkle" className="size-4" /><span><b>{t('إرسال كهدية')}</b><small>{t('نوصله لشخص عزيز عليكِ')}</small></span></button>
+                    </div>
+                    {mode === 'saved' && <p className="co-saved-hint">{t('عبّأنا عنوانكِ المحفوظ — يمكنكِ تعديله لهذا الطلب فقط.')} <Link className="text-link" to="/profile#address">{t('تغيير العنوان المحفوظ')}</Link></p>}
+                    {mode === 'gift' && (
+                      <div className="co-gift">
+                        <p className="co-gift__lead"><Icon name="sparkle" className="size-4 shrink-0" />{t('سنتواصل مع المستلم لتسليم الهدية، ولا نذكر له الأسعار.')}</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Field id="recipient_name" label={t('اسم مستلم الهدية')} error={errs.recipient_name?.message}>
+                            {(inputProps) => <input id="recipient_name" type="text" autoComplete="off" placeholder={t('مثال: أمي / سارة أحمد')} {...inputProps} {...form.register('recipient_name')} />}
+                          </Field>
+                          <Field id="recipient_phone" label={t('جوال مستلم الهدية')} error={errs.recipient_phone?.message}>
+                            {(inputProps) => <input id="recipient_phone" type="tel" inputMode="tel" autoComplete="off" placeholder="05XXXXXXXX" dir="ltr" {...inputProps} {...form.register('recipient_phone')} />}
+                          </Field>
+                        </div>
+                        <Field id="gift_message" label={t('رسالة مع الهدية')} required={false} error={errs.gift_message?.message}>
+                          {(inputProps) => <input id="gift_message" type="text" autoComplete="off" maxLength={200} placeholder={t('مثال: كل عام وأنتِ بخير')} {...inputProps} {...form.register('gift_message')} />}
+                        </Field>
+                      </div>
+                    )}
                     <Field id="city" label={t('منطقة التوصيل')} error={errs.city?.message}>
                       {(inputProps) => (
                         <select id="city" autoComplete="address-level2" {...inputProps} {...form.register('city')}>
@@ -396,7 +465,9 @@ function LegacyCheckoutPage() {
                   <dl>
                     <div><dt>{t('الاسم')}</dt><dd>{values.name}</dd></div>
                     <div><dt>{t('الجوال')}</dt><dd><bdi className="num" dir="ltr">{values.phone}</bdi></dd></div>
-                    <div><dt>{t('العنوان')}</dt><dd>{fullAddress}</dd></div>
+                    {values.is_gift && <div><dt>{t('هدية إلى')}</dt><dd>{values.recipient_name} · <bdi className="num" dir="ltr">{values.recipient_phone}</bdi></dd></div>}
+                    {values.is_gift && values.gift_message && <div><dt>{t('رسالة الهدية')}</dt><dd>{values.gift_message}</dd></div>}
+                    <div><dt>{values.is_gift ? t('عنوان المستلم') : t('العنوان')}</dt><dd>{fullAddress}</dd></div>
                     {zone && <div><dt>{t('مدة التوصيل')}</dt><dd>{formatEta(zone.etaMinutes)} {t('تقريباً')}</dd></div>}
                   </dl>
                   <details className="co-note" open={Boolean(values.notes)}>

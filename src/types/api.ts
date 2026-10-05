@@ -199,6 +199,11 @@ export interface CheckoutPayload {
   coupon_code?: string
   /** B-02 — منطقة التوصيل المختارة من /delivery-zones */
   delivery_zone_id?: number
+  /** إرسال كهدية — بيانات المستلم */
+  is_gift?: boolean
+  recipient_name?: string
+  recipient_phone?: string
+  gift_message?: string
 }
 
 export interface JawwalConfirmPayload {

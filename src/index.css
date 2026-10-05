@@ -1691,3 +1691,25 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .wallet-card__balance { display: block; }
 .wallet-card__cta { display: flex; width: fit-content; }
 .cancel-order li small { margin-inline-start: 6px; }
+
+/* ===== الهيدر: بطاقة الحساب بعد تسجيل الدخول ===== */
+.account-chip { display: inline-flex; align-items: center; gap: 8px; height: 2.6rem; padding-inline: 4px 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; transition: .2s ease; }
+.account-chip:hover { border-color: #d9bcc6; color: var(--primary); }
+.account-chip__avatar { display: grid; place-items: center; width: 2.05rem; height: 2.05rem; border-radius: 50%; background: var(--primary); color: #fff; font-size: 14px; font-weight: 800; }
+.account-chip__text { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1279px) { .account-chip { padding-inline: 4px; border-color: transparent; background: transparent; } .account-chip__text { display: none; } }
+/* ===== إتمام الطلب: اختيار وجهة التوصيل والهدية ===== */
+.co-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.co-mode { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 12px; background: #fff; text-align: start; transition: .15s; }
+.co-mode > svg { margin-top: 3px; color: var(--text-3); flex-shrink: 0; }
+.co-mode b { display: block; font-size: 14px; }
+.co-mode small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.6; color: var(--text-3); }
+.co-mode:hover { border-color: #d9bcc6; }
+.co-mode[aria-checked="true"] { border-color: var(--primary); background: var(--primary-dim, #f7ecef); }
+.co-mode[aria-checked="true"] > svg, .co-mode[aria-checked="true"] b { color: var(--primary); }
+.co-mode--gift[aria-checked="true"] { border-color: var(--gold, #b8893a); background: #fbf5e9; }
+.co-mode--gift[aria-checked="true"] > svg, .co-mode--gift[aria-checked="true"] b { color: #8a6420; }
+.co-saved-hint { font-size: 12.5px; color: var(--text-2); }
+.co-saved-hint .text-link { display: inline; font-size: inherit; }
+.co-gift { display: grid; gap: 14px; padding: 16px; border: 1px dashed #dcc59a; border-radius: 14px; background: #fdf9f0; }
+.co-gift__lead { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8a6420; }
