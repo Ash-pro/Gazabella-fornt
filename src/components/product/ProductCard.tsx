@@ -1,4 +1,4 @@
-import { t } from '../../i18n'
+import { getLocale, t } from '../../i18n'
 import { isMvp0Api } from '../../lib/apiContract'
 import { QuickBuy } from './QuickBuy'
 import { Link } from 'react-router-dom'
@@ -17,7 +17,8 @@ function getPrimaryImage(product: ProductBrief): string | null {
 }
 
 /**
- * بطاقة المنتج: الصورة والاسم يفتحان التفاصيل، وإجراء أساسي واحد (الشراء السريع).
+ * بطاقة المنتج: إجراء أساسي (الإضافة للسلة / اختيار الخيارات) وزر ثانوي ظاهر دائمًا للتفاصيل.
+ * الصورة والاسم يفتحان التفاصيل أيضًا.
  * الأسعار والخصم من productPricing كما هي — لا منطق تسعير هنا.
  */
 export function ProductCard({ product }: { product: ProductBrief }) {
@@ -49,7 +50,12 @@ export function ProductCard({ product }: { product: ProductBrief }) {
           <b aria-label={t('السعر الحالي')}><span className="num">{formatPrice(current)}</span></b>
           {original !== null && <del aria-label={t('السعر السابق')}><span className="num">{formatPrice(original)}</span></del>}
         </div>
-        <QuickBuy product={product} />
+        <div className="pcard__actions">
+          <QuickBuy product={product} />
+          <Link className="pcard__details" to={href} aria-label={t('تفاصيل المنتج: {name}', { name: product.name })}>
+            {getLocale() === 'en' ? 'View details' : t('تفاصيل المنتج')}
+          </Link>
+        </div>
         {wishlist.toggle.isError && <p role="alert" className="field-error">{getApiErrorMessage(wishlist.toggle.error)}</p>}
       </div>
     </article>

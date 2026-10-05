@@ -146,7 +146,14 @@ export function CategoryTiles({ categories, loading, current, compact }: { categ
 
 // ─────────────────────────────── Product rows ───────────────────────────────
 
-function ProductRow({ id, title, to, linkLabel, products, loading }: { id: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean }) {
+function ProductRow({ id, title, to, linkLabel, products, loading, failed = false, onRetry }: { id: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean; failed?: boolean; onRetry?: () => void }) {
+  // فشل الجلب يختلف عن غياب المنتجات: الأول يعرض تنبيهًا خفيفًا مع إعادة محاولة، والثاني يخفي القسم
+  if (failed && !products.length) return (
+    <section className="container-page hm-section" aria-labelledby={id}>
+      <header className="hm-head"><h2 id={id}>{title}</h2></header>
+      <div className="hm-rowerror" role="alert"><p>{t('تعذّر تحميل هذا القسم الآن.')}</p>{onRetry && <button type="button" onClick={onRetry}>{t('إعادة المحاولة')}</button>}</div>
+    </section>
+  )
   if (!loading && !products.length) return null
   return (
     <section className="container-page hm-section" aria-labelledby={id}>
@@ -171,8 +178,8 @@ function BudgetTiles() {
           if (max !== undefined) query.set('max_price', String(max))
           return (
             <Link key={`${min}-${max}`} className="hm-budget__tile" to={`/?${query.toString()}#products`}>
-              <small>{min === undefined ? t('حتى') : max === undefined ? t('أكثر من') : t('من')}</small>
-              <b className="num">{min === undefined ? formatPrice(max!) : max === undefined ? formatPrice(min) : <>{formatPrice(min)} – {formatPrice(max)}</>}</b>
+              <small>{min === undefined ? t('حتى') : t('من')}</small>
+              <b>{min === undefined ? <span className="num">{formatPrice(max!)}</span> : max === undefined ? <><span className="num">{formatPrice(min)}</span> {t('فأكثر')}</> : <span className="num">{formatPrice(min)} – {formatPrice(max)}</span>}</b>
               <Icon name="arrow" className="size-4 rtl:rotate-180" />
             </Link>
           )
@@ -242,10 +249,10 @@ export function HomeShowcase() {
   const collection = promo ? null : (collections.data ?? []).find((c) => c.description || c.image_url) ?? null
 
   return <>
-    <ProductRow id="hm-picks-title" title={t('مختارات Gazabella')} to="/#products" linkLabel={t('عرض الكل')} products={picks} loading={featured.isPending} />
+    <ProductRow id="hm-picks-title" title={t('مختارات Gazabella')} to="/#products" linkLabel={t('كل المنتجات')} products={picks} loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} />
     <BudgetTiles />
     <PromoBand banner={promo} collection={collection} />
-    <ProductRow id="hm-new-title" title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} loading={latest.isPending || featured.isPending} />
+    <ProductRow id="hm-new-title" title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} loading={latest.isPending || (featured.isPending && !featured.isError)} failed={latest.isError} onRetry={() => void latest.refetch()} />
     <ServiceInfo />
   </>
 }

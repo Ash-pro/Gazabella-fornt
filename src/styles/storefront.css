@@ -186,3 +186,32 @@
   .hm-budget__tile b { font-size: 1rem; }
   .hm-budget__tile svg { bottom: auto; top: var(--sp-4); }
 }
+
+/* ═════════════ جولة الصقل: وضوح الإجراءات والسعر ═════════════ */
+/* صورة مربعة: توازن بين الصورة والمعلومات بعد إضافة زر التفاصيل؛ البديل يملأ المساحة نفسها */
+.pcard__media { aspect-ratio: 1 / 1; }
+.product-skeleton > div { aspect-ratio: 1 / 1; }
+.product-skeleton::after { content: ""; display: block; height: 104px; }
+
+.pcard__cat { color: var(--c-ink-2); }
+.pcard__price { direction: inherit; column-gap: 8px; row-gap: 0; min-height: 1.7em; font-variant-numeric: tabular-nums; }
+.pcard__price b { color: var(--c-brand-strong); text-decoration: none; }
+/* الشطب: .num عنصر inline-block فلا يرث خط الشطب من del — نرسمه على الرقم نفسه مرة واحدة */
+.pcard__price del { font-size: 13px; color: var(--c-ink-2); text-decoration: none; }
+.pcard__price del .num { text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: currentColor; }
+
+.pcard__actions { display: grid; gap: 6px; margin-top: auto; padding-top: var(--sp-2); }
+.pcard__body .pcard__actions .btn-primary.quick-add { margin-top: 0; background: var(--c-brand); color: #fff; }
+.pcard__body .pcard__actions .btn-primary.quick-add:disabled { background: var(--c-soft); color: var(--c-ink-2); }
+.pcard__details { display: flex; align-items: center; justify-content: center; min-height: var(--tap); padding: 8px 10px; border: 1px solid var(--c-line-strong); border-radius: var(--rad-md); background: var(--c-card); color: var(--c-brand-strong); font-size: var(--fs-sm); font-weight: 700; text-align: center; transition: border-color var(--dur), background var(--dur); }
+.pcard__details:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
+@media (hover: hover) {
+  .pcard__body .pcard__actions .btn-primary.quick-add:hover:not(:disabled) { background: var(--c-brand-strong); }
+  .pcard__details:hover { border-color: var(--c-brand); background: var(--c-brand-tint); }
+}
+@media (hover: none) { .pcard:hover { transform: none; box-shadow: none; } .pcard:hover .pcard__media img { transform: none; } }
+
+.hm-section { scroll-margin-top: 150px; }
+.hm-rowerror { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border: 1px dashed var(--c-line-strong); border-radius: var(--rad-lg); background: var(--c-card); color: var(--c-ink-2); font-size: var(--fs-sm); }
+.hm-budget__tile b { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 5px; }
+.hm-rowerror button { min-height: var(--tap); padding: 8px 16px; border: 1px solid var(--c-brand); border-radius: var(--rad-md); color: var(--c-brand-strong); font-weight: 700; background: var(--c-card); }

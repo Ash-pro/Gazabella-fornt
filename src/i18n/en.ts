@@ -1051,6 +1051,13 @@ const en: Record<string, string> = {
   "عرض الكل": "View all",
   "كل الجديد": "All new arrivals",
   "كل المنتجات": "All products",
+  "تفاصيل المنتج: {name}": "View details: {name}",
+  "اختاري خيارات {name}": "Choose options for {name}",
+  "أضيفي {name} للسلة": "Add {name} to cart",
+  "اختاري الخيارات": "Choose options",
+  "اختاري الخيارات — {name}": "Choose options — {name}",
+  "تعذّر تحميل هذا القسم الآن.": "This section couldn’t load right now.",
+  "فأكثر": "& up",
 }
 
 export default en

@@ -47,11 +47,11 @@ export function QuickBuy({ product }: { product: ProductBrief }) {
     else submit(1)
   }
   return <>
-    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={t('شراء سريع: {name}', { name: product.name })} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
-      {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر') : t('شراء سريع +')}
+    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={variants.length > 1 ? t('اختاري خيارات {name}', { name: product.name }) : t('أضيفي {name} للسلة', { name: product.name })} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
+      {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر') : variants.length > 1 ? t('اختاري الخيارات') : t('أضيفي للسلة')}
     </button>
     {add.isError && !open && <p role="alert" className="field-error">{getApiErrorMessage(add.error)}</p>}
-    {open && <Dialog title={t('شراء سريع — {name}', { name: product.name })} bottom returnFocusRef={trigger} onClose={() => { if (!sending.current) setOpen(false) }}>
+    {open && <Dialog title={t('اختاري الخيارات — {name}', { name: product.name })} bottom returnFocusRef={trigger} onClose={() => { if (!sending.current) setOpen(false) }}>
       <form className="quick-buy-content" onSubmit={e => { e.preventDefault(); submit(quantity) }}>
         <div className="quick-buy-preview"><ProductVisual src={image} alt={product.name} /><div><b>{product.name}</b>{original !== null && <del aria-label={t('السعر السابق')}>{money(original)}</del>}<p>{money(price)} {t('للقطعة')} {percent > 0 && <span>{t('— خصم')} {percent}%</span>}</p></div></div>
         <div>
