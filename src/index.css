@@ -245,7 +245,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .tiny-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
 .service-strip { display: flex; justify-content: center; gap: 60px; border-bottom: 1px solid var(--border); padding-block: 18px; }
 .service-strip span { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--text-2); }
-.category-section { padding-block: 30px 8px; scroll-margin-top: 170px; }
+.category-section { padding-block: 30px 8px; scroll-margin-top: calc(var(--header-h, 150px) + 16px); }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
 .section-heading :is(h1,h2) { font-size: 25px; font-weight: 700; margin-top: 7px; }
 .section-heading > span, .section-heading p { color: var(--text-3); font-size: 12px; margin-top: 6px; }
@@ -255,7 +255,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .category-tile img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .category-tile:hover > div { transform: translateY(-3px); }
 .category-tile.active > div { border-color: var(--primary); }
-.catalog-section { padding-block: 34px 30px; scroll-margin-top: 160px; }
+.catalog-section { padding-block: 34px 30px; scroll-margin-top: calc(var(--header-h, 150px) + 8px); }
 .text-link { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--primary); white-space: nowrap; }
 .catalog-toolbar { display: flex; gap: 10px; align-items: center; border-block: 1px solid var(--border); padding-block: 13px; margin-bottom: 24px; }
 .filter-toggle { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; min-height: 44px; font-size: 13px; }
@@ -305,10 +305,6 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .cart-item-price { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-end; gap: 7px; }
 .catalog-action { display: flex; justify-content: space-between; align-items: center; padding-block: 12px; min-height: 44px; border-top: 1px solid var(--border); font-size: 12px; color: var(--primary); }
 .sold-out-label { position: absolute; bottom: 12px; inset-inline: 12px; text-align: center; background: #fffc; border-radius: 4px; padding: 8px; font-size: 12px; }
-.product-skeleton > div { aspect-ratio: 4/4.7; border-radius: 8px; background: #ece5df; }
-.product-skeleton span { display: block; height: 14px; background: #ece5df; margin-top: 16px; width: 80%; }
-.product-skeleton span:last-child { width: 40%; }
-.product-skeleton { animation: soft-pulse 1.4s ease-in-out infinite; }
 @keyframes soft-pulse { 50% { opacity: .45; } }
 .collection-editorial { display: grid; grid-template-columns: 1fr 1fr; border-radius: 10px; overflow: hidden; margin-top: 30px; background: #eaded7; }
 .collection-editorial > img { width: 100%; height: 400px; object-fit: cover; object-position: center 40%; }
@@ -1109,7 +1105,7 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .support-fab:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
 @media (max-width: 1023px) {
-  .support-fab { inset-inline-end: 14px; bottom: calc(4rem + env(safe-area-inset-bottom) + 14px); width: 52px; padding: 0; justify-content: center; }
+  .support-fab { inset-inline-end: 12px; bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 12px); width: 48px; height: 48px; padding: 0; justify-content: center; }
   .support-fab__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 @media (max-width: 860px) {
@@ -1483,7 +1479,20 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
   .related-rail > * { flex: 0 0 min(58%, 240px); scroll-snap-align: start; min-width: 0; }
 }
 /* زر واتساب يرتفع فوق شريط الشراء الثابت في صفحة المنتج على الجوال */
-@media (max-width: 1023px) { body:has(.product-sticky) .support-fab { bottom: calc(64px + 76px + env(safe-area-inset-bottom) + 12px); } }
+/* زر الدعم لا يغطي المحتوى: يتنحّى أثناء التمرير للأسفل على الجوال (يبقى متاحًا بالتركيز)، ويختفي خلف اقتراحات البحث المفتوحة */
+body:has(.search-dropdown) .support-fab { display: none; }
+@media (max-width: 1023px) {
+  .support-fab { transition: transform .25s, opacity .25s, box-shadow .2s; }
+  .support-fab.is-away:not(:focus-visible) { transform: translateY(24px); opacity: 0; pointer-events: none; }
+  body:has(.product-sticky) .support-fab.is-away { transform: none; opacity: 1; pointer-events: auto; }
+}
+/* صفحة المنتج على الجوال: زر الدعم يستقر داخل شريط الشراء الثابت بدل أن يطفو فوق العنوان والمعلومات */
+@media (max-width: 1023px) {
+  .product-sticky { padding-inline-end: 68px; gap: 12px; }
+  .product-sticky > div { min-width: 84px; }
+  .product-sticky .btn-primary { white-space: nowrap; padding-inline: 12px; }
+  body:has(.product-sticky) .support-fab { inset-inline-end: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 14px); width: 44px; height: 44px; box-shadow: none; }
+}
 
 /* ===== تتبع الطلب (/track) ===== */
 .track-link { display: inline-flex; align-items: center; gap: 7px; height: 2.6rem; padding-inline: 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font-size: 13px; font-weight: 700; color: var(--primary); white-space: nowrap; transition: .2s ease; margin-inline-end: 6px; }

@@ -1,4 +1,4 @@
-import { getLocale, t } from '../../i18n'
+import { t } from '../../i18n'
 import { isMvp0Api } from '../../lib/apiContract'
 import { QuickBuy } from './QuickBuy'
 import { Link } from 'react-router-dom'
@@ -14,6 +14,19 @@ function getPrimaryImage(product: ProductBrief): string | null {
   const imgs = product.images ?? []
   const primary = imgs.find((img) => img.is_primary)
   return primary?.url ?? imgs[0]?.url ?? null
+}
+
+/** هيكل تحميل بنفس تركيب البطاقة حتى لا يقفز التخطيط عند وصول البيانات */
+export function ProductCardSkeleton() {
+  return (
+    <div className="pcard pcard--skeleton" aria-hidden="true">
+      <div className="pcard__media" />
+      <div className="pcard__body">
+        <span className="sk sk--cat" /><span className="sk sk--name" /><span className="sk sk--price" />
+        <div className="pcard__actions"><span className="sk sk--btn" /><span className="sk sk--btn" /></div>
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -34,7 +47,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
         <Link to={href} aria-label={t('عرض {name}', { name: product.name })} tabIndex={-1}>
           <ProductVisual src={imageUrl} alt={product.name} />
         </Link>
-        {discount > 0 && product.in_stock && <span className="pcard__badge">−<span className="num">{discount}%</span></span>}
+        {discount > 0 && product.in_stock && <span className="pcard__badge" aria-label={t('خصم {n}%', { n: discount })}><span className="num" aria-hidden="true">−{discount}%</span></span>}
         {!product.in_stock && <span className="pcard__badge pcard__badge--out">{t('غير متوفر حاليًا')}</span>}
         {!isMvp0Api() && (
           <button type="button" className={`pcard__wish ${saved ? 'is-saved' : ''}`} aria-label={saved ? t('إزالة من المفضلة') : t('حفظ في المفضلة')} aria-pressed={saved}
@@ -53,7 +66,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
         <div className="pcard__actions">
           <QuickBuy product={product} />
           <Link className="pcard__details" to={href} aria-label={t('تفاصيل المنتج: {name}', { name: product.name })}>
-            {getLocale() === 'en' ? 'View details' : t('تفاصيل المنتج')}
+            {t('تفاصيل المنتج')}
           </Link>
         </div>
         {wishlist.toggle.isError && <p role="alert" className="field-error">{getApiErrorMessage(wishlist.toggle.error)}</p>}

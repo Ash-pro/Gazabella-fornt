@@ -6,7 +6,7 @@ import { gazabellaApi } from '../../api/gazabella'
 import { getApiErrorMessage, getImageUrl } from '../../lib/apiClient'
 import { formatPrice } from '../../lib/format'
 import { useStoreInfo } from '../../hooks/useStoreInfo'
-import { ProductCard } from '../product/ProductCard'
+import { ProductCard, ProductCardSkeleton } from '../product/ProductCard'
 import { ErrorState } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
 import type { Banner, Category, Collection, ProductBrief } from '../../types/api'
@@ -75,7 +75,7 @@ function Hero({ slides }: { slides: Banner[] }) {
                 {banner.subtitle && <p>{banner.subtitle}</p>}
                 <div className="hm-hero__actions">
                   {to && <Link className="btn-primary" to={to}>{banner.link_label || t('اكتشفي المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>}
-                  <a className={to ? 'hm-hero__ghost' : 'btn-primary'} href="#categories">{t('تصفّحي الأقسام')}</a>
+                  <Link className={to ? 'hm-hero__ghost' : 'btn-primary'} to={{ hash: '#categories' }}>{t('تصفّحي الأقسام')}</Link>
                 </div>
               </div>
               {banner.image_url && <div className="hm-hero__art"><Cover src={banner.image_url} priority={position === 0} /></div>}
@@ -159,7 +159,7 @@ function ProductRow({ id, title, to, linkLabel, products, loading, failed = fals
     <section className="container-page hm-section" aria-labelledby={id}>
       <header className="hm-head"><h2 id={id}>{title}</h2><Link className="hm-more" to={to}>{linkLabel} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></header>
       <div className="hm-rail" aria-busy={loading}>
-        {loading ? Array.from({ length: 4 }, (_, i) => <div key={i} className="product-skeleton"><div /><span /><span /></div>) : products.map((p) => <ProductCard key={p.id} product={p} />)}
+        {loading ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />) : products.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
     </section>
   )

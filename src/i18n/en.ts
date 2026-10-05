@@ -583,7 +583,8 @@ const en: Record<string, string> = {
   'توصيل من': 'Delivery from',
   '· دفع عند الاستلام': '· Cash on delivery',
   'إضافة المنتج للسلة لا تحجز المخزون': 'Adding to cart doesn’t reserve stock',
-  'تفاصيل المنتج': 'Product details',
+  'تفاصيل المنتج': 'View details',
+  'وصف المنتج': 'Product details',
   'التوصيل والاستلام': 'Delivery and receiving',
   'نوصّل إلى:': 'We deliver to:',
   '. رسوم التوصيل من': '. Delivery fees start from',
@@ -1054,10 +1055,13 @@ const en: Record<string, string> = {
   "تفاصيل المنتج: {name}": "View details: {name}",
   "اختاري خيارات {name}": "Choose options for {name}",
   "أضيفي {name} للسلة": "Add {name} to cart",
-  "اختاري الخيارات": "Choose options",
+  "اختاري الخيارات": "See options",
   "اختاري الخيارات — {name}": "Choose options — {name}",
   "تعذّر تحميل هذا القسم الآن.": "This section couldn’t load right now.",
   "فأكثر": "& up",
+  "خصم {n}%": "{n}% off",
+  "جارٍ إضافة {name} للسلة…": "Adding {name} to cart…",
+  "{name} غير متوفر حاليًا": "{name} is currently unavailable",
 }
 
 export default en

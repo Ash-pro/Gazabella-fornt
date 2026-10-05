@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { Icon } from '../ui/Icon'
-import { ProductCard } from './ProductCard'
+import { ProductCard, ProductCardSkeleton } from './ProductCard'
 
 const LIMIT = 4
 
@@ -31,7 +31,7 @@ export function RelatedProducts({ product }: { product: { id: number; slug: stri
         )}
       </div>
       {query.isLoading
-        ? <div className="related-rail" aria-label={t('جارٍ تحميل المنتجات')}>{Array.from({ length: LIMIT }, (_, i) => <div key={i} className="product-skeleton"><div /><span /><span /></div>)}</div>
+        ? <div className="related-rail" aria-label={t('جارٍ تحميل المنتجات')}>{Array.from({ length: LIMIT }, (_, i) => <ProductCardSkeleton key={i} />)}</div>
         : <div className="related-rail">{items.map((item) => <ProductCard key={item.id} product={item} />)}</div>}
     </section>
   )

@@ -223,7 +223,7 @@ function ProductContent({ slug }: { slug: string }) {
           </div>
 
           <details className="product-information" open>
-            <summary>{t('تفاصيل المنتج')}</summary>
+            <summary>{t('وصف المنتج')}</summary>
             <p>{product.description}</p>
           </details>
           <details className="product-information">

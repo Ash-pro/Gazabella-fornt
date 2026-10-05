@@ -47,7 +47,7 @@ export function QuickBuy({ product }: { product: ProductBrief }) {
     else submit(1)
   }
   return <>
-    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={variants.length > 1 ? t('اختاري خيارات {name}', { name: product.name }) : t('أضيفي {name} للسلة', { name: product.name })} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
+    <button ref={trigger} type="button" className="btn-primary quick-add" aria-label={add.isPending ? t('جارٍ إضافة {name} للسلة…', { name: product.name }) : !product.in_stock ? t('{name} غير متوفر حاليًا', { name: product.name }) : variants.length > 1 ? t('اختاري خيارات {name}', { name: product.name }) : t('أضيفي {name} للسلة', { name: product.name })} disabled={!product.in_stock || add.isPending || (isMvp0Api() && !variant)} onClick={quickBuy}>
       {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر') : variants.length > 1 ? t('اختاري الخيارات') : t('أضيفي للسلة')}
     </button>
     {add.isError && !open && <p role="alert" className="field-error">{getApiErrorMessage(add.error)}</p>}

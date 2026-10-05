@@ -1,5 +1,5 @@
 import { t } from '../../i18n'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
@@ -12,6 +12,11 @@ import { Dialog } from '../ui/Dialog'
 import { LanguageSwitch } from './LanguageSwitch'
 import { AccountMenu } from './AccountMenu'
 
+const ANNOUNCE_KEY = 'gz_announcement'
+function expectsAnnouncement(): boolean {
+  try { return localStorage.getItem(ANNOUNCE_KEY) === '1' } catch { return false }
+}
+
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchParams] = useSearchParams()
@@ -22,10 +27,28 @@ export function Header() {
   const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: gazabellaApi.getSettings })
   const { data: banners } = useQuery({ queryKey: ['banners'], queryFn: () => gazabellaApi.getBanners() })
   const announcement = banners?.find((b) => b.type === 'announcement')
+  // شريط الإعلان يصل مع البانرات: نحجز مكانه أثناء التحميل إن كان ظاهرًا في آخر زيارة، فلا تنزاح الصفحة عند وصوله
+  const hasAnnouncement = Boolean(announcement?.title)
+  useEffect(() => {
+    if (!banners) return
+    try { localStorage.setItem(ANNOUNCE_KEY, hasAnnouncement ? '1' : '0') } catch { /* التخزين غير متاح — لا حجز */ }
+  }, [banners, hasAnnouncement])
+  const reserveAnnouncement = !banners && expectsAnnouncement()
+  // ارتفاع الهيدر الثابت يتغير مع المقاس واللغة والإعلان؛ نعلنه كمتغير CSS لتعويض الروابط الداخلية (#products…)
+  const headerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const apply = () => document.documentElement.style.setProperty('--header-h', `${Math.round(el.getBoundingClientRect().height)}px`)
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   const searchField = <SearchBox />
   return <>
-    {announcement?.title && <aside className="announcement" aria-label={t('إعلان')}>{announcement.title}</aside>}
-    <header className="store-header">
+    {hasAnnouncement ? <aside className="announcement" aria-label={t('إعلان')}>{announcement!.title}</aside> : reserveAnnouncement && <div className="announcement" aria-hidden="true">&nbsp;</div>}
+    <header ref={headerRef} className="store-header">
       <div className="container-page header-main">
         <button className="icon-button menu-trigger" aria-label={t('فتح التصنيفات')} onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
         <Link to="/" aria-label={t('Gazabella — الرئيسية')} className="brand-lockup"><img src={getImageUrl(settings?.logo_url) || "/brand/symbol/logo-128.webp"} alt="" width="44" height="44" decoding="async" /><span><b>{settings?.store_name || "Gazabella"}</b><small>{settings ? settings.tagline : t('الجمال، أقرب إليكِ')}</small></span></Link>
