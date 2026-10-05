@@ -97,7 +97,7 @@ async function productMeta(slug: string, origin: string): Promise<Partial<Meta> 
   const api = env('OG_API_BASE_URL') || env('VITE_API_BASE_URL')
   if (!api) return null
   try {
-    const res = await fetch(`${api}/products/${encodeURIComponent(slug)}`, { headers: { Accept: 'application/json', 'Accept-Language': 'ar' }, signal: AbortSignal.timeout(2500) })
+    const res = await fetch(`${api}/products/${encodeURIComponent(slug)}?lang=ar`, { headers: { Accept: 'application/json', 'Accept-Language': 'ar' }, signal: AbortSignal.timeout(2500) })
     if (!res.ok) return null
     const body = (await res.json()) as { data?: { name?: string; description?: string | null; price?: number | string; discount_price?: number | string | null; images?: Array<{ url?: string; is_primary?: boolean }>; category?: { name?: string } } }
     const p = body.data
@@ -203,7 +203,7 @@ async function fetchSitemapEntries(): Promise<SitemapEntry[] | null> {
   const api = env('OG_API_BASE_URL') || env('VITE_API_BASE_URL')
   if (!api) return null
   try {
-    const res = await fetch(`${api}/sitemap`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) })
+    const res = await fetch(`${api}/sitemap?lang=ar`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) })
     if (!res.ok) return null
     const body = (await res.json()) as { data?: { entries?: SitemapEntry[] } | SitemapEntry[] }
     const entries = Array.isArray(body.data) ? body.data : body.data?.entries
