@@ -247,8 +247,13 @@ export interface Order {
   payment_reference?: string | null
   items_count?: number
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
+  /** يحدده الخادم؛ إن غاب نعتمد الحالة */
+  can_cancel?: boolean
   created_at: string
 }
+
+export interface WalletTransaction { id: number | string; type: string; label?: string | null; amount: string; order_number?: string | null; created_at: string }
+export interface Wallet { balance: string; currency: string; transactions: WalletTransaction[]; /** false = المسار غير مفعّل في الخادم بعد */ available: boolean }
 
 export interface ApiErrorBody {
   message: string

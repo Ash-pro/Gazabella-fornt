@@ -2,6 +2,7 @@ import { t } from '../i18n'
 import { Link } from 'react-router-dom'
 import { AccountShell } from '../components/account/AccountShell'
 import { OrderProgress } from '../components/account/OrderCard'
+import { CancelOrderButton } from '../components/account/CancelOrderButton'
 import { ReorderButton } from '../components/account/ReorderButton'
 import { ErrorState } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
@@ -13,6 +14,7 @@ import { formatDate, formatPrice } from '../lib/format'
 import { orderGroup } from '../lib/orderSearch'
 import { orderStatusLabel } from '../lib/orderStatus'
 import { useSeo } from '../lib/seo'
+import { useWallet } from '../hooks/useWallet'
 import type { Order } from '../types/api'
 
 type IconName = Parameters<typeof Icon>[0]['name']
@@ -42,13 +44,15 @@ export function AccountPage() {
   useSeo({ title: t('حسابي'), noindex: true })
   const store = useStoreInfo()
   const query = useAccountOrders()
+  const wallet = useWallet()
   const orders = query.data?.orders ?? []
   const active = orders.filter((o) => orderGroup(o.status) === 'active')
   const current = active[0]
   const past = orders.filter((o) => orderGroup(o.status) !== 'active').slice(0, 3)
 
-  const actions: Array<{ to: string; icon: IconName; title: string; text: string; external?: boolean }> = [
+  const actions: Array<{ to: string; icon: IconName; title: string; text: string; external?: boolean; raw?: boolean }> = [
     { to: '/orders', icon: 'package', title: 'طلباتي', text: 'كل طلباتكِ الجارية والسابقة' },
+    { to: '/wallet', icon: 'wallet', title: 'محفظتي', text: wallet.data ? t('الرصيد: {amount}', { amount: formatPrice(wallet.data.balance) }) : 'رصيدكِ وحركاته', raw: !!wallet.data },
     { to: '/profile', icon: 'user', title: 'بياناتي وعنواني', text: 'الاسم، الجوال، وعنوان التوصيل' },
     { to: '/?saved=true#products', icon: 'heart', title: 'المحفوظات', text: 'منتجات حفظتِها لوقت لاحق' },
     ...(store.whatsapp ? [{ to: whatsappLink(store.whatsapp, t('مرحباً Gazabella، أحتاج مساعدة')), icon: 'phone' as IconName, title: 'مساعدة', text: 'راسلينا على واتساب', external: true }] : []),
@@ -73,7 +77,7 @@ export function AccountPage() {
                 <OrderProgress status={current.status} />
                 <footer>
                   <p><bdi className="num" dir="ltr">{current.order_number}</bdi> · <span className="num">{formatDate(current.created_at, { day: 'numeric', month: 'short' })}</span> · <b className="num">{formatPrice(current.total)}</b></p>
-                  <Link className="btn-primary" to={orderPath(current)}>{t('تابعي الطلب')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
+                  <CancelOrderButton order={current} /><Link className="btn-primary" to={orderPath(current)}>{t('تابعي الطلب')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
                 </footer>
               </article>
             ) : (
@@ -106,7 +110,7 @@ export function AccountPage() {
 
         <nav className="dash-actions" aria-label={t('اختصارات الحساب')}>
           {actions.map((a) => {
-            const body = <><span><Icon name={a.icon} className="size-5" /></span><div><b>{t(a.title)}</b><small>{t(a.text)}</small></div><Icon name="arrow" className="size-4 rtl:rotate-180" /></>
+            const body = <><span><Icon name={a.icon} className="size-5" /></span><div><b>{t(a.title)}</b><small>{a.raw ? a.text : t(a.text)}</small></div><Icon name="arrow" className="size-4 rtl:rotate-180" /></>
             return a.external
               ? <a key={a.title} className="dash-action" href={a.to} target="_blank" rel="noopener noreferrer">{body}</a>
               : <Link key={a.title} className="dash-action" to={a.to}>{body}</Link>

@@ -10,6 +10,7 @@ import { orderPath } from '../../hooks/useAccountOrders'
 import { whatsappLink } from '../../content/storeInfo'
 import { Icon } from '../ui/Icon'
 import { ReorderButton } from './ReorderButton'
+import { CancelOrderButton } from './CancelOrderButton'
 import { orderGroup } from '../../lib/orderSearch'
 
 
@@ -97,6 +98,7 @@ export function OrderCard({ order, query, whatsapp, acceptanceMinutes }: { order
         <div className="acct-order__total"><span>{t('الإجمالي')}</span><strong className="num">{formatPrice(order.total)}</strong></div>
         <div className="acct-order__actions">
           {help && <a className="btn-whatsapp" href={help} target="_blank" rel="noopener noreferrer" aria-label={t('مساعدة بخصوص الطلب {order_number} عبر واتساب', { order_number: order.order_number })}><Icon name="whatsapp" className="size-5" />{t('مساعدة عبر واتساب')}</a>}
+          <CancelOrderButton order={order} />
           {orderGroup(order.status) !== 'active' && <ReorderButton order={order} />}
           <Link className="btn-primary" to={orderPath(order)}>{t('تفاصيل الطلب')}</Link>
         </div>

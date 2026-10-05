@@ -3,6 +3,7 @@ import axios from 'axios'
 import { loadLastOrder } from '../lib/lastOrder'
 import { phoneDigits, samePhone, trackedFromOrder, trackedFromResponse, type TrackedOrder } from '../lib/orderTracking'
 
+export class CancelUnavailableError extends Error {}
 export class TrackError extends Error {
   kind: 'not_found' | 'unavailable' | 'rate_limited'
   constructor(kind: 'not_found' | 'unavailable' | 'rate_limited') { super(kind); this.kind = kind }
@@ -234,6 +235,7 @@ export function normalizeOrder(raw: RawOrder): Order {
     escrow_expires_at: raw.escrow_expires_at,
     delivery_pin: raw.delivery_pin,
     tracking: raw.tracking ?? [],
+    can_cancel: (raw as unknown as { can_cancel?: boolean }).can_cancel,
     items_count: (raw as unknown as { items_count?: number }).items_count ?? rawItems.length,
     created_at: raw.created_at,
   }
@@ -469,6 +471,36 @@ const legacyGazabellaApi = {
     isMockMode()
       ? mockServices.getCart()
       : fetchCart(),
+
+  /** إلغاء الطلب من العميلة مع سبب إلزامي. إن كان مدفوعاً مسبقاً يعيد الخادم المبلغ للمحفظة. */
+  async cancelOrder(orderId: number | string, body: { reason: string; reason_code: string | null }): Promise<{ refunded_to_wallet: string | null }> {
+    if (isMockMode()) return { refunded_to_wallet: null }
+    try {
+      const { data } = await apiClient.post<ApiData<{ refunded_to_wallet?: string | number | null }>>(`/orders/${encodeURIComponent(orderId)}/cancel`, body)
+      const refunded = data.data?.refunded_to_wallet
+      return { refunded_to_wallet: refunded == null ? null : String(refunded) }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const message = String((error.response.data as { message?: string } | undefined)?.message ?? '')
+        if (error.response.status === 405 || (error.response.status === 404 && /route .*could not be found/i.test(message))) throw new CancelUnavailableError()
+      }
+      throw error
+    }
+  },
+
+  /** المحفظة الافتراضية: الرصيد وآخر الحركات. إن لم يكن المسار مفعّلاً نعرض محفظة فارغة. */
+  async getWallet(): Promise<import('../types/api').Wallet> {
+    const empty = { balance: '0', currency: 'ILS', transactions: [], available: false }
+    if (isMockMode()) return empty
+    try {
+      const { data } = await apiClient.get<ApiData<{ balance?: string | number; currency?: string; transactions?: import('../types/api').WalletTransaction[] }>>('/wallet')
+      const w = data.data ?? {}
+      return { balance: String(w.balance ?? 0), currency: w.currency ?? 'ILS', transactions: (w.transactions ?? []).map((x) => ({ ...x, amount: String(x.amount) })), available: true }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return empty
+      throw error
+    }
+  },
 
   /**
    * «اطلبيها مرة أخرى»: طلب واحد للخادم يضيف المتوفر من الطلب للسلة بالأسعار الحالية.
