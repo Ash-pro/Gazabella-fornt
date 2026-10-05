@@ -85,3 +85,27 @@ export function trackedFromResponse(raw: Raw): TrackedOrder {
     tracking: tracking.map((s) => ({ status: str(s.status), label: str(s.label) || null, note: str(s.note) || null, created_at: str(s.created_at) })),
   }
 }
+
+/**
+ * آخر نتيجة تتبع ناجحة في هذا التبويب — حتى لا تختفي الحالة عند تحديث الصفحة
+ * أو عند رفض الخادم مؤقتاً (حد المحاولات). sessionStorage: يُمسح بإغلاق التبويب.
+ */
+const TRACKED_KEY = 'gz_tracked'
+const TRACKED_TTL_MS = 6 * 60 * 60 * 1000
+
+export function saveTracked(order: TrackedOrder, phone: string) {
+  try { sessionStorage.setItem(TRACKED_KEY, JSON.stringify({ order, phone, savedAt: Date.now() })) } catch { /* تخزين غير متاح */ }
+}
+
+export function loadTracked(orderNumber?: string): { order: TrackedOrder; phone: string } | null {
+  try {
+    const raw = sessionStorage.getItem(TRACKED_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw) as { order: TrackedOrder; phone: string; savedAt: number }
+    if (!data?.order?.order_number || !data.phone || Date.now() - data.savedAt > TRACKED_TTL_MS) return null
+    if (orderNumber && data.order.order_number.toUpperCase() !== orderNumber.toUpperCase()) return null
+    return { order: { ...data.order, local: true }, phone: data.phone }
+  } catch {
+    return null
+  }
+}

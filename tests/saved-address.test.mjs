@@ -29,3 +29,16 @@ test('savedAddressFrom: single segment goes to street; empty profile is null', (
   assert.equal(m.savedAddressFrom({ city: null, address: null }, zones), null)
   assert.equal(m.savedAddressFrom(null, zones), null)
 })
+
+test('tracked order cache: round-trips per order number, marks as local, ignores other orders', async () => {
+  const store = new Map()
+  globalThis.sessionStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) }
+  const t = await server.ssrLoadModule('/src/lib/orderTracking.ts')
+  assert.equal(t.loadTracked('GZ-1'), null)
+  t.saveTracked({ order_number: 'GZ-261005-5JTYB5', status: 'shipped', items: [], tracking: [] }, '0598466903')
+  const hit = t.loadTracked('gz-261005-5jtyb5')
+  assert.equal(hit.order.status, 'shipped'); assert.equal(hit.order.local, true); assert.equal(hit.phone, '0598466903')
+  assert.equal(t.loadTracked('GZ-OTHER'), null)
+  assert.equal(t.loadTracked().order.order_number, 'GZ-261005-5JTYB5')
+  delete globalThis.sessionStorage
+})

@@ -1,5 +1,5 @@
 import { t } from '../i18n'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { gazabellaApi, TrackError } from '../api/gazabella'
@@ -8,7 +8,7 @@ import { formatDate, formatPrice } from '../lib/format'
 import { loadLastOrder, maskPhone } from '../lib/lastOrder'
 import { orderStatusLabel, paymentMethodLabel } from '../lib/orderStatus'
 import { orderStepIndex } from '../lib/orderSearch'
-import { cleanOrderNumber, isTrackablePhone, trackedFromOrder, type TrackedOrder } from '../lib/orderTracking'
+import { cleanOrderNumber, isTrackablePhone, loadTracked, saveTracked, trackedFromOrder, type TrackedOrder } from '../lib/orderTracking'
 import { whatsappLink } from '../content/storeInfo'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { useAuthStore } from '../stores/authStore'
@@ -57,9 +57,12 @@ export function TrackOrderPage() {
   const [saved] = useState(loadLastOrder)
   const paramNumber = cleanOrderNumber(params.get('order') ?? '')
   const savedMatches = !!saved && (!paramNumber || paramNumber === saved.order.order_number.toUpperCase())
-  const [number, setNumber] = useState(paramNumber || (savedMatches ? saved.order.order_number : ''))
-  const [phone, setPhone] = useState(savedMatches ? saved.phone : '')
-  const [lookup, setLookup] = useState<{ number: string; phone: string } | null>(savedMatches ? { number: saved.order.order_number.toUpperCase(), phone: saved.phone } : null)
+  // آخر تتبع ناجح في هذا التبويب: يبقى ظاهراً بعد تحديث الصفحة أو عند رفض مؤقت من الخادم
+  const [tracked] = useState(() => (savedMatches ? null : loadTracked(paramNumber || undefined)))
+  const known = savedMatches ? { number: saved.order.order_number.toUpperCase(), phone: saved.phone } : tracked ? { number: tracked.order.order_number.toUpperCase(), phone: tracked.phone } : null
+  const [number, setNumber] = useState(paramNumber || known?.number || '')
+  const [phone, setPhone] = useState(known?.phone ?? '')
+  const [lookup, setLookup] = useState<{ number: string; phone: string } | null>(known)
   const [touched, setTouched] = useState(false)
 
   const query = useQuery({
@@ -75,7 +78,11 @@ export function TrackOrderPage() {
     refetchInterval: (q) => (q.state.data && !q.state.error && orderStepIndex(q.state.data.status) >= 0 && q.state.data.status !== 'delivered' && !q.state.data.local ? 600_000 : false),
   })
   // أثناء أول تحميل نعرض اللقطة المحفوظة فوراً بدل هيكل فارغ
-  const snapshot = lookup && saved && saved.order.order_number.toUpperCase() === lookup.number ? trackedFromOrder(saved.order, true) : null
+  const snapshot = lookup && saved && saved.order.order_number.toUpperCase() === lookup.number ? trackedFromOrder(saved.order, true)
+    : lookup && tracked && tracked.order.order_number.toUpperCase() === lookup.number && tracked.phone === lookup.phone ? tracked.order : null
+  const fresh = query.data && !query.data.local ? query.data : null
+  const lookupPhone = lookup?.phone
+  useEffect(() => { if (fresh && lookupPhone) saveTracked(fresh, lookupPhone) }, [fresh, lookupPhone])
   // فشل التحديث (مثلاً حد المحاولات) لا يُخفي الطلب: نُبقي آخر ما لدينا — رد الخادم السابق أو اللقطة المحفوظة
   const order: TrackedOrder | null = query.data ?? (lookup ? snapshot : null)
   const staleReason = order && query.isError ? errorText(query.error, true) : null
