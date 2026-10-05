@@ -166,7 +166,14 @@ export function TrackOrderPage() {
             </button>
           </form>
 
-          <p className="trk-alt">{loggedIn ? <Link className="text-link" to="/orders">{t('عرض كل طلباتي')}</Link> : <>{t('لديكِ حساب؟')} <Link className="text-link" to="/auth?next=%2Forders">{t('سجّلي الدخول لرؤية كل طلباتكِ')}</Link></>}</p>
+          <div className="trk-forgot">
+            <span className="trk-forgot__icon"><Icon name="user" className="size-5" /></span>
+            <div className="trk-forgot__text">
+              <b>{loggedIn ? t('كل طلباتكِ في مكان واحد') : t('نسيتِ رقم الطلب؟ لا مشكلة')}</b>
+              <p>{loggedIn ? t('افتحي «طلباتي» لمتابعة كل طلب دون إدخال أي رقم.') : t('سجّلي الدخول برقم جوالكِ وستجدين كل طلباتكِ وحالتها في مكان واحد — دون حاجة لرقم الطلب.')}</p>
+            </div>
+            <Link className="trk-forgot__cta" to={loggedIn ? '/orders' : '/auth?next=%2Forders'}>{loggedIn ? t('طلباتي') : t('تسجيل الدخول')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
+          </div>
         </section>
 
         <aside className="trk-tips" aria-label={t('مساعدة في التتبع')}>

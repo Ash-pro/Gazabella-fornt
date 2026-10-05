@@ -1030,6 +1030,10 @@ const en: Record<string, string> = {
   "تعذّر تحديث الحالة الآن — هذه آخر حالة محفوظة لدينا.": "We couldn't refresh the status right now — this is the last status we have saved.",
   "طلبكِ الأخير": "Your latest order",
   "عرض الحالة": "View status",
+  "كل طلباتكِ في مكان واحد": "All your orders in one place",
+  "نسيتِ رقم الطلب؟ لا مشكلة": "Forgot your order number? No problem",
+  "افتحي «طلباتي» لمتابعة كل طلب دون إدخال أي رقم.": "Open “My orders” to follow every order without entering any number.",
+  "سجّلي الدخول برقم جوالكِ وستجدين كل طلباتكِ وحالتها في مكان واحد — دون حاجة لرقم الطلب.": "Sign in with your phone number to find all your orders and their status in one place — no order number needed.",
 }
 
 export default en

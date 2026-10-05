@@ -1746,3 +1746,13 @@ a.contact-card:hover { border-color: var(--primary); box-shadow: 0 8px 22px rgba
 .trk-recent span { flex: 1; min-width: 0; }
 .trk-recent bdi { font-weight: 700; color: var(--text); }
 .trk-recent b { color: var(--primary); white-space: nowrap; }
+
+/* تتبع الطلب: بطاقة «نسيتِ رقم الطلب؟» */
+.trk-forgot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 22px; padding: 16px 18px; border: 1px solid #ecd9a8; border-radius: 14px; background: linear-gradient(135deg, #fdf8ea 0%, #fbf1dc 100%); }
+.trk-forgot__icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px; background: #fff; color: #8a6420; box-shadow: 0 2px 8px rgba(138, 100, 32, .12); }
+.trk-forgot__text { flex: 1; min-width: 200px; }
+.trk-forgot__text b { display: block; font-size: 15px; color: #5c4313; }
+.trk-forgot__text p { margin-top: 3px; font-size: 13px; line-height: 1.8; color: #6f5a2d; }
+.trk-forgot__cta { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border-radius: 10px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; transition: transform .2s, box-shadow .2s; }
+.trk-forgot__cta:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(155, 44, 82, .25); }
+@media (max-width: 479px) { .trk-forgot__cta { width: 100%; justify-content: center; } }
