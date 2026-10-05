@@ -16,47 +16,39 @@ function getPrimaryImage(product: ProductBrief): string | null {
   return primary?.url ?? imgs[0]?.url ?? null
 }
 
+/**
+ * بطاقة المنتج: الصورة والاسم يفتحان التفاصيل، وإجراء أساسي واحد (الشراء السريع).
+ * الأسعار والخصم من productPricing كما هي — لا منطق تسعير هنا.
+ */
 export function ProductCard({ product }: { product: ProductBrief }) {
   const wishlist = useWishlist()
   const saved = wishlist.authenticated && !!wishlist.query.data?.some((item) => item.id === product.id)
   const imageUrl = getPrimaryImage(product)
   const { current, original, percent: discount } = productPricing(product)
+  const href = `/products/${product.slug}`
 
   return (
-    <article className="catalog-card">
-      <div className="catalog-card__image">
-        <Link to={`/products/${product.slug}`} aria-label={t('عرض {name}', { name: product.name })}>
+    <article className={`pcard ${product.in_stock ? '' : 'is-out'}`}>
+      <div className="pcard__media">
+        <Link to={href} aria-label={t('عرض {name}', { name: product.name })} tabIndex={-1}>
           <ProductVisual src={imageUrl} alt={product.name} />
         </Link>
-        {discount > 0 && (
-          <span className="catalog-discount">−<span className="num">{discount}%</span></span>
+        {discount > 0 && product.in_stock && <span className="pcard__badge">−<span className="num">{discount}%</span></span>}
+        {!product.in_stock && <span className="pcard__badge pcard__badge--out">{t('غير متوفر حاليًا')}</span>}
+        {!isMvp0Api() && (
+          <button type="button" className={`pcard__wish ${saved ? 'is-saved' : ''}`} aria-label={saved ? t('إزالة من المفضلة') : t('حفظ في المفضلة')} aria-pressed={saved}
+            disabled={wishlist.toggle.isPending} onClick={() => wishlist.toggleProduct(product.slug)}>
+            <Icon name="heart" className="size-[18px]" />
+          </button>
         )}
-        {!isMvp0Api() && <button
-          className={`wishlist-button ${saved ? 'is-saved' : ''}`}
-          aria-label={saved ? t('إزالة من المفضلة') : t('حفظ في المفضلة')}
-          aria-pressed={saved}
-          disabled={wishlist.toggle.isPending}
-          onClick={() => wishlist.toggleProduct(product.slug)}
-        >
-          <Icon name="heart" className="size-4" />
-        </button>}
-        {!product.in_stock && <span className="sold-out-label">{t('غير متوفر حاليًا')}</span>}
       </div>
-      <div className="catalog-card__body">
-        <span className="catalog-category">{product.category?.name}</span>
-        <Link className="catalog-name" to={`/products/${product.slug}`}>{product.name}</Link>
-        <div className="catalog-price">
-          {original !== null && (
-            <del aria-label={t('السعر السابق')} className="line-through text-gray-400 text-sm">
-              <span className="num">{formatPrice(original)}</span>
-            </del>
-          )}
+      <div className="pcard__body">
+        {product.category?.name && <span className="pcard__cat">{product.category.name}</span>}
+        <Link className="pcard__name" to={href}>{product.name}</Link>
+        <div className="pcard__price">
           <b aria-label={t('السعر الحالي')}><span className="num">{formatPrice(current)}</span></b>
+          {original !== null && <del aria-label={t('السعر السابق')}><span className="num">{formatPrice(original)}</span></del>}
         </div>
-        <Link className="catalog-action" to={`/products/${product.slug}`}>
-          {product.in_stock ? t('اكتشفي المنتج') : t('عرض التفاصيل')}
-          <Icon name="arrow" className="size-4 rtl:rotate-180" />
-        </Link>
         <QuickBuy product={product} />
         {wishlist.toggle.isError && <p role="alert" className="field-error">{getApiErrorMessage(wishlist.toggle.error)}</p>}
       </div>

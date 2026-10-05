@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { gazabellaApi, isMockMode, type ProductFilters } from '../api/gazabella'
-import { ApiHome } from '../components/home/ApiHome'
+import { CategoryTiles, HomeIntro, HomeShowcase } from '../components/home/HomeSections'
 import { useWishlist } from '../hooks/useWishlist'
-import { getImageUrl } from '../lib/apiClient'
 import { CatalogFilters } from '../components/product/CatalogFilters'
 import { ProductCard } from '../components/product/ProductCard'
 import { EmptyState, ErrorState } from '../components/ui/AsyncState'
@@ -69,19 +68,21 @@ export function ProductsPage() {
   const unknownCategory = !isMockMode() && !!resolvedCategorySlug && categoriesData.isSuccess && resolvedCategoryId === undefined
   const shownCount = unknownCategory ? 0 : savedOnly ? (wishlist.query.data ?? []).length : products.data?.meta?.total ?? 0
   const list = unknownCategory ? [] : savedOnly ? wishlist.query.data ?? [] : products.data?.data ?? []
+  const home = !active && !isMockMode() && !isMvp0Api()
   return <>
-    {!active && !isMockMode() && !isMvp0Api() && <ApiHome />}
+    {home && <HomeIntro />}
     {!active && (isMockMode() || isMvp0Api()) && <section className="container-page editorial-hero">
       <div className="editorial-hero__copy"><span className="eyebrow">{t('اختيارات تشبهكِ')}</span><h1>{t('تفاصيل صغيرة.')}<br /><em>{t('جمال كل يوم.')}</em></h1><p>{t('عناية، عطور وهدايا من متاجر مختارة.')}<br /><span className="hero-description-more">{t('اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.')}</span></p><Link to="/#products" className="btn-primary">{t('اكتشفي المختارات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> {t('من خانيونس، بكل حب')}</div></div>
       <div className="editorial-hero__image"><img src="/images/hero-beauty.webp" alt={t('تشكيلة Gazabella للعناية والعطور')} fetchPriority="high" /><span className="hero-edition">THE GAZABELLA EDIT <span>01 / BEAUTY</span></span></div>
     </section>}
     {!active && isMockMode() && <div className="container-page service-strip"><span><Icon name="truck" className="size-4" /> {t('سلة واحدة، توصيل موحّد')}</span><span><Icon name="sparkle" className="size-4" /> {t('اختيارات بعناية')}</span><span><Icon name="shield" className="size-4" /> {t('تجربة واضحة من البداية')}</span></div>}
-    <section id="categories" className="container-page category-section"><div className="section-heading"><h2>{t('لكل جانب من جمالكِ')}</h2><span>{t('اكتشفي الأقسام')}</span></div><nav className="category-rail" aria-label={t('تسوق حسب الفئة')}>{categoriesData.isPending && Array.from({ length: 6 }, (_, i) => <span key={i} className="category-tile category-tile--skeleton" aria-hidden="true"><div /><span /></span>)}{categoriesData.data?.map((c) => <Link key={c.id} to={`/?category=${c.slug}#products`} className={category === c.slug ? 'category-tile active' : 'category-tile'}><div><img src={getImageUrl(c.image_url) || '/brand/symbol/logo-128.webp'} alt="" loading="lazy" /></div><span>{c.name}</span></Link>)}</nav></section>
+    <CategoryTiles categories={categoriesData.data ?? []} loading={categoriesData.isPending} current={category} compact={!home} />
+    {home && <HomeShowcase />}
     {savedOnly && !wishlist.authenticated && <div className="container-page py-6"><Link className="btn-primary" to="/auth?next=%2F%3Fsaved%3Dtrue">{t('سجّلي الدخول لعرض المفضلة')}</Link></div>}
     {savedOnly && wishlist.query.isError && <div className="container-page"><ErrorState message={getApiErrorMessage(wishlist.query.error)} onRetry={() => void wishlist.query.refetch()} /></div>}
     {categoriesData.isError && <div className="container-page"><ErrorState message={getApiErrorMessage(categoriesData.error)} onRetry={() => void categoriesData.refetch()} /></div>}
     <section id="products" className="container-page catalog-section">
-      <div className="section-heading"><div><span className="eyebrow">{active ? t('اختياراتكِ، بطريقتكِ') : 'THE EVERYDAY EDIT'}</span><CatalogTitle>{savedOnly ? t('محفوظاتكِ') : search ? t('نتائج «{search}»', { search: search }) : currentCategory?.children?.find((c) => c.slug === sub)?.name || currentCategory?.name || t('مختارات تستحق مكانًا لديكِ')}</CatalogTitle><p>{unknownCategory || products.data ? <><span className="num">{shownCount}</span> {plural(shownCount, COUNT_FORMS)}</> : t('نجهّز مختاراتكِ…')}{products.isFetching && !products.isLoading ? t(' · جارٍ التحديث') : ''}</p></div><Link className="text-link" to="/?sort=-created_at#products">{t('وصل حديثًا')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div>
+      <div className="section-heading"><div>{!home && <span className="eyebrow">{active ? t('اختياراتكِ، بطريقتكِ') : 'THE EVERYDAY EDIT'}</span>}<CatalogTitle>{savedOnly ? t('محفوظاتكِ') : search ? t('نتائج «{search}»', { search: search }) : currentCategory?.children?.find((c) => c.slug === sub)?.name || currentCategory?.name || (home ? t('كل المنتجات') : t('مختارات تستحق مكانًا لديكِ'))}</CatalogTitle><p>{unknownCategory || products.data ? <><span className="num">{shownCount}</span> {plural(shownCount, COUNT_FORMS)}</> : t('نجهّز مختاراتكِ…')}{products.isFetching && !products.isLoading ? t(' · جارٍ التحديث') : ''}</p></div><Link className="text-link" to="/?sort=-created_at#products">{t('وصل حديثًا')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div>
       <div className="catalog-toolbar"><button className="filter-toggle" disabled={savedOnly} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="filter" className="size-4" /> {t('تصفية')}</button>{!isMvp0Api() && <button className={`filter-toggle ${savedOnly ? 'active' : ''}`} aria-pressed={savedOnly} onClick={() => setFilter('saved', savedOnly ? '' : 'true')}><Icon name="heart" className="size-4" /> {t('المحفوظات')}</button>}<label className="sort-label">{t('ترتيب حسب')} <select disabled={savedOnly} aria-label={t('ترتيب المنتجات')} value={validSort || ''} onChange={(e) => setFilter('sort', e.target.value)}><option value="">{t('المختارات')}</option><option value="-created_at">{t('الأحدث')}</option><option value="price">{t('السعر: الأقل أولًا')}</option><option value="-price">{t('السعر: الأعلى أولًا')}</option></select></label></div>
       {filtersOpen && <CatalogFilters key={params.toString()} categories={categoriesData.data || []} onClose={() => setFiltersOpen(false)} />}
       {!!chips.length && <div className="active-filters">{chips.map((chip) => <button key={chip.key + chip.value} onClick={() => removeChip(chip.key,chip.value)} aria-label={t('إزالة فلتر {label}', { label: chip.label })}>{chip.label} ×</button>)}{chips.length > 1 && <button onClick={() => setParams({}, {state:{preserveScroll:true}})}>{t('مسح الكل')}</button>}</div>}

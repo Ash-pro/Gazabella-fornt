@@ -1034,6 +1034,23 @@ const en: Record<string, string> = {
   "نسيتِ رقم الطلب؟ لا مشكلة": "Forgot your order number? No problem",
   "افتحي «طلباتي» لمتابعة كل طلب دون إدخال أي رقم.": "Open “My orders” to follow every order without entering any number.",
   "سجّلي الدخول برقم جوالكِ وستجدين كل طلباتكِ وحالتها في مكان واحد — دون حاجة لرقم الطلب.": "Sign in with your phone number to find all your orders and their status in one place — no order number needed.",
+  "تصفّحي الأقسام": "Browse categories",
+  "مداخل سريعة": "Quick links",
+  "تسوّقي حسب القسم": "Shop by category",
+  "تسوّقي حسب الميزانية": "Shop by budget",
+  "حتى": "Up to",
+  "أكثر من": "Over",
+  "اكتشفي المجموعة": "Explore the collection",
+  "توصيل إلى {n} مناطق": "Delivery to {n} areas",
+  "رسوم التوصيل تبدأ من {fee}": "Delivery fees start at {fee}",
+  "للطلبات من {amount} فأكثر": "On orders of {amount} or more",
+  "تدفعين نقداً للمندوب عند وصول طلبكِ": "Pay the courier in cash when your order arrives",
+  "دعم عبر واتساب": "WhatsApp support",
+  "نجيب على استفساراتكِ عن الطلبات والمنتجات": "We answer your questions about orders and products",
+  "خدماتنا": "Our services",
+  "عرض الكل": "View all",
+  "كل الجديد": "All new arrivals",
+  "كل المنتجات": "All products",
 }
 
 export default en
