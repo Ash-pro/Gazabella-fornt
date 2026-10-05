@@ -210,6 +210,7 @@ export function normalizeOrder(raw: RawOrder): Order {
       const img = imgs.find((i) => i.is_primary) ?? imgs[0]
       return {
         id: item.id,
+        product_id: item.product?.id ?? (item as { product_id?: number }).product_id,
         product_name: item.product?.name ?? item.product_name ?? '',
         variant_name: null,
         unit_price: amount(item.unit_price),

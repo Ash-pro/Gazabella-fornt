@@ -34,7 +34,7 @@ export function AuthPage() {
   const [countdown, setCountdown] = useState(0)
   const navigate = useNavigate()
 
-  const next = params.get('next') || '/orders'
+  const next = params.get('next') || '/account'
   const safeNext = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : '/orders'
 
   // countdown timer for resend

@@ -87,7 +87,7 @@ function AccountSearch(props: SearchProps) {
 }
 
 /** إطار موحّد لصفحات الحساب: بطاقة العميلة + أرقام سريعة + تبويبات + بحث */
-export function AccountShell({ active, search, children }: { active: 'orders' | 'profile'; search: SearchProps; children: ReactNode }) {
+export function AccountShell({ active, search, children }: { active: 'overview' | 'orders' | 'profile'; search: SearchProps; children: ReactNode }) {
   const navigate = useNavigate()
   const storedUser = useAuthStore((s) => s.user)
   const session = useQuery({ queryKey: ['session'], queryFn: gazabellaApi.getMe, retry: false, staleTime: 60_000 })
@@ -135,6 +135,7 @@ export function AccountShell({ active, search, children }: { active: 'orders' | 
 
       <div className="acct-toolbar">
         <nav className="acct-tabs" aria-label={t('أقسام الحساب')}>
+          <Link to="/account" className="acct-tab" aria-current={active === 'overview' ? 'page' : undefined}><Icon name="sparkle" className="size-4" />{t('الرئيسية')}</Link>
           <Link to="/orders" className="acct-tab" aria-current={active === 'orders' ? 'page' : undefined}><Icon name="package" className="size-4" />{t('طلباتي')}</Link>
           <Link to="/profile" className="acct-tab" aria-current={active === 'profile' ? 'page' : undefined}><Icon name="user" className="size-4" />{t('الملف الشخصي')}</Link>
         </nav>

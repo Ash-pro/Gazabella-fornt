@@ -71,13 +71,13 @@ export function MobileBottomNav() {
 
         {/* طلباتي / حسابي */}
         <NavLink
-          to={token ? '/orders' : '/auth'}
+          to={token ? '/account' : '/auth'}
           className={({ isActive }) =>
             `mbn-item${isActive ? ' is-active' : ''}`
           }
         >
           <Icon name="user" className="size-5" />
-          <span>{token ? t('طلباتي') : t('حسابي')}</span>
+          <span>{t('حسابي')}</span>
         </NavLink>
       </div>
     </nav>

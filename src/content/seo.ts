@@ -35,7 +35,7 @@ export const ROUTE_SEO: Record<string, SeoEntry> = {
 
 /** صفحات خاصة لا تُفهرس حتى لو كانت ديناميكية */
 export function isPrivatePath(pathname: string): boolean {
-  return /^\/(orders|checkout|profile|auth|cart|merchant|delivery)(\/|$)/.test(pathname)
+  return /^\/(orders|account|checkout|profile|auth|cart|merchant|delivery)(\/|$)/.test(pathname)
 }
 
 export function fullTitle(title: string | null | undefined): string {

@@ -222,6 +222,7 @@ export interface Order {
   status: OrderStatus
   items: Array<{
     id: number
+    product_id?: number
     product_name: string
     variant_name?: string | null
     unit_price: string

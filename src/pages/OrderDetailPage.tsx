@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { ProductVisual } from '../components/product/ProductVisual'
+import { OrderProgress } from '../components/account/OrderCard'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
@@ -16,7 +17,7 @@ import { formatDate, formatPrice } from '../lib/format'
 import { demoDispute, demoOpenDispute } from '../mock/demoOperations'
 
 const payments: Record<string, string> = { pending: 'بانتظار التأكيد', paid: 'مدفوع', failed: 'لم يكتمل الدفع', refunded: 'تم استرداد المبلغ' }
-const date = (value: string) => formatDate(value, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) => formatDate(value, { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })
 
 function OrderConfirmModal({ orderId, paymentMethod, status, onClose }: { orderId: string; paymentMethod?: string | null; status?: string; onClose: () => void }) {
   // P1-FE-03 — رسالة النجاح حسب طريقة الدفع (COD مؤكد فوراً · جوال باي بانتظار الدفع)
@@ -103,8 +104,8 @@ export function OrderDetailPage() {
     {!isMockMode() && !isMvp0Api() && <JawwalReferenceForm order={order} />}
     <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="space-y-6">
-        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">{t('رحلة طلبكِ')}</h2><ol className="order-timeline">{(order.tracking ?? []).map((event,index) => <li key={event.created_at + index}><b>{orderStatusLabel(event.status)}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
-        <section className="checkout-card"><h2 className="mb-5 text-lg font-bold">{t('اختياراتكِ')}</h2><div className="space-y-4">{order.items.map((item) => <div key={item.id} className="flex items-center gap-3 border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"><div className="size-16 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.image_url} alt={item.product_name} /></div><div className="min-w-0 flex-1"><b className="text-sm">{item.product_name}</b><p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name} {t('· الكمية')} <span className="num">{item.quantity}</span></p></div><b className="whitespace-nowrap text-sm"><span className="num">{formatPrice(item.subtotal)}</span></b></div>)}</div></section>
+        <section className="checkout-card"><h2 className="mb-6 text-lg font-bold">{t('رحلة طلبكِ')}</h2><OrderProgress status={order.status} /><ol className="order-timeline mt-5">{(order.tracking?.length ? order.tracking : [{ status: order.status, note: null, created_at: order.created_at }]).map((event,index) => <li key={event.created_at + index}><b>{orderStatusLabel(event.status)}</b>{event.note && <p>{event.note}</p>}<time dateTime={event.created_at} className="num">{date(event.created_at)}</time></li>)}</ol></section>
+        <section className="checkout-card"><h2 className="mb-5 text-lg font-bold">{t('اختياراتكِ')}</h2><div className="space-y-4">{order.items.map((item) => <div key={item.id} className="flex items-center gap-3 border-b border-[var(--border)] pb-4 last:border-0 last:pb-0"><div className="order-thumb size-16 shrink-0 overflow-hidden rounded-lg"><ProductVisual src={item.image_url} alt={item.product_name} /></div><div className="min-w-0 flex-1"><b className="text-sm">{item.product_name}</b><p className="mt-1 text-xs text-[var(--text-3)]">{item.variant_name} {t('· الكمية')} <span className="num">{item.quantity}</span></p></div><b className="whitespace-nowrap text-sm"><span className="num">{formatPrice(item.subtotal)}</span></b></div>)}</div></section>
         {order.status === 'delivered' && <section className="checkout-card"><h2 className="text-lg font-bold">{t('متابعة ما بعد الاستلام')}</h2>{order.escrow_expires_at && <p className="mt-3 text-sm leading-7">{t('تنتهي نافذة مراجعة الطلب في')} <span className="num">{date(order.escrow_expires_at)}</span>.</p>}{savedDispute ? <p className="demo-note mt-4" role="status">{t('تم حفظ البلاغ التجريبي')} <span className="num">{savedDispute.id}</span> {t('على هذا الجهاز. لم يُرسل إلى فريق الدعم.')}</p> : withinDisputeWindow && isMockMode() ? <><p className="my-3 text-sm text-[var(--text-2)]">{t('يمكنكِ تجربة تسجيل مشكلة في الطلب خلال')} <span className="num">48</span> {t('ساعة من التسليم.')}</p><button className="btn-ghost" onClick={() => setDisputeOpen(true)}>{t('تسجيل مشكلة في الطلب')}</button></> : <p className="mt-3 text-sm text-[var(--text-2)]">{isMockMode() ? t('انتهت نافذة تسجيل المشكلة لهذا الطلب.') : t('خدمة متابعة المشكلات تنتظر الربط مع فريق الدعم.')}</p>}</section>}
       </div>
       <aside className="space-y-6">
