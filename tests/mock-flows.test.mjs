@@ -5,7 +5,7 @@ const memory = new Map()
 globalThis.localStorage = { getItem: k => memory.get(k) ?? null, setItem: (k,v) => memory.set(k,String(v)), removeItem: k => memory.delete(k), clear: () => memory.clear() }
 let server, api, db, operations, formatPrice
 before(async () => {
-  server = await createServer({ configFile:false, resolve:{alias:{axios:new URL('../node_modules/axios/dist/esm/axios.js',import.meta.url).pathname.replace(/^\/(\w:)/,'$1')}}, cacheDir:'node_modules/.vite-tests', server:{middlewareMode:true,hmr:{port:24682}}, appType:'custom', define:{'import.meta.env.VITE_MOCK_DELAY_MS':'"0"','import.meta.env.VITE_DATA_SOURCE':'"mock"'} })
+  server = await createServer({ configFile:false, resolve:{alias:{axios:new URL('../node_modules/axios/dist/esm/axios.js',import.meta.url).pathname.replace(/^\/(\w:)/,'$1')}}, cacheDir:'node_modules/.vite-tests', server:{middlewareMode:true,hmr:false}, appType:'custom', define:{'import.meta.env.VITE_MOCK_DELAY_MS':'"0"','import.meta.env.VITE_DATA_SOURCE':'"mock"'} })
   api = (await server.ssrLoadModule('/src/mock/mockServices.ts')).mockServices
   db = await server.ssrLoadModule('/src/mock/mockDatabase.ts')
   operations = await server.ssrLoadModule('/src/mock/demoOperations.ts')

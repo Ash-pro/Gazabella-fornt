@@ -19,8 +19,9 @@
 .hm-cover--empty img { width: 44%; max-width: 72px; height: auto; object-fit: contain; opacity: .5; }
 
 /* ───────────── Hero ───────────── */
-.hm-hero { margin-top: var(--sp-4); }
-.hm-hero__stage { display: grid; border-radius: var(--rad-xl); overflow: hidden; background: var(--c-card); border: 1px solid var(--c-line); box-shadow: var(--el-2); }
+/* --hm-hero-min: ارتفاع أدنى مشترك بين هيكل التحميل والبانر الفعلي */
+.hm-hero { margin-top: var(--sp-4); --hm-hero-min: calc(clamp(170px, 50vw, 300px) + 300px); }
+.hm-hero__stage { display: grid; min-height: var(--hm-hero-min); border-radius: var(--rad-xl); overflow: hidden; background: var(--c-card); border: 1px solid var(--c-line); box-shadow: var(--el-2); }
 .hm-hero__slide { grid-area: 1 / 1; display: grid; grid-template-rows: auto 1fr; opacity: 0; visibility: hidden; transition: opacity .45s var(--ease), visibility .45s; }
 .hm-hero__slide.is-active { opacity: 1; visibility: visible; }
 .hm-hero__art { order: -1; width: 100%; height: clamp(170px, 50vw, 300px); }
@@ -40,15 +41,16 @@
 .hm-hero__dots button { position: relative; width: 28px; height: var(--tap); }
 .hm-hero__dots button::after { content: ""; position: absolute; inset-inline: 6px; top: 50%; height: 4px; margin-top: -2px; border-radius: 4px; background: var(--c-line-strong); transition: background var(--dur), inset var(--dur); }
 .hm-hero__dots button[aria-current="true"]::after { inset-inline: 0; background: var(--c-brand); }
-.hm-hero--skeleton > div { border-radius: var(--rad-xl); min-height: 420px; background: #ece5df; animation: soft-pulse 1.6s ease-in-out infinite; }
+/* فشل جلب البانرات: رسالة الخطأ تشغل مساحة البانر نفسها فلا يقفز ما تحتها */
+.hm-hero--error { display: grid; align-content: center; min-height: var(--hm-hero-min); }
+.hm-hero--skeleton > div { border-radius: var(--rad-xl); min-height: var(--hm-hero-min); background: #ece5df; animation: soft-pulse 1.6s ease-in-out infinite; }
 @media (min-width: 900px) {
-  .hm-hero { margin-top: var(--sp-6); }
+  .hm-hero { margin-top: var(--sp-6); --hm-hero-min: 420px; }
   .hm-hero__slide { grid-template-rows: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); min-height: 420px; }
   .hm-hero__art { order: 0; aspect-ratio: auto; max-height: none; height: 100%; }
   .hm-hero__copy { padding: var(--sp-12) clamp(32px, 4vw, 64px); gap: var(--sp-4); }
   .hm-hero__slide--text { grid-template-columns: 1fr; }
   .hm-hero__slide--text .hm-hero__copy { align-items: center; text-align: center; margin-inline: auto; }
-  .hm-hero--skeleton > div { min-height: 420px; }
 }
 
 /* ───────────── Quick chips ───────────── */

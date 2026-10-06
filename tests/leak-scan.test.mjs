@@ -24,7 +24,7 @@ globalThis.sessionStorage = globalThis.localStorage
 let server, api
 const STORE_NAMES = ['متجر روز غزة', 'بوتيك سحر الشرق', 'لافندر كوزمتكس']
 before(async () => {
-  server = await createServer({ configFile: false, cacheDir: 'node_modules/.vite-leak-tests', server: { middlewareMode: true, hmr: { port: 24682 } }, appType: 'custom',
+  server = await createServer({ configFile: false, cacheDir: 'node_modules/.vite-leak-tests', server: { middlewareMode: true, hmr:false }, appType: 'custom',
     define: { 'import.meta.env.VITE_DATA_SOURCE': '"mock"', 'import.meta.env.VITE_MOCK_DELAY_MS': '"0"' } })
   api = (await server.ssrLoadModule('/src/api/gazabella.ts')).gazabellaApi
 })

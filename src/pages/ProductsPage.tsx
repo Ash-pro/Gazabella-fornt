@@ -54,7 +54,7 @@ export function ProductsPage() {
   const chips = [
     ...params.getAll('category').map((value) => ({key:'category',value,label:categoriesData.data?.find((c) => c.slug === value)?.name || value})),
     ...(sub ? [{key:'sub',value:sub,label:currentCategory?.children?.find((c) => c.slug === sub)?.name || sub}] : []),
-    ...(filters.min_price !== undefined || filters.max_price !== undefined ? [{key:'price',value:'',label:t('السعر: {v1} ₪ – {v2}', { v1: filters.min_price ?? 0, v2: filters.max_price === undefined ? 'بلا حد' : filters.max_price + ' ₪' })}] : []),
+    ...(filters.min_price !== undefined || filters.max_price !== undefined ? [{key:'price',value:'',label:t('السعر: {v1} ₪ – {v2}', { v1: filters.min_price ?? 0, v2: filters.max_price === undefined ? t('بلا حد') : filters.max_price + ' ₪' })}] : []),
     ...(search ? [{key:'search',value:search,label:search}] : []),
     ...(savedOnly ? [{key:'saved',value:'true',label:t('المحفوظات')}] : []),
   ]

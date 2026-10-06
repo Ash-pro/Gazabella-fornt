@@ -5,7 +5,7 @@ const memory=new Map()
 globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)}
 let server, api, client, auth, module
 before(async()=>{
-  server=await createServer({configFile:false,resolve:{alias:{axios:new URL("../node_modules/axios/dist/esm/axios.js",import.meta.url).pathname.replace(/^\/(\w:)/,"$1")}},cacheDir:'node_modules/.vite-api-tests',server:{middlewareMode:true,hmr:{port:24681}},appType:'custom',define:{'import.meta.env.VITE_DATA_SOURCE':'"api"','import.meta.env.VITE_STORAGE_URL':'"https://api.example.test"'}})
+  server=await createServer({configFile:false,resolve:{alias:{axios:new URL("../node_modules/axios/dist/esm/axios.js",import.meta.url).pathname.replace(/^\/(\w:)/,"$1")}},cacheDir:'node_modules/.vite-api-tests',server:{middlewareMode:true,hmr:false},appType:'custom',define:{'import.meta.env.VITE_DATA_SOURCE':'"api"','import.meta.env.VITE_STORAGE_URL':'"https://api.example.test"'}})
   module=await server.ssrLoadModule('/src/api/gazabella.ts'); api=module.gazabellaApi
   client=await server.ssrLoadModule('/src/lib/apiClient.ts')
   auth=(await server.ssrLoadModule('/src/stores/authStore.ts')).useAuthStore

@@ -101,13 +101,17 @@ function Hero({ slides }: { slides: Banner[] }) {
 export function HomeIntro() {
   const banners = useQuery({ queryKey: ['banners'], queryFn: () => gazabellaApi.getBanners() })
   const collections = useQuery({ queryKey: ['collections'], queryFn: gazabellaApi.getCollections })
-  if (banners.isPending) return <div className="container-page hm-hero hm-hero--skeleton" role="status" aria-label={t('نحمّل المختارات')}><div /></div>
+  // أثناء التحميل: هيكل بارتفاع البانر نفسه، والمداخل السريعة ظاهرة من البداية — فلا ينزاح ما تحتها عند وصول البانرات
+  if (banners.isPending) return <>
+    <div className="container-page hm-hero hm-hero--skeleton" role="status" aria-label={t('نحمّل المختارات')}><div /></div>
+    <Shortcuts collections={collections.data ?? []} />
+  </>
   const all = banners.data ?? []
   const heroes = all.filter((b) => b.type === 'hero')
   // إن لم يوجد بانر رئيسي نرفع أول بانر ترويجي مكانه حتى لا تبدأ الصفحة بلا رسالة
   const slides = heroes.length ? heroes : all.filter((b) => b.type === 'promo').slice(0, 1)
   return <>
-    {banners.isError && <div className="container-page"><ErrorState message={getApiErrorMessage(banners.error)} onRetry={() => void banners.refetch()} /></div>}
+    {banners.isError && <div className="container-page hm-hero hm-hero--error"><ErrorState message={getApiErrorMessage(banners.error)} onRetry={() => void banners.refetch()} /></div>}
     {!!slides.length && <Hero key={slides.map((s) => s.id).join('-')} slides={slides} />}
     <Shortcuts collections={collections.data ?? []} />
   </>

@@ -7,6 +7,7 @@ import { gazabellaApi } from '../api/gazabella'
 import { useCartStore } from '../stores/cartStore'
 import { queryClient } from '../lib/queryClient'
 import { RelatedProducts } from '../components/product/RelatedProducts'
+import { SupportLink } from '../components/support/SupportLink'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { ErrorState } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
@@ -93,16 +94,20 @@ function ProductContent({ slug }: { slug: string }) {
     track('view_item', { items: [productItem(product)], value: Number(product.discount_price ?? product.price) || 0 })
   }, [viewedId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // هيكل التحميل يستخدم بنية الصفحة نفسها (مسار، معرض، نص) حتى لا ينزاح المحتوى عند وصول البيانات
   if (query.isLoading) return (
-    <div className="container-page product-detail-skeleton">
-      <div className="skel-image" />
-      <div>
-        <div className="skel-line skel-line--title" />
-        <div className="skel-line skel-line--price" />
-        <div className="skel-line skel-line--short" />
-        <div className="skel-line" />
-        <div className="skel-line" style={{ width: '65%' }} />
-        <div className="skel-btn" />
+    <div key="skeleton" className="container-page product-detail product-detail-skeleton" aria-busy="true">
+      <div className="product-breadcrumb" aria-hidden="true"><span>&nbsp;</span></div>
+      <div className="detail-layout">
+        <div className="detail-gallery"><div className="detail-main-image skel-image" /></div>
+        <div className="detail-copy">
+          <div className="skel-line skel-line--title" />
+          <div className="skel-line skel-line--price" />
+          <div className="skel-line skel-line--short" />
+          <div className="skel-line" />
+          <div className="skel-line" style={{ width: '65%' }} />
+          <div className="skel-btn" />
+        </div>
       </div>
     </div>
   )
@@ -241,6 +246,7 @@ function ProductContent({ slug }: { slug: string }) {
           <b><span className="num">{money(displayPrice)}</span></b>
         </div>
         {button}
+        <SupportLink className="product-sticky__support" />
       </div>
 
       {zoom && (
