@@ -209,7 +209,16 @@ img { display: block; max-width: 100%; }
 }
 
 /* Gazabella storefront — shared type, layout and interaction tokens. */
-@theme { --font-sans: "Tajawal", system-ui, sans-serif; }
+@theme {
+  --font-sans: "Tajawal", system-ui, sans-serif;
+  /* نقاط التوقف بالـ px مثل استعلامات الوسائط في CSS المتجر (1024px…): بقيمها الافتراضية بالـ rem كانت تتبع حجم خط
+     المتصفح المختار، فعند تكبير الخط إلى 24px يبقى الهيدر ديسكتوب بينما يظهر التنقل السفلي (lg:hidden) ويغطيه التنبيه */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
 :root { --text-3: #795766; --border: #e9e0dc; --surface2: #f7f3ef; --bg: #fdfbf8; --shadow: 0 8px 28px rgba(42,26,31,.05); }
 body { background: var(--bg); }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }

@@ -149,6 +149,9 @@
 .hm-rowerror { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border: 1px dashed var(--c-line-strong); border-radius: var(--rad-lg); background: var(--c-card); color: var(--c-ink-2); font-size: var(--fs-sm); }
 .hm-rowerror button { min-height: var(--tap); padding: var(--sp-2) var(--sp-4); border: 1px solid var(--c-brand); border-radius: var(--rad-md); color: var(--c-brand); font-weight: 600; background: var(--c-card); }
 
+/* قسم مطلوب بالاسم بلا منتجات: سطر واضح ومدخل للكتالوج */
+.hm-rowempty { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-6); padding: var(--sp-5); border: 1px solid var(--c-line); border-radius: var(--rad-lg); background: var(--c-card); color: var(--c-ink-2); }
+
 /* ───────────── Editorial band ───────────── */
 .hm-edit { position: relative; display: grid; gap: var(--sp-6); overflow: hidden; padding: var(--sp-8) var(--sp-5) 0; border-radius: var(--rad-xl); background: var(--c-ink); color: #fff; }
 .hm-edit--text { padding-bottom: var(--sp-8); }

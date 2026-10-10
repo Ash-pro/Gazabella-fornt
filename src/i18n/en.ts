@@ -1074,6 +1074,7 @@ const en: Record<string, string> = {
   "كل ما في Gazabella، في مكان واحد": "Everything at Gazabella, in one place",
   "تصفّحي كل المنتجات": "Browse all products",
   'تسوّقي المنتجات': 'Shop products',
+  'لا توجد مختارات معروضة الآن.': 'No picks to show right now.',
 }
 
 export default en

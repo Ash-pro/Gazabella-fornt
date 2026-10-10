@@ -5,6 +5,7 @@ import { ProfilePage } from './pages/ProfilePage'
 import { CheckoutReceiptPage } from './pages/CheckoutReceiptPage'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { productsPathToRoute } from './lib/routes'
 import { AppShell } from './components/layout/AppShell'
 import { DemoRoleBar } from './components/layout/DemoRoleBar'
 import { AnalyticsTracker } from './components/layout/AnalyticsTracker'
@@ -63,6 +64,7 @@ export default function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<ProductsPage />} />
+              <Route path="products" element={<ProductsPathRedirect />} />
               <Route path="products/:slug" element={<Suspense fallback={<PageLoader />}><ProductDetailPage /></Suspense>} />
               <Route path="cart" element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
               <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
@@ -95,4 +97,10 @@ export default function App() {
       </div>
     </ErrorBoundary>
   )
+}
+
+/** مسار /products غير موجود كصفحة: يُحوَّل (replace) إلى وجهته الفعلية بدل صفحة «غير موجود» */
+function ProductsPathRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={productsPathToRoute(search)} replace />
 }
