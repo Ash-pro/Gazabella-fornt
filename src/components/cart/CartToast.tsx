@@ -41,7 +41,7 @@ function CartToastBanner({ cartToast }: { cartToast: CartToastInfo }) {
       role="status"
       aria-live="polite"
       aria-label={t('إشعار إضافة للسلة')}
-      className="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%_-_2rem)] max-w-md animate-fade-in pointer-events-auto"
+      className="cart-toast fixed left-1/2 -translate-x-1/2 z-50 w-[calc(100%_-_2rem)] max-w-md animate-fade-in pointer-events-auto"
     >
       <div className="relative overflow-hidden rounded-2xl border border-[var(--gold)]/40 bg-stone-900/95 p-3 sm:p-3.5 text-white shadow-2xl backdrop-blur-md">
         <div className="flex items-center gap-3">

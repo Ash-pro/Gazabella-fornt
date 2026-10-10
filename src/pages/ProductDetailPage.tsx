@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 import { isMvp0Api } from '../lib/apiContract'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -93,6 +93,20 @@ function ProductContent({ slug }: { slug: string }) {
     if (!product) return
     track('view_item', { items: [productItem(product)], value: Number(product.discount_price ?? product.price) || 0 })
   }, [viewedId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ارتفاع شريط الشراء الفعلي (يتغير مع النص والتكبير واللغة) كمتغير CSS، ليظهر تنبيه الإضافة فوقه لا عليه
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const hasProduct = Boolean(query.data)
+  useEffect(() => {
+    const el = stickyRef.current
+    if (!el) return
+    const root = document.documentElement
+    const apply = () => root.style.setProperty('--buybar-h', `${Math.round(el.getBoundingClientRect().height)}px`)
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(el)
+    return () => { observer.disconnect(); root.style.removeProperty('--buybar-h') }
+  }, [hasProduct])
 
   // هيكل التحميل يستخدم بنية الصفحة نفسها (مسار، معرض، نص) حتى لا ينزاح المحتوى عند وصول البيانات
   if (query.isLoading) return (
@@ -240,7 +254,7 @@ function ProductContent({ slug }: { slug: string }) {
 
       <RelatedProducts product={product} />
 
-      <div className="product-sticky">
+      <div ref={stickyRef} className="product-sticky">
         <div>
           <small>{product.name}</small>
           <b><span className="num">{money(displayPrice)}</span></b>

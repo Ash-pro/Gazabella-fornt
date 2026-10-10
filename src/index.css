@@ -515,6 +515,11 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .ops-inventory { display:grid; gap:12px; }
 .ops-inventory article { display:flex; align-items:center; gap:20px; padding:18px; background:white; border:1px solid var(--border); border-radius:10px; }
 .toast-progress { animation:toast-progress 3.8s linear forwards; transform-origin:right; }
+/* تنبيه الإضافة فوق التنقل السفلي وشريط الشراء (إن وُجد) ومنطقة الأمان، لا عليهم */
+.cart-toast { bottom: calc(4rem + var(--buybar-h, 0px) + env(safe-area-inset-bottom, 0px) + 12px); }
+@media (min-width: 1024px) { .cart-toast { bottom: 24px; } }
+/* على الجوال يأخذ التنبيه مكان زر الدعم العائم مؤقتًا بدل أن يغطيه */
+@media (max-width: 1023px) { body:has(.cart-toast) .support-fab { opacity: 0; pointer-events: none; } }
 @keyframes toast-progress { from {transform:scaleX(1)} to {transform:scaleX(0)} }
 @media(max-width:639px) {
   .ops-page { padding-top:24px; }
