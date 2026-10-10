@@ -36,7 +36,18 @@ export function usePageNavigation() {
         return
       } else if (location.hash) {
         const target = document.getElementById(location.hash.slice(1))
-        if (target) { target.scrollIntoView({behavior:'instant'}); const id = location.hash.slice(1); settle(() => document.getElementById(id)?.scrollIntoView({ behavior: 'instant' })) }
+        // قسم ما زال بانتظار حركة الظهور (data-reveal="pending") مُزاح بـ translateY؛ نُظهره فورًا حتى يستقر الهدف تحت الهيدر بالضبط
+        const show = (el: HTMLElement | null) => {
+          if (el && el.dataset.reveal === 'pending') {
+            const node = el
+            node.style.transition = 'none'
+            node.dataset.reveal = 'in'
+            void node.offsetHeight
+            requestAnimationFrame(() => { node.style.transition = '' })
+          }
+          return el
+        }
+        if (target) { show(target)?.scrollIntoView({behavior:'instant'}); const id = location.hash.slice(1); settle(() => show(document.getElementById(id))?.scrollIntoView({ behavior: 'instant' })) }
         else if (attempts++ < 90) frame = requestAnimationFrame(move)
       } else {
         window.scrollTo({top:0,behavior:'instant'})

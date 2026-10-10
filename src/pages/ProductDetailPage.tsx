@@ -33,6 +33,10 @@ function ProductContent({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(1)
   const [imageIndex, setImageIndex] = useState(0)
   const [zoom, setZoom] = useState(false)
+  // حالة كل صورة حسب رابطها: التكبير متاح فقط لصورة حُمّلت فعلًا (لا لصورة مفقودة أو فاشلة أو ما زالت تُحمَّل).
+  // الحالة محلية لهذا المنتج (المكوّن مُفتاحه slug) فتُصفَّر تلقائيًا عند الانتقال لمنتج آخر
+  const [imageStatus, setImageStatus] = useState<Record<string, 'ok' | 'failed'>>({})
+  const noteImage = (status: 'ok' | 'failed', url: string | null) => { if (url) setImageStatus((m) => (m[url] === status ? m : { ...m, [url]: status })) }
 
   const query = useQuery({
     queryKey: ['product', slug],
@@ -144,6 +148,10 @@ function ProductContent({ slug }: { slug: string }) {
     )
 
   const image = (product.images ?? [])[imageIndex] ?? (product.images ?? [])[0]
+  const imageUrl = getImageUrl(image?.url ?? null)
+  const zoomable = !!imageUrl && imageStatus[imageUrl] === 'ok'
+  // مفتاح بالرابط: عند تبديل الصورة يُعاد إنشاء العنصر فلا تنتقل حالة فشل صورة سابقة إلى التالية
+  const mainVisual = <ProductVisual key={imageUrl ?? 'none'} src={image?.url ?? null} alt={image?.alt_text ?? product.name} priority onStatus={noteImage} />
   const { current: displayPrice, original: originalPrice, percent } = productPricing(product, variant)
   const disabled = add.isPending || !product.in_stock || quantity > limit
 
@@ -171,14 +179,14 @@ function ProductContent({ slug }: { slug: string }) {
 
       <div className="detail-layout">
         <div className="detail-gallery">
-          <button
-            className="detail-main-image"
-            onClick={() => setZoom(true)}
-            aria-label={t('تكبير صورة المنتج')}
-          >
-            <ProductVisual src={image?.url ?? null} alt={image?.alt_text ?? product.name} priority />
-            <span><Icon name="eye" className="size-4" /> {t('عرض الصورة')}</span>
-          </button>
+          {zoomable ? (
+            <button className="detail-main-image" onClick={() => setZoom(true)} aria-label={t('تكبير صورة المنتج')}>
+              {mainVisual}
+              <span><Icon name="eye" className="size-4" /> {t('عرض الصورة')}</span>
+            </button>
+          ) : (
+            <div className="detail-main-image">{mainVisual}</div>
+          )}
           {(product.images ?? []).length > 1 && (
             <div className="detail-thumbnails">
               {(product.images ?? []).map((img, i) => (
@@ -264,7 +272,7 @@ function ProductContent({ slug }: { slug: string }) {
         <SupportLink className="product-sticky__support" />
       </div>
 
-      {zoom && (
+      {zoom && zoomable && (
         <Dialog title={product.name} onClose={() => setZoom(false)}>
           <div className="aspect-square">
             <ProductVisual
