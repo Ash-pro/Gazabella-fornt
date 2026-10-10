@@ -15,10 +15,16 @@ import type { Banner, Category, Collection, ProductBrief } from '../../types/api
 
 type IconName = Parameters<typeof Icon>[0]['name']
 
+/** قسم «مختارات Gazabella» في الرئيسية (منتجات is_featured من الـ API) — وجهة فعلية لروابط «المختارات» */
+const PICKS_ANCHOR = 'picks'
+const PICKS_LINK = '/#' + PICKS_ANCHOR
+
 /** روابط البانر تأتي من الخادم: نقبل المسارات الداخلية فقط ونحوّل القديمة منها */
 function bannerLink(value: string | null): string | null {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null
   if (value === '/products') return ALL_PRODUCTS
+  // المختارات = المنتجات المميّزة نفسها التي يعرضها قسم المختارات (فلتر featured مدعوم في الـ API)
+  if (value === '/products?featured=1' || value === '/products?featured=true') return PICKS_LINK
   if (value.startsWith('/categories/')) return '/?category=' + encodeURIComponent(value.slice(12)) + '#products'
   return value
 }
@@ -57,7 +63,7 @@ function Hero({ slides, tagline }: { slides: Banner[]; tagline?: string | null }
             {banner.title && (active === 0 ? <h1 className="hm-hero__title">{banner.title}</h1> : <h2 className="hm-hero__title">{banner.title}</h2>)}
             {banner.subtitle && <p className="hm-hero__lead">{banner.subtitle}</p>}
             <div className="hm-hero__actions">
-              {to && <Link className="btn-primary hm-cta" to={to}>{banner.link_label || t('اكتشفي المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>}
+              {to && <Link className="btn-primary hm-cta" to={to}>{banner.link_label || (to === PICKS_LINK ? t('اكتشفي المختارات') : t('تسوّقي المنتجات'))} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>}
               <Link className={to ? 'hm-link' : 'btn-primary hm-cta'} to={{ hash: '#categories' }}>{t('تصفّحي الأقسام')} {to && <Icon name="arrow" className="size-4 rtl:rotate-180" />}</Link>
             </div>
           </div>
@@ -137,7 +143,7 @@ export function CategoryTiles({ categories, loading, current, compact }: { categ
 
 // ─────────────────────────────── Product rows ───────────────────────────────
 
-function ProductRow({ id, kicker, title, to, linkLabel, products, loading, layout, failed = false, onRetry }: { id: string; kicker?: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean; layout: 'grid' | 'rail'; failed?: boolean; onRetry?: () => void }) {
+function ProductRow({ id, anchor, kicker, title, to, linkLabel, products, loading, layout, failed = false, onRetry }: { id: string; anchor?: string; kicker?: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean; layout: 'grid' | 'rail'; failed?: boolean; onRetry?: () => void }) {
   const reveal = useReveal<HTMLElement>()
   const rail = useRef<HTMLDivElement>(null)
   const scroll = (dir: 1 | -1) => {
@@ -149,14 +155,14 @@ function ProductRow({ id, kicker, title, to, linkLabel, products, loading, layou
   const head = <header className="hm-head"><div>{kicker && <p className="hm-kicker">{kicker}</p>}<h2 id={id}>{title}</h2></div>{!failed && <div className="hm-head__tools">{layout === 'rail' && !loading && products.length > 2 && <span className="hm-rail-nav"><button type="button" className="icon-button" aria-label={t('السابق')} onClick={() => scroll(-1)}><Icon name="arrow" className="size-4 ltr:rotate-180" /></button><button type="button" className="icon-button" aria-label={t('التالي')} onClick={() => scroll(1)}><Icon name="arrow" className="size-4 rtl:rotate-180" /></button></span>}<Link className="hm-more" to={to}>{linkLabel} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div>}</header>
   // فشل الجلب يختلف عن غياب المنتجات: الأول يعرض تنبيهًا خفيفًا مع إعادة محاولة، والثاني يخفي القسم
   if (failed && !products.length) return (
-    <section className="container-page hm-section" aria-labelledby={id}>
+    <section id={anchor} className="container-page hm-section" aria-labelledby={id}>
       {head}
       <div className="hm-rowerror" role="alert"><p>{t('تعذّر تحميل هذا القسم الآن.')}</p>{onRetry && <button type="button" onClick={onRetry}>{t('إعادة المحاولة')}</button>}</div>
     </section>
   )
   if (!loading && !products.length) return null
   return (
-    <section ref={reveal} className={`container-page hm-section hm-products hm-products--${layout}`} aria-labelledby={id}>
+    <section ref={reveal} id={anchor} className={`container-page hm-section hm-products hm-products--${layout}`} aria-labelledby={id}>
       {head}
       <div ref={rail} className={layout === 'rail' ? 'hm-rail' : 'hm-grid'} aria-busy={loading}>
         {loading ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />) : products.map((p) => <ProductCard key={p.id} product={p} />)}
@@ -209,7 +215,7 @@ function PromoBand({ banner, collection }: { banner: Banner | null; collection: 
           {text && <p className="hm-edit__lead">{text}</p>}
           {to && <Link className="hm-edit__cta" to={to}>{banner?.link_label || t('اكتشفي المجموعة')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>}
         </div>
-        {image && <div className="hm-edit__art" aria-hidden="true"><span className="hm-edit__ring" /><div className="hm-edit__frame"><Cover src={image} /></div></div>}
+        {image && <div className="hm-edit__art" aria-hidden="true"><div className="hm-edit__frame"><Cover src={image} /></div></div>}
       </div>
     </section>
   )
@@ -267,7 +273,7 @@ export function HomeShowcase() {
   const collection = promo ? null : (collections.data ?? []).find((c) => c.description || c.image_url) ?? null
 
   return <>
-    <ProductRow id="hm-picks-title" kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} />
+    <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} />
     <PromoBand banner={promo} collection={collection} />
     <ProductRow id="hm-new-title" kicker={t('جديدنا')} title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} layout="rail" loading={latest.isPending || (featured.isPending && !featured.isError)} failed={latest.isError} onRetry={() => void latest.refetch()} />
     <BudgetTiles />

@@ -1073,6 +1073,7 @@ const en: Record<string, string> = {
   "مجموعة": "Collection",
   "كل ما في Gazabella، في مكان واحد": "Everything at Gazabella, in one place",
   "تصفّحي كل المنتجات": "Browse all products",
+  'تسوّقي المنتجات': 'Shop products',
 }
 
 export default en
