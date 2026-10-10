@@ -53,20 +53,20 @@
 .hm-hero__mark img { width: 46%; max-width: 132px; opacity: .55; }
 .is-textonly .hm-hero__frame { background: linear-gradient(180deg, var(--c-peach) 0%, #FFF4EE 100%); }
 
-/* دخول البانر: تتابع قصير للنص، وكشف الصورة من الأسفل، واستقرار الأشكال — مرة واحدة */
-.hm-hero__copy > * { animation: rise var(--dur-enter) var(--ease) both; }
-.hm-hero__copy > :nth-child(2) { animation-delay: 70ms; }
-.hm-hero__copy > :nth-child(3) { animation-delay: 140ms; }
-.hm-hero__copy > :nth-child(4) { animation-delay: 210ms; }
-.hm-hero__frame { animation: reveal-up 620ms 80ms var(--ease) both; }
-.hm-hero__frame img { animation: settle 900ms 80ms var(--ease) both; }
-.hm-hero__shape--lilac { animation: grow 700ms var(--ease) both; }
-.hm-hero__shape--berry { animation: drop 560ms 260ms var(--ease-pop) both; }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
-@keyframes reveal-up { from { clip-path: inset(100% 0 0 0 round 999px 999px 16px 16px); } to { clip-path: inset(0 0 0 0 round 999px 999px 16px 16px); } }
-@keyframes settle { from { transform: scale(1.1); } }
-@keyframes grow { from { transform: scale(.82); opacity: 0; } }
-@keyframes drop { from { transform: translateY(-24px); opacity: 0; } }
+/* دخول البانر — مرة واحدة، opacity/transform فقط، وينتهي كله خلال ~500ms.
+   النص يظهر فورًا تقريبًا (280ms بلا انتظار طويل)، وأزرار الإجراء لا تتحرك أبدًا: قابلة للنقر من أول رسم. */
+.hm-hero__copy > :not(.hm-hero__actions) { animation: rise 280ms var(--ease) both; }
+.hm-hero__copy > :nth-child(2) { animation-delay: 40ms; }
+.hm-hero__copy > :nth-child(3) { animation-delay: 80ms; }
+.hm-hero__frame { animation: frame-in 400ms 40ms var(--ease) both; }
+.hm-hero__frame img { animation: settle 500ms 40ms var(--ease) both; }
+.hm-hero__shape--lilac { animation: grow 400ms var(--ease) both; }
+.hm-hero__shape--berry { animation: drop 360ms 120ms var(--ease) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes frame-in { from { opacity: 0; transform: translateY(12px); } }
+@keyframes settle { from { transform: scale(1.05); } }
+@keyframes grow { from { transform: scale(.9); opacity: 0; } }
+@keyframes drop { from { transform: translateY(-12px); opacity: 0; } }
 
 .hm-hero__nav { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-3); font-size: 13px; color: var(--c-ink-2); }
 .hm-hero--skeleton > div { border-radius: var(--rad-xl); min-height: var(--hm-hero-min); background: #EFE9EE; animation: soft-pulse 1.6s ease-in-out infinite; }
@@ -95,20 +95,21 @@
 /* ───────────── Categories ───────────── */
 .hm-cats__grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(138px, 42%); gap: var(--sp-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; padding-bottom: 4px; }
 .hm-cats__grid::-webkit-scrollbar { display: none; }
-.hm-cat { --tile: var(--c-lilac); position: relative; display: grid; grid-template-rows: 1fr auto; min-width: 0; aspect-ratio: 3 / 4; overflow: hidden; border-radius: var(--rad-xl); background: var(--tile); scroll-snap-align: start; }
+.hm-cat { --tile: var(--c-lilac); position: relative; display: grid; grid-template-rows: 1fr auto; min-width: 0; aspect-ratio: 3 / 4; overflow: hidden; border-radius: var(--rad-lg); background: var(--tile); scroll-snap-align: start; }
 .hm-cat:nth-child(3n+2) { --tile: var(--c-peach); }
 .hm-cat:nth-child(3n) { --tile: var(--c-petal); }
-.hm-cat__art { display: block; min-height: 0; padding: var(--sp-4) var(--sp-4) 0; }
-.hm-cat__art .hm-cover { border-radius: var(--rad-arch); background: rgba(255, 255, 255, .55); transition: transform var(--dur-enter) var(--ease); }
+/* التصنيفات: صورة بعرض البطاقة كاملًا (قص مستطيل) — القوس محفوظ للبانر والقسم التحريري فقط */
+.hm-cat__art { display: block; min-height: 0; overflow: hidden; }
+.hm-cat__art .hm-cover { background: transparent; transition: transform 320ms var(--ease); }
 .hm-cat__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-height: calc(1.35em * 2 + var(--sp-3) + var(--sp-4)); padding: var(--sp-3) var(--sp-4) var(--sp-4); font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--c-ink); overflow-wrap: anywhere; }
 .hm-cat__arrow { flex-shrink: 0; color: var(--c-brand); }
 .hm-cat[aria-current="true"] { box-shadow: inset 0 0 0 2px var(--c-brand); }
 @media (hover: hover) {
-  .hm-cat:hover .hm-cover { transform: translateY(-6px); }
+  .hm-cat:hover .hm-cover:not(.hm-cover--empty) { transform: scale(1.04); }
   .hm-cat:hover .hm-cat__arrow { transform: translateX(-4px); }
   [dir="ltr"] .hm-cat:hover .hm-cat__arrow { transform: translateX(4px); }
 }
-.hm-cat:focus-visible .hm-cover { transform: translateY(-6px); }
+.hm-cat:focus-visible .hm-cover:not(.hm-cover--empty) { transform: scale(1.04); }
 .hm-cat--skeleton { background: #EFE9EE; animation: soft-pulse 1.6s ease-in-out infinite; }
 .hm-cat--skeleton .hm-cover { background: transparent; }
 .hm-cat--skeleton .hm-cat__name { height: 52px; }
@@ -159,16 +160,15 @@
 .hm-edit__cta:active { transform: scale(.97); }
 @media (hover: hover) { .hm-edit__cta:hover { background: var(--c-lilac); } }
 .hm-edit :focus-visible { outline-color: #fff; }
-.hm-edit__art { position: relative; height: clamp(220px, 62vw, 340px); }
-.hm-edit__ring { position: absolute; inset-inline-start: -12%; bottom: -30%; width: 70%; aspect-ratio: 1; border-radius: 50%; background: var(--c-brand); opacity: .9; }
-.hm-edit__frame { position: absolute; inset-inline-end: 0; bottom: 0; top: 0; width: min(76%, 320px); overflow: hidden; border-radius: var(--rad-arch); border-end-start-radius: 0; border-end-end-radius: 0; background: var(--c-lilac); }
+/* القسم التحريري: تقسيم أفقي — الصورة تملأ نصف اللوحة حتى حافتها (بلا قوس) لتنويع الإيقاع بعد البانر */
+.hm-edit__art { position: relative; height: clamp(200px, 56vw, 300px); margin-inline: calc(-1 * var(--sp-5)); }
+.hm-edit__frame { position: absolute; inset: 0; overflow: hidden; background: var(--c-lilac); }
 .hm-edit__frame .hm-cover { background: transparent; }
-[data-reveal="in"] .hm-edit__frame { animation: reveal-up 620ms var(--ease) both; }
 @media (min-width: 900px) {
-  .hm-edit { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: end; min-height: 380px; padding: 0 clamp(32px, 4vw, 64px); }
+  .hm-edit { --edit-pad: clamp(32px, 4vw, 64px); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; gap: var(--sp-10); min-height: 380px; padding: 0 var(--edit-pad); }
   .hm-edit--text { grid-template-columns: 1fr; align-items: center; }
   .hm-edit__copy { align-self: center; padding-block: var(--sp-12); }
-  .hm-edit__art { height: 340px; }
+  .hm-edit__art { height: auto; min-height: 380px; margin-inline: 0 calc(-1 * var(--edit-pad)); }
 }
 
 /* ───────────── Budget ───────────── */
@@ -206,7 +206,7 @@
 /* صورة 4:5 بخلفية متناسقة ثابتة؛ البديل وفشل التحميل يملآن المساحة نفسها فلا يتغير التخطيط */
 .pcard__media { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--rad-lg); background: #F3EEF2; }
 .pcard__media > a { display: block; width: 100%; height: 100%; }
-.pcard__media img:not(.image-placeholder__mark) { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms var(--ease); }
+.pcard__media img:not(.image-placeholder__mark) { width: 100%; height: 100%; object-fit: cover; transition: transform 400ms var(--ease); }
 .pcard.is-out .pcard__media img:not(.image-placeholder__mark) { filter: grayscale(.6); opacity: .75; }
 .pcard .image-placeholder { background: #F3EEF2; gap: 6px; }
 .pcard .image-placeholder span { font-size: 11px; }
@@ -263,7 +263,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal="pending"], [data-reveal="in"] { opacity: 1; transform: none; transition: none; }
-  .hm-hero__copy > *, .hm-hero__frame, .hm-hero__frame img, .hm-hero__shape, [data-reveal="in"] .hm-edit__frame, .pcard__wish.is-saved svg { animation: none; }
+  .hm-hero__copy > *, .hm-hero__frame, .hm-hero__frame img, .hm-hero__shape, .pcard__wish.is-saved svg { animation: none; }
   .pcard__media img, .hm-cat .hm-cover, .hm-budget__tile, .hm-more svg, .hm-link svg, .hm-cta svg, .hm-edit__cta svg, .hm-budget__tile svg, .hm-cat__arrow { transition: none; }
   .hm-hero--skeleton > div, .hm-cat--skeleton, .hm-cats--compact .hm-cat--skeleton .hm-cat__art, .pcard--skeleton .pcard__media, .pcard--skeleton .sk { animation: none; }
 }
