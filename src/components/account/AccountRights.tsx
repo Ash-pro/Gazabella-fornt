@@ -11,31 +11,11 @@ import { Dialog } from '../ui/Dialog'
 
 const CONFIRM_WORD = 'حذف'
 
-function downloadJson(data: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-/** حقوق البيانات (B-10): تنزيل نسخة من البيانات، وحذف الحساب نهائياً */
+/** حقوق البيانات (B-10): حذف الحساب نهائياً (أُزيل تنزيل نسخة البيانات بطلب المالك) */
 export function AccountRights() {
   const navigate = useNavigate()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [typed, setTyped] = useState('')
-
-  const exportData = useMutation({
-    mutationFn: gazabellaApi.exportMyData,
-    onSuccess: (data) => {
-      track('privacy_action', { action: 'export' })
-      downloadJson(data, `gazabella-my-data-${new Date().toISOString().slice(0, 10)}.json`)
-    },
-  })
 
   const remove = useMutation({
     mutationFn: gazabellaApi.deleteMyAccount,
@@ -63,18 +43,6 @@ export function AccountRights() {
       <h2 id="rights-title">{t('بياناتكِ وحقوقكِ')}</h2>
       <p>{t('تحكّمي ببياناتكِ مباشرة. التفاصيل في')} <Link className="text-link" to="/privacy">{t('سياسة الخصوصية')}</Link>.</p>
 
-      <div className="account-rights__row">
-        <div>
-          <h3>{t('تنزيل نسخة من بياناتي')}</h3>
-          <p>{t('ملف يحتوي ملفكِ الشخصي وسجل طلباتكِ.')}</p>
-        </div>
-        <button type="button" className="btn-ghost" disabled={exportData.isPending} onClick={() => exportData.mutate()}>
-          {exportData.isPending ? t('نجهّز الملف…') : t('تنزيل بياناتي')}
-        </button>
-      </div>
-      {exportData.isError && <p role="alert" className="field-error">{getApiErrorMessage(exportData.error)}</p>}
-      {exportData.isSuccess && <p role="status" className="account-rights__ok">{t('تم تنزيل الملف.')}</p>}
-
       <div className="account-rights__row account-rights__row--danger">
         <div>
           <h3>{t('حذف حسابي')}</h3>
@@ -100,7 +68,6 @@ export function AccountRights() {
                   <li>{t('يُسجَّل خروجكِ من كل الأجهزة.')}</li>
                   <li>{t('يمكنكِ إنشاء حساب جديد لاحقاً بنفس الرقم، لكن بدون سجلكِ السابق.')}</li>
                 </ul>
-                <p className="danger-dialog__tip">{t('💡 قد ترغبين بـ')}<button type="button" className="link-button" onClick={() => exportData.mutate()}>{t('تنزيل نسخة من بياناتكِ')}</button> {t('أولاً.')}</p>
                 <label className="field-label block">
                   {t('للتأكيد اكتبي كلمة «{word}»', { word: t(CONFIRM_WORD) })}
                   <input className="form-field mt-2" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" disabled={remove.isPending} aria-describedby="delete-hint" />

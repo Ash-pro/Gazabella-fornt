@@ -1,54 +1,99 @@
 /*
- * Gazabella design tokens — مصدر واحد للألوان والمسافات والحواف والخطوط والظلال.
- * الألوان الأساسية معرّفة في index.css (:root)؛ هنا نكمل السلّم وندرّج الاستخدام الدلالي.
- * المكوّنات الجديدة تستخدم هذه المتغيرات فقط، بلا قيم مباشرة قدر الإمكان.
+ * Gazabella — «جمال عصري، حيوي وواثق»
+ * مصدر واحد للخط والألوان والمسافات والحواف والظلال والحركة.
+ * ألوان العلامة الأساسية (--primary, --text, --bg…) معرّفة في index.css (:root) وتُستخدم عبر كل الصفحات؛
+ * هنا السلّم الكامل والاستخدام الدلالي للمكوّنات.
  */
+
+/* Readex Pro — خط واحد متغيّر الوزن للعربية واللاتينية (OFL-1.1، مستضاف ذاتياً في /public/fonts) */
+@font-face {
+  font-family: "Readex Pro";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 160 700;
+  src: url(/fonts/readex-pro-arabic-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Readex Pro";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 160 700;
+  src: url(/fonts/readex-pro-latin-ext-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Readex Pro";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 160 700;
+  src: url(/fonts/readex-pro-latin-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
-  /* Surfaces */
+  /* Type */
+  --font-sans: "Readex Pro", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --font-brand: "Cormorant Garamond", Georgia, serif;
+
+  /* Surfaces & ink */
   --c-page: var(--bg);
   --c-card: var(--surface);
-  --c-soft: #F8EFE8;
-  --c-petal: #FBEDF1;
-  --c-line: #EADCD2;
-  --c-line-strong: #DCC7BA;
+  --c-soft: #F5F0F3;
+  --c-petal: #F8E5EE;
+  --c-line: #EAE2E8;
+  --c-line-strong: #D9CDD5;
   --c-ink: var(--text);
   --c-ink-2: var(--text-2);
-  --c-ink-3: #8A6470;
+  --c-ink-3: var(--text-3);
+
+  /* Brand: توتي (رئيسي) + ليلكي (مساعد) + خوخي (لمسات محدودة) */
   --c-brand: var(--primary);
   --c-brand-strong: var(--primary-mid);
-  --c-brand-tint: #F6E7EC;
-  --c-gold: #A87E33;
-  --c-gold-tint: #F7EEDC;
+  --c-brand-tint: #FBEAF1;
+  --c-lilac: #E9E1FB;
+  --c-lilac-2: #D9CCF6;
+  --c-lilac-deep: #5E43B0;
+  --c-peach: #FFE6DA;
+  --c-peach-deep: #9A3F1C;
+  /* أسماء قديمة يعتمد عليها بعض المكوّنات: صارت الليلكي الداكن بدل الذهبي */
+  --c-gold: var(--c-lilac-deep);
+  --c-gold-tint: var(--c-lilac);
 
   /* Type scale (mobile → desktop عبر clamp) */
   --fs-xs: 12px;
   --fs-sm: 13px;
   --fs-base: 15px;
   --fs-md: 16px;
-  --fs-lg: clamp(18px, 1.2vw + 14px, 22px);
-  --fs-xl: clamp(20px, 1.6vw + 15px, 28px);
-  --fs-2xl: clamp(26px, 3.4vw + 14px, 46px);
-  --lh-tight: 1.3;
+  --fs-lg: clamp(18px, 1.1vw + 14px, 22px);
+  --fs-xl: clamp(22px, 1.7vw + 15px, 32px);
+  --fs-2xl: clamp(30px, 3.6vw + 14px, 54px);
+  --fs-display: clamp(34px, 4.2vw + 16px, 72px);
+  --lh-tight: 1.22;
   --lh-body: 1.8;
 
   /* Spacing (4px grid) */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
-  --section-gap: clamp(36px, 5vw, 72px);
+  --section-gap: clamp(44px, 6vw, 96px);
 
-  /* Radius */
+  /* Radius — حواف واضحة وغير مبالغ في استدارتها */
   --rad-sm: 8px;
   --rad-md: 12px;
-  --rad-lg: 18px;
-  --rad-xl: 24px;
+  --rad-lg: 16px;
+  --rad-xl: 22px;
   --rad-pill: 999px;
+  --rad-arch: 999px 999px var(--rad-lg) var(--rad-lg);
 
-  /* Elevation */
-  --el-1: 0 1px 2px rgba(42, 26, 31, .05);
-  --el-2: 0 8px 24px rgba(89, 59, 71, .08);
-  --el-3: 0 18px 44px rgba(89, 59, 71, .12);
+  /* Elevation — ظلال قليلة ومنخفضة */
+  --el-1: 0 1px 2px rgba(29, 18, 32, .06);
+  --el-2: 0 10px 28px rgba(29, 18, 32, .08);
+  --el-3: 0 22px 48px rgba(29, 18, 32, .12);
 
   /* Motion */
-  --ease: cubic-bezier(.2, .7, .3, 1);
-  --dur: .22s;
+  --ease: cubic-bezier(.22, .8, .24, 1);
+  --ease-pop: cubic-bezier(.3, 1.45, .55, 1);
+  --dur-1: 160ms;
+  --dur: 220ms;
+  --dur-enter: 440ms;
   --tap: 44px;
 }

@@ -1062,6 +1062,17 @@ const en: Record<string, string> = {
   "خصم {n}%": "{n}% off",
   "جارٍ إضافة {name} للسلة…": "Adding {name} to cart…",
   "{name} غير متوفر حاليًا": "{name} is currently unavailable",
+  "طلب نسخة من بياناتكِ": "Request a copy of your data",
+  "عبر": "through",
+  'أُضيف إلى سلتكِ': 'Added to your bag',
+  "اكتشفي": "Discover",
+  "اختيارات": "Picks",
+  "جديدنا": "Just in",
+  "على قدّ ميزانيتكِ": "Within your budget",
+  "من Gazabella": "From Gazabella",
+  "مجموعة": "Collection",
+  "كل ما في Gazabella، في مكان واحد": "Everything at Gazabella, in one place",
+  "تصفّحي كل المنتجات": "Browse all products",
 }
 
 export default en

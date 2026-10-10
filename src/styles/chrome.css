@@ -1,0 +1,162 @@
+/*
+ * هيكل الواجهة المشترك: الهيدر، البحث، أزرار الأيقونات، التنقل السفلي، الفوتر، النوافذ، تنبيه السلة.
+ * يحلّ محل قواعد الهيدر/الفوتر القديمة في index.css (حُذفت من هناك ولم يُعَد تعريفها فوقها).
+ */
+
+/* ───────────── أزرار الأيقونات ───────────── */
+.icon-button { position: relative; display: inline-grid; width: var(--tap); height: var(--tap); place-items: center; border: 0; border-radius: var(--rad-md); color: var(--c-ink); transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.icon-button:active { transform: scale(.94); }
+@media (hover: hover) { .icon-button:hover { background: var(--c-soft); color: var(--c-brand); } }
+.cart-count { position: absolute; inset-inline-end: 3px; top: 3px; display: grid; min-width: 18px; height: 18px; padding-inline: 4px; place-items: center; border: 2px solid #fff; border-radius: var(--rad-pill); background: var(--c-brand); color: #fff; font-size: 10px; font-weight: 600; line-height: 1; }
+
+/* السلة: قفزة قصيرة مرة واحدة عند زيادة العدد (لا اهتزاز مستمر) */
+.cart-button.is-bump svg { animation: bag-hop .52s var(--ease-pop); }
+.cart-button.is-bump .cart-count { animation: count-pop .42s var(--ease-pop); }
+@keyframes bag-hop { 30% { transform: translateY(-4px) rotate(-8deg); } 60% { transform: translateY(0) rotate(4deg); } }
+@keyframes count-pop { 0% { transform: scale(.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* ───────────── الهيدر ───────────── */
+.store-header { position: sticky; top: 0; z-index: 40; background: rgba(255, 255, 255, .94); border-bottom: 1px solid var(--c-line); backdrop-filter: saturate(1.4) blur(10px); }
+.header-main { display: flex; align-items: center; gap: var(--sp-3); min-height: 64px; }
+.brand-lockup { display: inline-flex; align-items: center; gap: 10px; min-height: var(--tap); }
+.brand-lockup img { width: 38px; height: 38px; border-radius: 50%; }
+.brand-lockup b { display: block; font: italic 600 31px/1 var(--font-brand); color: var(--c-brand); letter-spacing: -.01em; }
+.brand-lockup small { display: block; margin-top: 4px; font-size: 10px; font-weight: 400; color: var(--c-ink-3); }
+[dir="ltr"] .brand-lockup small { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+.header-actions { display: flex; align-items: center; gap: 2px; margin-inline-start: auto; }
+.menu-trigger { display: inline-grid; }
+.desktop-search, .header-nav { display: none; }
+.mobile-search { padding-bottom: var(--sp-3); }
+
+/* البحث: كبسولة هادئة تتحول لحقل أبيض بإطار توتي عند التركيز، والأيقونة تنتقل قليلاً */
+.header-search { display: flex; align-items: center; gap: 10px; min-height: 46px; padding-inline: 16px 6px; border: 1px solid transparent; border-radius: var(--rad-pill); background: var(--c-soft); color: var(--c-ink-3); transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.header-search svg { flex-shrink: 0; transition: transform var(--dur) var(--ease), color var(--dur) var(--ease); }
+.header-search:focus-within { background: #fff; border-color: var(--c-brand); box-shadow: 0 0 0 4px var(--c-brand-tint); color: var(--c-brand); }
+.header-search:focus-within svg { transform: scale(1.12) rotate(-10deg); }
+.header-search input { flex: 1; min-width: 0; width: 100%; border: 0; outline: none; background: transparent; color: var(--c-ink); font-size: 14px; }
+.header-search input::placeholder { color: var(--c-ink-3); }
+.header-search button { min-height: 36px; padding-inline: 14px; border-radius: var(--rad-pill); background: var(--c-brand); color: #fff; font-size: 13px; font-weight: 600; transition: background-color var(--dur-1); }
+@media (hover: hover) { .header-search button:hover { background: var(--primary-hover); } }
+
+/* اللغة */
+.lang-switch { position: relative; display: inline-flex; align-items: center; gap: 6px; height: var(--tap); padding-inline: 10px; border-radius: var(--rad-md); font-size: 13px; font-weight: 500; line-height: 1; color: var(--c-ink); white-space: nowrap; transition: background-color var(--dur-1), color var(--dur-1); }
+.lang-switch svg { color: var(--c-ink-3); transition: transform var(--dur-enter) var(--ease); }
+@media (hover: hover) { .lang-switch:hover { background: var(--c-soft); color: var(--c-brand); } .lang-switch:hover svg { transform: rotate(180deg); color: var(--c-brand); } }
+.lang-switch:disabled { opacity: .6; }
+.lang-switch__short { display: inline; font-weight: 600; }
+.lang-switch__full { display: none; }
+
+/* تتبع الطلب: الأيقونة «تتحرك» قليلاً عند التفاعل */
+.track-link { display: none; align-items: center; gap: 8px; height: var(--tap); padding-inline: 14px; border-radius: var(--rad-md); font-size: 13px; font-weight: 500; color: var(--c-ink); white-space: nowrap; transition: background-color var(--dur-1), color var(--dur-1); }
+.track-link svg { color: var(--c-brand); }
+@media (hover: hover) { .track-link:hover { background: var(--c-soft); color: var(--c-brand); } .track-link:hover svg { animation: parcel-nudge .5s var(--ease); } }
+.track-link:focus-visible svg { animation: parcel-nudge .5s var(--ease); }
+@keyframes parcel-nudge { 35% { transform: translateY(-3px) rotate(-6deg); } 70% { transform: translateY(1px); } }
+
+/* تنقّل التصنيفات (ديسكتوب): خط سفلي يمتد من بداية النص */
+.header-nav { justify-content: center; gap: var(--sp-1); height: 46px; align-items: stretch; font-size: 14px; }
+.header-nav a { position: relative; display: flex; align-items: center; padding-inline: 14px; color: var(--c-ink-2); white-space: nowrap; transition: color var(--dur-1); }
+.header-nav a::after { content: ""; position: absolute; inset-inline: 14px; bottom: 0; height: 2px; border-radius: 2px; background: var(--c-brand); transform: scaleX(0); transform-origin: var(--origin-start, right); transition: transform var(--dur) var(--ease); }
+[dir="ltr"] .header-nav a::after { transform-origin: left; }
+.header-nav a.active { color: var(--c-brand); font-weight: 500; }
+.header-nav a.active::after { transform: scaleX(1); }
+@media (hover: hover) { .header-nav a:hover { color: var(--c-brand); } .header-nav a:hover::after { transform: scaleX(1); } }
+
+@media (max-width: 380px) { .brand-lockup img { display: none; } .brand-lockup b { font-size: 27px; } }
+@media (min-width: 1024px) {
+  .header-main { display: grid; grid-template-columns: 1fr minmax(320px, 520px) 1fr; gap: var(--sp-6); min-height: 76px; }
+  .menu-trigger, .mobile-search { display: none; }
+  .header-main .brand-lockup { justify-self: start; }
+  .desktop-search { display: block; width: 100%; }
+  .header-main .header-actions { justify-self: end; margin: 0; gap: var(--sp-1); }
+  .header-nav { display: flex; border-top: 1px solid var(--c-line); }
+  .track-link { display: inline-flex; }
+  .lang-switch__short { display: none; }
+  .lang-switch__full { display: inline; }
+  .brand-lockup img { width: 42px; height: 42px; }
+  .brand-lockup b { font-size: 34px; }
+}
+/* 1024–1279: الإجراءات مختصرة (أيقونة التتبع بلا نص، رمز اللغة) حتى لا تزاحم البحث والشعار */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .header-main { grid-template-columns: auto minmax(240px, 1fr) auto; }
+  .track-link { width: var(--tap); padding: 0; justify-content: center; }
+  .track-link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .lang-switch__short { display: inline; }
+  .lang-switch__full { display: none; }
+}
+
+/* ───────────── التنقل السفلي (جوال) ───────────── */
+.mbn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: var(--tap); font-size: 11px; font-weight: 500; line-height: 1.2; color: var(--c-ink-3); transition: color var(--dur-1); }
+.mbn-item > svg, .mbn-item > div { position: relative; display: grid; place-items: center; width: 44px; height: 28px; border-radius: var(--rad-pill); transition: background-color var(--dur) var(--ease); }
+.mbn-item > svg { width: 44px; padding-inline: 12px; box-sizing: border-box; }
+.mbn-item.is-active { color: var(--c-brand); font-weight: 600; }
+.mbn-item.is-active > svg, .mbn-item.is-active > div { background: var(--c-brand-tint); }
+@media (hover: hover) { .mbn-item:hover { color: var(--c-brand); } }
+@media (max-width: 359px) { .mbn-item { font-size: 10px; } }
+
+/* ───────────── الفوتر ───────────── */
+.site-footer { margin-top: var(--section-gap); background: #1D1220; color: #EDE6EF; }
+.site-footer a { transition: color var(--dur-1); }
+.footer-grid { display: grid; gap: var(--sp-8); padding-block: var(--sp-12) var(--sp-8); }
+.footer-brand { font: italic 600 46px/1 var(--font-brand); color: #fff; }
+.footer-grid p { margin-top: var(--sp-3); max-width: 340px; font-size: 13px; line-height: 1.9; color: #BFB3C4; }
+.footer-grid p.flex { align-items: flex-start; }
+.footer-grid p svg { flex-shrink: 0; margin-top: 5px; color: var(--gold-light); }
+.footer-grid h2 { margin-bottom: var(--sp-4); font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--gold-light); }
+.footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 4px var(--sp-4); }
+.footer-links a, .footer-grid > div > a:not(.footer-brand) { display: block; padding-block: 6px; font-size: 14px; color: #EDE6EF; }
+@media (hover: hover) { .footer-links a:hover, .footer-grid > div > a:not(.footer-brand):hover { color: var(--gold-light); } }
+[dir="rtl"] .footer-grid a[dir="ltr"] { text-align: right; }
+.footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); padding-block: var(--sp-5); border-top: 1px solid rgba(255, 255, 255, .12); font-size: 12px; color: #A99CAE; }
+.footer-legal { display: flex; gap: var(--sp-5); }
+@media (hover: hover) { .footer-legal a:hover { color: #fff; } }
+.site-footer :focus-visible { outline-color: var(--gold-light); }
+@media (min-width: 768px) { .footer-grid { grid-template-columns: minmax(240px, 1.1fr) 1.2fr 1fr; gap: var(--sp-12); } }
+@media (max-width: 1023px) { .site-footer { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); } }
+
+/* ───────────── النوافذ والدرج ───────────── */
+.app-dialog { border-color: var(--c-line); border-radius: var(--rad-xl); background: var(--c-card); box-shadow: var(--el-3); }
+.app-dialog::backdrop { background: rgba(29, 18, 32, .42); backdrop-filter: blur(2px); }
+.app-dialog[open]:not(.app-dialog--bottom):not(.app-dialog--sheet) .dialog-inner { animation: dlg-in var(--dur-enter) var(--ease); }
+.app-dialog--sheet[open] .dialog-inner { animation: sheet-in var(--dur-enter) var(--ease); }
+.app-dialog[open]::backdrop { animation: backdrop-in var(--dur) ease-out; }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+@keyframes sheet-in { from { opacity: .4; transform: translateX(28px); } }
+[dir="ltr"] .app-dialog--sheet[open] .dialog-inner { animation-name: sheet-in-ltr; }
+@keyframes sheet-in-ltr { from { opacity: .4; transform: translateX(-28px); } }
+@keyframes backdrop-in { from { opacity: 0; } }
+
+/* الأكورديون: السهم يدور ليعكس الحالة */
+details > summary svg.disclosure-caret { transition: transform var(--dur) var(--ease); }
+details[open] > summary svg.disclosure-caret { transform: rotate(180deg); }
+
+/* ───────────── تنبيه الإضافة للسلة ───────────── */
+/* الموضع: فوق التنقل السفلي وشريط الشراء ومنطقة الأمان (انظر --buybar-h) */
+.cart-toast { bottom: calc(4rem + var(--buybar-h, 0px) + env(safe-area-inset-bottom, 0px) + 12px); }
+@media (min-width: 1024px) { .cart-toast { bottom: 24px; } }
+@media (max-width: 1023px) { body:has(.cart-toast) .support-fab { opacity: 0; pointer-events: none; } }
+.ct { position: relative; overflow: hidden; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; padding: 12px; border-radius: var(--rad-lg); background: #1D1220; color: #fff; box-shadow: var(--el-3); animation: ct-in var(--dur-enter) var(--ease-pop); }
+.ct__thumb { width: 48px; height: 48px; overflow: hidden; border-radius: var(--rad-md); background: rgba(255, 255, 255, .08); }
+.ct__copy { min-width: 0; }
+.ct__status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--gold-light); }
+.ct__check { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; background: #2E9E6A; color: #fff; }
+.ct__check path { stroke-dasharray: 16; stroke-dashoffset: 16; animation: tick-draw .38s .14s var(--ease) forwards; }
+@keyframes tick-draw { to { stroke-dashoffset: 0; } }
+.ct__name { margin-top: 2px; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ct__meta { display: flex; flex-wrap: wrap; gap: 0 8px; margin-top: 2px; font-size: 12px; color: #CFC4D3; }
+.ct__actions { display: flex; align-items: center; gap: 4px; }
+.ct__view { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding-inline: 14px; border-radius: var(--rad-md); background: var(--c-brand); color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.ct__close { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--rad-md); color: #CFC4D3; }
+@media (hover: hover) { .ct__view:hover { background: var(--primary-hover); } .ct__close:hover { background: rgba(255, 255, 255, .1); color: #fff; } }
+.ct__progress { position: absolute; inset-inline: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .1); }
+.ct__progress > div { height: 100%; background: var(--gold-light); }
+/* نص طويل أو خط مكبّر: الأزرار تنزل لسطر خاص بها بدل ضغط النص */
+@container toast (max-width: 360px) { .ct { grid-template-columns: auto minmax(0, 1fr); } .ct__actions { grid-column: 1 / -1; justify-content: flex-end; } }
+.cart-toast { container: toast / inline-size; }
+@keyframes ct-in { from { opacity: 0; transform: translateY(16px) scale(.97); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-button.is-bump svg, .cart-button.is-bump .cart-count, .track-link svg, .ct, .app-dialog[open] .dialog-inner, .app-dialog[open]::backdrop { animation: none; }
+  .ct__check path { animation: none; stroke-dashoffset: 0; }
+  .header-search svg, .lang-switch svg, .header-nav a::after { transition: none; }
+}

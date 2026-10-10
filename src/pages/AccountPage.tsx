@@ -1,4 +1,5 @@
 import { t } from '../i18n'
+import { ALL_PRODUCTS } from '../lib/routes'
 import { Link } from 'react-router-dom'
 import { AccountShell } from '../components/account/AccountShell'
 import { OrderProgress } from '../components/account/OrderCard'
@@ -85,7 +86,7 @@ export function AccountPage() {
                 <span className="trk-badge"><Icon name="bag" className="size-7" /></span>
                 <b>{orders.length ? t('لا طلبات جارية الآن') : t('لم تطلبي بعد')}</b>
                 <p>{orders.length ? t('جاهزة لطلب جديد؟ اكتشفي ما وصل حديثاً.') : t('ابدئي بأول طلب — التوصيل للبيت والدفع عند الاستلام.')}</p>
-                <Link className="btn-primary" to="/#products">{t('تسوّقي الآن')}</Link>
+                <Link className="btn-primary" to={ALL_PRODUCTS}>{t('تسوّقي الآن')}</Link>
               </div>
             )}
 

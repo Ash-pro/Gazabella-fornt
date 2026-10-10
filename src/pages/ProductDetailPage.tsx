@@ -1,6 +1,7 @@
 import { t } from '../i18n'
+import { ALL_PRODUCTS } from '../lib/routes'
 import { isMvp0Api } from '../lib/apiContract'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { gazabellaApi } from '../api/gazabella'
@@ -94,6 +95,20 @@ function ProductContent({ slug }: { slug: string }) {
     track('view_item', { items: [productItem(product)], value: Number(product.discount_price ?? product.price) || 0 })
   }, [viewedId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ارتفاع شريط الشراء الفعلي (يتغير مع النص والتكبير واللغة) كمتغير CSS، ليظهر تنبيه الإضافة فوقه لا عليه
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const hasProduct = Boolean(query.data)
+  useEffect(() => {
+    const el = stickyRef.current
+    if (!el) return
+    const root = document.documentElement
+    const apply = () => root.style.setProperty('--buybar-h', `${Math.round(el.getBoundingClientRect().height)}px`)
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(el)
+    return () => { observer.disconnect(); root.style.removeProperty('--buybar-h') }
+  }, [hasProduct])
+
   // هيكل التحميل يستخدم بنية الصفحة نفسها (مسار، معرض، نص) حتى لا ينزاح المحتوى عند وصول البيانات
   if (query.isLoading) return (
     <div key="skeleton" className="container-page product-detail product-detail-skeleton" aria-busy="true">
@@ -118,7 +133,7 @@ function ProductContent({ slug }: { slug: string }) {
         <span className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-[var(--primary-dim)] text-[var(--primary)]"><Icon name="search" className="size-7" /></span>
         <h1 className="text-2xl font-extrabold">{t('هذا المنتج غير متوفر')}</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--text-2)]">{t('ربما نفد أو أُزيل من المتجر، أو أن الرابط غير صحيح. تصفّحي بقية المختارات.')}</p>
-        <Link className="btn-primary mt-7" to="/#products">{t('تصفّح المنتجات')}</Link>
+        <Link className="btn-primary mt-7" to={ALL_PRODUCTS}>{t('تصفّح المنتجات')}</Link>
       </div>
     )
   if (query.isError || !product)
@@ -240,7 +255,7 @@ function ProductContent({ slug }: { slug: string }) {
 
       <RelatedProducts product={product} />
 
-      <div className="product-sticky">
+      <div ref={stickyRef} className="product-sticky">
         <div>
           <small>{product.name}</small>
           <b><span className="num">{money(displayPrice)}</span></b>
