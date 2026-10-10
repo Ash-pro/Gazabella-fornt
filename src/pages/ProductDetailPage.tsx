@@ -140,7 +140,7 @@ function ProductContent({ slug }: { slug: string }) {
       className="btn-primary flex-1"
     >
       <Icon name="bag" className="size-4" />
-      {add.isPending ? t('نضيف اختياركِ…') : !product.in_stock ? t('غير متوفر حاليًا') : t('أضيفي إلى السلة')}
+      {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر حاليًا') : t('أضيفي إلى السلة')}
     </button>
   )
 
