@@ -42,7 +42,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
   const href = `/products/${product.slug}`
 
   return (
-    <article className={`pcard ${product.in_stock ? '' : 'is-out'}`}>
+    <article className={`pcard${product.in_stock ? '' : ' is-out'}${original !== null ? ' has-discount' : ''}`}>
       <div className="pcard__media">
         <Link to={href} aria-label={t('عرض {name}', { name: product.name })} tabIndex={-1}>
           <ProductVisual src={imageUrl} alt={product.name} />

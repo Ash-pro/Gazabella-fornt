@@ -1,4 +1,5 @@
 import { t } from '../i18n'
+import { ALL_PRODUCTS } from '../lib/routes'
 import { isMvp0Api } from '../lib/apiContract'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -132,7 +133,7 @@ function ProductContent({ slug }: { slug: string }) {
         <span className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-[var(--primary-dim)] text-[var(--primary)]"><Icon name="search" className="size-7" /></span>
         <h1 className="text-2xl font-extrabold">{t('هذا المنتج غير متوفر')}</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-[var(--text-2)]">{t('ربما نفد أو أُزيل من المتجر، أو أن الرابط غير صحيح. تصفّحي بقية المختارات.')}</p>
-        <Link className="btn-primary mt-7" to="/#products">{t('تصفّح المنتجات')}</Link>
+        <Link className="btn-primary mt-7" to={ALL_PRODUCTS}>{t('تصفّح المنتجات')}</Link>
       </div>
     )
   if (query.isError || !product)

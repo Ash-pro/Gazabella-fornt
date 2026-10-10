@@ -1,4 +1,5 @@
 import { t } from '../i18n'
+import { ALL_PRODUCTS } from '../lib/routes'
 import { Link } from 'react-router-dom'
 import { useWallet } from '../hooks/useWallet'
 import { AccountShell } from '../components/account/AccountShell'
@@ -30,7 +31,7 @@ export function WalletPage() {
           <div className="wallet-card__top"><span className="wallet-card__icon"><Icon name="wallet" className="size-6" /></span><h2 id="wallet-title">{t('محفظتي')}</h2></div>
           <p className="wallet-card__label">{t('الرصيد المتاح')}</p>
           <p className="wallet-card__balance num">{wallet.isLoading ? '—' : formatPrice(balance)}</p>
-          <Link className="wallet-card__cta" to="/#products">{balance > 0 ? t('تسوّقي برصيدكِ') : t('تسوّقي الآن')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
+          <Link className="wallet-card__cta" to={ALL_PRODUCTS}>{balance > 0 ? t('تسوّقي برصيدكِ') : t('تسوّقي الآن')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
         </section>
 
         <aside className="wallet-how" aria-label={t('كيف تعمل المحفظة')}>
