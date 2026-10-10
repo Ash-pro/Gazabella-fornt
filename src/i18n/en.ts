@@ -1062,6 +1062,8 @@ const en: Record<string, string> = {
   "خصم {n}%": "{n}% off",
   "جارٍ إضافة {name} للسلة…": "Adding {name} to cart…",
   "{name} غير متوفر حاليًا": "{name} is currently unavailable",
+  "طلب نسخة من بياناتكِ": "Request a copy of your data",
+  "عبر": "through",
 }
 
 export default en
