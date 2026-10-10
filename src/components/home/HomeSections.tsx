@@ -1,13 +1,13 @@
 import { t } from '../../i18n'
 import { useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { getApiErrorMessage, getImageUrl } from '../../lib/apiClient'
 import { formatPrice } from '../../lib/format'
 import { useStoreInfo } from '../../hooks/useStoreInfo'
 import { useReveal } from '../../hooks/useReveal'
-import { ALL_PRODUCTS } from '../../lib/routes'
+import { ALL_PRODUCTS, PICKS_ANCHOR, PICKS_LINK, productsPathToRoute } from '../../lib/routes'
 import { ProductCard, ProductCardSkeleton } from '../product/ProductCard'
 import { ErrorState } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
@@ -15,16 +15,11 @@ import type { Banner, Category, Collection, ProductBrief } from '../../types/api
 
 type IconName = Parameters<typeof Icon>[0]['name']
 
-/** قسم «مختارات Gazabella» في الرئيسية (منتجات is_featured من الـ API) — وجهة فعلية لروابط «المختارات» */
-const PICKS_ANCHOR = 'picks'
-const PICKS_LINK = '/#' + PICKS_ANCHOR
-
 /** روابط البانر تأتي من الخادم: نقبل المسارات الداخلية فقط ونحوّل القديمة منها */
 function bannerLink(value: string | null): string | null {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null
-  if (value === '/products') return ALL_PRODUCTS
-  // المختارات = المنتجات المميّزة نفسها التي يعرضها قسم المختارات (فلتر featured مدعوم في الـ API)
-  if (value === '/products?featured=1' || value === '/products?featured=true') return PICKS_LINK
+  // /products وصيغه (featured، category…) تُحوَّل بالقاعدة نفسها المستخدمة لمسار /products المباشر
+  if (value === '/products' || value.startsWith('/products?')) return productsPathToRoute(value.slice('/products'.length))
   if (value.startsWith('/categories/')) return '/?category=' + encodeURIComponent(value.slice(12)) + '#products'
   return value
 }
@@ -143,7 +138,7 @@ export function CategoryTiles({ categories, loading, current, compact }: { categ
 
 // ─────────────────────────────── Product rows ───────────────────────────────
 
-function ProductRow({ id, anchor, kicker, title, to, linkLabel, products, loading, layout, failed = false, onRetry }: { id: string; anchor?: string; kicker?: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean; layout: 'grid' | 'rail'; failed?: boolean; onRetry?: () => void }) {
+function ProductRow({ id, anchor, kicker, title, to, linkLabel, products, loading, layout, failed = false, onRetry, empty }: { id: string; anchor?: string; empty?: ReactNode; kicker?: string; title: string; to: string; linkLabel: string; products: ProductBrief[]; loading: boolean; layout: 'grid' | 'rail'; failed?: boolean; onRetry?: () => void }) {
   const reveal = useReveal<HTMLElement>()
   const rail = useRef<HTMLDivElement>(null)
   const scroll = (dir: 1 | -1) => {
@@ -160,7 +155,13 @@ function ProductRow({ id, anchor, kicker, title, to, linkLabel, products, loadin
       <div className="hm-rowerror" role="alert"><p>{t('تعذّر تحميل هذا القسم الآن.')}</p>{onRetry && <button type="button" onClick={onRetry}>{t('إعادة المحاولة')}</button>}</div>
     </section>
   )
-  if (!loading && !products.length) return null
+  // لا قسم فارغًا في الرئيسية؛ إلا إن طُلب القسم بالاسم (رابط #picks) فنعرض وجهة مفهومة بدل صفحة لا تتحرك
+  if (!loading && !products.length) return empty ? (
+    <section id={anchor} className="container-page hm-section" aria-labelledby={id}>
+      <header className="hm-head"><div>{kicker && <p className="hm-kicker">{kicker}</p>}<h2 id={id}>{title}</h2></div></header>
+      <div className="hm-rowempty"><p>{empty}</p><Link className="hm-more" to={to}>{linkLabel} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div>
+    </section>
+  ) : null
   return (
     <section ref={reveal} id={anchor} className={`container-page hm-section hm-products hm-products--${layout}`} aria-labelledby={id}>
       {head}
@@ -255,6 +256,7 @@ const ROW = 4
 
 /** وسط الرئيسية بعد الأقسام: مختارات، قسم تحريري، الجديد، الميزانية، الكتالوج، الخدمات */
 export function HomeShowcase() {
+  const { hash } = useLocation()
   const banners = useQuery({ queryKey: ['banners'], queryFn: () => gazabellaApi.getBanners() })
   const collections = useQuery({ queryKey: ['collections'], queryFn: gazabellaApi.getCollections })
   const featured = useQuery({ queryKey: ['products', { featured: true, per_page: 8 }], queryFn: () => gazabellaApi.getProducts({ featured: true, per_page: 8 }), staleTime: 120_000 })
@@ -273,7 +275,7 @@ export function HomeShowcase() {
   const collection = promo ? null : (collections.data ?? []).find((c) => c.description || c.image_url) ?? null
 
   return <>
-    <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} />
+    <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} empty={hash === '#' + PICKS_ANCHOR ? t('لا توجد مختارات معروضة الآن.') : undefined} />
     <PromoBand banner={promo} collection={collection} />
     <ProductRow id="hm-new-title" kicker={t('جديدنا')} title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} layout="rail" loading={latest.isPending || (featured.isPending && !featured.isError)} failed={latest.isError} onRetry={() => void latest.refetch()} />
     <BudgetTiles />
