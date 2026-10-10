@@ -27,7 +27,7 @@
 .hm-cover { display: block; width: 100%; height: 100%; overflow: hidden; background: var(--c-soft); }
 .hm-cover img { width: 100%; height: 100%; object-fit: cover; }
 .hm-cover--empty { display: grid; place-items: center; background: transparent; }
-.hm-cover--empty img { width: 42%; max-width: 72px; height: auto; object-fit: contain; opacity: .42; }
+.hm-cover--empty img { width: 42%; max-width: 72px; height: auto; object-fit: contain; opacity: .5; mix-blend-mode: multiply; }
 
 /* ───────────── Hero ───────────── */
 /* --hm-hero-min: ارتفاع أدنى مشترك بين هيكل التحميل والبانر الفعلي ورسالة فشله */
@@ -100,7 +100,7 @@
 .hm-cat:nth-child(3n) { --tile: var(--c-petal); }
 .hm-cat__art { display: block; min-height: 0; padding: var(--sp-4) var(--sp-4) 0; }
 .hm-cat__art .hm-cover { border-radius: var(--rad-arch); background: rgba(255, 255, 255, .55); transition: transform var(--dur-enter) var(--ease); }
-.hm-cat__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4) var(--sp-4); font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--c-ink); overflow-wrap: anywhere; }
+.hm-cat__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-height: calc(1.35em * 2 + var(--sp-3) + var(--sp-4)); padding: var(--sp-3) var(--sp-4) var(--sp-4); font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--c-ink); overflow-wrap: anywhere; }
 .hm-cat__arrow { flex-shrink: 0; color: var(--c-brand); }
 .hm-cat[aria-current="true"] { box-shadow: inset 0 0 0 2px var(--c-brand); }
 @media (hover: hover) {
