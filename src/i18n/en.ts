@@ -433,6 +433,7 @@ const en: Record<string, string> = {
   'ربما تغيّرت اختياراتها — تصفّحي المختارات.': 'Her picks may have changed — browse our selection.',
   'رسالة نصية': 'Text message',
   'رمز QR': 'QR code',
+  'شاركي عبر': 'Share via',
   'رمز QR للرابط': 'QR code for the link',
   'سارة': 'Sara',
   'ستوري': 'Story',
