@@ -3,10 +3,9 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
-import { clearCartToken, getApiErrorMessage } from '../../lib/apiClient'
-import { queryClient } from '../../lib/queryClient'
+import { getApiErrorMessage } from '../../lib/apiClient'
+import { clearLocalSession } from '../../lib/session'
 import { track } from '../../lib/analytics'
-import { useAuthStore } from '../../stores/authStore'
 import { Dialog } from '../ui/Dialog'
 
 const CONFIRM_WORD = 'تعطيل'
@@ -28,9 +27,7 @@ export function AccountRights() {
 
   function finish() {
     // إنهاء الجلسة محلياً بعد الحذف — التوكن أُلغي على الخادم
-    clearCartToken()
-    useAuthStore.getState().clearSession()
-    queryClient.clear()
+    clearLocalSession()
     navigate('/', { replace: true })
   }
 

@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
 import { getApiErrorMessage } from '../../lib/apiClient'
-import { queryClient } from '../../lib/queryClient'
+import { clearLocalSession } from '../../lib/session'
 import { formatDate, formatPrice } from '../../lib/format'
 import { orderStatusLabel } from '../../lib/orderStatus'
 import { orderMatches, summarizeOrders } from '../../lib/orderSearch'
@@ -96,11 +96,10 @@ export function AccountShell({ active, search, children }: { active: 'overview' 
   const summary = summarizeOrders(orders.data?.orders ?? [])
   const logout = useMutation({
     mutationFn: gazabellaApi.logout,
-    onSuccess: () => {
+    // onSettled لا onSuccess: فشل طلب الخروج على الخادم لا يُبقي الجلسة على الجهاز
+    onSettled: () => {
       navigate('/', { replace: true })
-      useAuthStore.getState().clearSession()
-      queryClient.removeQueries({ queryKey: ['orders'] })
-      queryClient.removeQueries({ queryKey: ['session'] })
+      clearLocalSession()
     },
   })
   const firstName = user?.name && !/^\+?\d/.test(user.name.trim()) ? user.name.trim().split(/\s+/)[0] : null

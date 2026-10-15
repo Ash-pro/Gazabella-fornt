@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
-import { queryClient } from '../../lib/queryClient'
+import { clearLocalSession } from '../../lib/session'
 import { useAuthStore } from '../../stores/authStore'
 import { Icon } from '../ui/Icon'
 
@@ -39,11 +39,7 @@ export function AccountMenu() {
     onSettled: () => {
       setOpen(false)
       navigate('/', { replace: true })
-      useAuthStore.getState().clearSession()
-      queryClient.removeQueries({ queryKey: ['orders'] })
-      queryClient.removeQueries({ queryKey: ['session'] })
-      queryClient.removeQueries({ queryKey: ['wallet'] })
-      void queryClient.invalidateQueries({ queryKey: ['cart'] })
+      clearLocalSession()
     },
   })
 
