@@ -18,8 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      # ثغرات معروفة في حزم الإنتاج (high فما فوق) تُفشل البناء
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       - run: npm test
+      # بناء الإنتاج الفعلي (Vercel) إلى جانب mvp0 و staging
+      - run: npm run build
       - run: npm run build:mvp0
       - run: npm run build:staging
 
