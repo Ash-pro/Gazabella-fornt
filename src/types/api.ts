@@ -88,7 +88,27 @@ export interface Cart {
   items: CartItem[]
   total_items: number
   subtotal: string
+  /** P2-2: الكوبون المطبّق على السلة (من الخادم) */
+  coupon?: CartCoupon | null
+  /** P2-2: قيمة الخصم الإجمالية، و total = subtotal − discount (قبل التوصيل) */
+  discount?: string | null
+  total?: string | null
 }
+
+export interface CartCoupon { code: string; discount: string; description?: string | null; /** واجهة فقط: مصدره وضع العرض */ demo?: boolean }
+
+/** P2-4 عنوان في دفتر العناوين — city من أسماء مناطق التوصيل */
+export interface CustomerAddress {
+  id: number
+  label: string
+  recipient_name: string
+  phone: string
+  city: string
+  neighborhood: string
+  street: string
+  is_default: boolean
+}
+export type CustomerAddressInput = Omit<CustomerAddress, 'id'>
 
 export interface ProductVariant {
   id: number

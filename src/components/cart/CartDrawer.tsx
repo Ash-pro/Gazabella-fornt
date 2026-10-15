@@ -13,6 +13,9 @@ import { ProductVisual } from '../product/ProductVisual'
 import { Dialog } from '../ui/Dialog'
 import { ErrorState, PageLoader } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
+import { FreeDeliveryBar } from './FreeDeliveryBar'
+import { CouponField } from './CouponField'
+import { CartSuggestions } from './CartSuggestions'
 
 export function CartDrawer() {
   const open = useCartStore((state) => state.isDrawerOpen)
@@ -42,7 +45,8 @@ export function CartDrawer() {
         </div>
       </article>)}
       {!!cart.data?.items.length && (update.isError || remove.isError) && <p className="field-error mt-3" role="alert">{t('تعذّر تحديث السلة. تحققي من اتصالك وحاولي مجدداً.')}</p>}
+      {!!cart.data?.items.length && <CartSuggestions cart={cart.data} compact onNavigate={close} />}
     </div>
-    {!!cart.data?.items.length && <div className="border-t border-[var(--border)] bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"><div className="mb-2 flex justify-between text-base"><b>{t('المجموع الفرعي')}</b><b><span className="num">{money(cart.data.subtotal)}</span></b></div><p className="mb-5 text-xs text-[var(--text-3)]">{t('تظهر رسوم التوصيل قبل تأكيد الطلب.')}</p>{proceed.isError && <p className="field-error mb-3" role="alert">{getApiErrorMessage(proceed.error)}</p>}<button className="btn-primary w-full" disabled={busy} onClick={() => proceed.mutate()}>{proceed.isPending ? t('نتحقق من التوافر…') : t('متابعة إلى التوصيل والدفع')}<Icon name="arrow" className="size-4 rtl:rotate-180" /></button><Link className="mt-3 block py-2 text-center text-sm underline underline-offset-4" to="/cart" onClick={close}>{t('عرض السلة كاملة')}</Link></div>}
+    {!!cart.data?.items.length && <div className="border-t border-[var(--border)] bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"><FreeDeliveryBar subtotal={Number(cart.data.subtotal) || 0} compact /><CouponField cart={cart.data} collapsible />{cart.data.discount && Number(cart.data.discount) > 0 && <div className="mb-1 flex justify-between text-sm text-[var(--success,#1f7a4d)]"><span>{t('الخصم')}</span><span className="num">−{money(cart.data.discount)}</span></div>}<div className="mb-2 flex justify-between text-base"><b>{t('المجموع الفرعي')}</b><b><span className="num">{money(cart.data.total ?? cart.data.subtotal)}</span></b></div><p className="mb-5 text-xs text-[var(--text-3)]">{t('تظهر رسوم التوصيل قبل تأكيد الطلب.')}</p>{proceed.isError && <p className="field-error mb-3" role="alert">{getApiErrorMessage(proceed.error)}</p>}<button className="btn-primary w-full" disabled={busy} onClick={() => proceed.mutate()}>{proceed.isPending ? t('نتحقق من التوافر…') : t('متابعة إلى التوصيل والدفع')}<Icon name="arrow" className="size-4 rtl:rotate-180" /></button><Link className="mt-3 block py-2 text-center text-sm underline underline-offset-4" to="/cart" onClick={close}>{t('عرض السلة كاملة')}</Link></div>}
   </Dialog>
 }

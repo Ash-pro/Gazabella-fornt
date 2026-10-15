@@ -11,6 +11,7 @@ export class TrackError extends Error {
 import { useAuthStore } from '../stores/authStore'
 import { demoFixtures } from '../lib/demo'
 import { withDemoDetails, withDemoRating } from '../fixtures/productExtras'
+import { withDemoCoupon } from '../fixtures/cartExtras'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
@@ -117,12 +118,15 @@ interface RawCart {
   items: RawCartItem[]
   items_count: number
   subtotal: number
+  coupon?: { code: string; discount: number | string; description?: string | null } | null
+  discount?: number | string | null
+  total?: number | string | null
 }
 
 export function normalizeCart(raw: RawCart): Cart {
   // حفظ الـ token من الـ response body (في حال الـ CORS ما بيكشف الـ header)
   if (raw.token) setCartToken(raw.token)
-  return {
+  const cart: Cart = {
     items: raw.items.map((item) => {
       const imgs = item.product.images ?? []
       const img = imgs.find((i) => i.is_primary) ?? imgs[0]
@@ -142,7 +146,12 @@ export function normalizeCart(raw: RawCart): Cart {
     }),
     total_items: raw.items_count,
     subtotal: String(raw.subtotal),
+    coupon: raw.coupon ? { code: raw.coupon.code, discount: String(raw.coupon.discount), description: raw.coupon.description ?? null } : null,
+    discount: raw.discount != null ? String(raw.discount) : null,
+    total: raw.total != null ? String(raw.total) : null,
   }
+  // R-1: كوبون العرض التجريبي فوق سلة بلا كوبون حقيقي
+  return demoFixtures() ? withDemoCoupon(cart) : cart
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -510,7 +519,7 @@ const legacyGazabellaApi = {
   // ── السلة ────────────────────────────────────────────────────────────
   getCart: (): Promise<Cart> =>
     isMockMode()
-      ? mockServices.getCart()
+      ? mockServices.getCart().then((c) => (demoFixtures() ? withDemoCoupon(c) : c))
       : fetchCart(),
 
   /** إلغاء الطلب من العميلة مع سبب إلزامي. إن كان مدفوعاً مسبقاً يعيد الخادم المبلغ للمحفظة. */

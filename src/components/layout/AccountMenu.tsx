@@ -6,6 +6,7 @@ import { gazabellaApi } from '../../api/gazabella'
 import { clearLocalSession } from '../../lib/session'
 import { useAuthStore } from '../../stores/authStore'
 import { Icon } from '../ui/Icon'
+import { addressBookEnabled } from '../../api/cartExtras'
 
 type IconName = Parameters<typeof Icon>[0]['name']
 
@@ -15,6 +16,7 @@ const LINKS: Array<{ to: string; icon: IconName; label: string }> = [
   { to: '/wallet', icon: 'wallet', label: 'محفظتي' },
   { to: '/?saved=true#products', icon: 'heart', label: 'المحفوظات' },
   { to: '/profile', icon: 'user', label: 'بياناتي وعنواني' },
+  ...(addressBookEnabled() ? [{ to: '/addresses', icon: 'mapPin' as IconName, label: 'عناويني' }] : []),
 ]
 
 /** بطاقة الحساب في الهيدر: تحية + قائمة منسدلة للتنقل السريع وتسجيل الخروج */

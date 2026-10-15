@@ -6,6 +6,9 @@ import { gazabellaApi } from '../api/gazabella'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { EmptyState, ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
+import { FreeDeliveryBar } from '../components/cart/FreeDeliveryBar'
+import { CouponField } from '../components/cart/CouponField'
+import { CartSuggestions } from '../components/cart/CartSuggestions'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { syncCart, trackCartRemoval, trackCartView, useProceedToCheckout } from '../hooks/useCartActions'
 import { formatPrice } from '../lib/format'
@@ -78,11 +81,14 @@ export function CartPage() {
 
           <aside className="order-summary lg:sticky lg:top-40">
             <h2 className="text-xl font-extrabold">{t('ملخص الطلب')}</h2>
+            <div className="mt-4"><FreeDeliveryBar subtotal={Number(cart.subtotal) || 0} /></div>
             <div className="my-6 space-y-4 border-y border-[var(--border)] py-5 text-sm">
               <div className="flex justify-between"><span className="text-[var(--text-2)]">{t('المجموع الفرعي')}</span><span className="font-mono font-bold"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+              {cart.discount && Number(cart.discount) > 0 && <div className="flex justify-between text-[var(--success,#1f7a4d)]"><span>{t('الخصم')}{cart.coupon ? <span dir="ltr"> ({cart.coupon.code})</span> : null}</span><span className="font-mono font-bold">−<span className="num">{formatPrice(cart.discount)}</span></span></div>}
               <div className="flex justify-between"><span className="text-[var(--text-2)]">{t('التوصيل')}</span><span>{t('من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة')}</span></div>
             </div>
-            <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">{t('المجموع')}</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.subtotal)}</span></span></div>
+            <div className="mb-4"><CouponField cart={cart} /></div>
+            <div className="mb-6 flex items-end justify-between"><span className="font-extrabold">{t('المجموع')}</span><span className="font-mono text-2xl font-bold text-[var(--primary)]"><span className="num">{formatPrice(cart.total ?? cart.subtotal)}</span></span></div>
             <button className="btn-primary w-full" type="button" disabled={reserveMutation.isPending || updateMutation.isPending || removeMutation.isPending} onClick={() => reserveMutation.mutate()}>
             {reserveMutation.isPending ? t('جارٍ المتابعة…') : t('متابعة إلى التوصيل والدفع')}
           </button>
@@ -90,6 +96,7 @@ export function CartPage() {
           {reserveMutation.isError && <p className="mt-4 rounded-lg bg-[var(--error-bg)] p-3 text-sm text-[var(--error)]">{getApiErrorMessage(reserveMutation.error)}</p>}
         </aside>
       </div>
+      <CartSuggestions cart={cart} />
     </div>
   )
 }

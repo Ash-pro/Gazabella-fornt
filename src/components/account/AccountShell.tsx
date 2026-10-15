@@ -11,6 +11,7 @@ import { orderMatches, summarizeOrders } from '../../lib/orderSearch'
 import { orderPath, useAccountOrders } from '../../hooks/useAccountOrders'
 import { useAuthStore } from '../../stores/authStore'
 import { Icon } from '../ui/Icon'
+import { addressBookEnabled } from '../../api/cartExtras'
 
 type SearchProps =
   | { mode: 'filter'; value: string; onChange: (value: string) => void }
@@ -87,7 +88,7 @@ function AccountSearch(props: SearchProps) {
 }
 
 /** إطار موحّد لصفحات الحساب: بطاقة العميلة + أرقام سريعة + تبويبات + بحث */
-export function AccountShell({ active, search, children }: { active: 'overview' | 'orders' | 'wallet' | 'profile'; search: SearchProps; children: ReactNode }) {
+export function AccountShell({ active, search, children }: { active: 'overview' | 'orders' | 'wallet' | 'profile' | 'addresses'; search: SearchProps; children: ReactNode }) {
   const navigate = useNavigate()
   const storedUser = useAuthStore((s) => s.user)
   const session = useQuery({ queryKey: ['session'], queryFn: gazabellaApi.getMe, retry: false, staleTime: 60_000 })
@@ -137,6 +138,7 @@ export function AccountShell({ active, search, children }: { active: 'overview' 
           <Link to="/account" className="acct-tab" aria-current={active === 'overview' ? 'page' : undefined}><Icon name="sparkle" className="size-4" />{t('الرئيسية')}</Link>
           <Link to="/orders" className="acct-tab" aria-current={active === 'orders' ? 'page' : undefined}><Icon name="package" className="size-4" />{t('طلباتي')}</Link>
           <Link to="/wallet" className="acct-tab" aria-current={active === 'wallet' ? 'page' : undefined}><Icon name="wallet" className="size-4" />{t('محفظتي')}</Link>
+          {addressBookEnabled() && <Link to="/addresses" className="acct-tab" aria-current={active === 'addresses' ? 'page' : undefined}><Icon name="mapPin" className="size-4" />{t('عناويني')}</Link>}
           <Link to="/profile" className="acct-tab" aria-current={active === 'profile' ? 'page' : undefined}><Icon name="user" className="size-4" />{t('الملف الشخصي')}</Link>
         </nav>
         <AccountSearch {...search} />

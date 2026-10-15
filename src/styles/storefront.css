@@ -454,3 +454,66 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .review-form__add { display: grid; place-items: center; align-content: center; gap: 2px; width: 76px; height: 76px; border: 1.5px dashed var(--c-line); border-radius: var(--rad-md); color: var(--c-ink-3); font-size: 11px; cursor: pointer; }
 .review-form__add:has(input:focus-visible) { outline: 2px solid var(--c-brand); outline-offset: 2px; }
 .review-form__hint { font-size: 12px; color: var(--c-ink-3); }
+
+/* ══════════ المرحلة 2 — السلة والدفع ══════════ */
+/* شريط التوصيل المجاني */
+.free-bar { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--rad-md); background: var(--c-brand-tint); font-size: 13px; color: var(--c-ink-2); }
+.free-bar p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.free-bar p svg { color: var(--c-brand); }
+.free-bar b { color: var(--c-ink); }
+.free-bar__track { height: 6px; overflow: hidden; border-radius: 99px; background: rgba(155, 45, 82, .14); }
+.free-bar__track > span { display: block; height: 100%; border-radius: inherit; background: var(--c-brand); transition: width .4s var(--ease); }
+.free-bar.is-done { background: #EAF6EF; color: #1f7a4d; }
+.free-bar.is-done p svg, .free-bar.is-done b { color: #1f7a4d; }
+.free-bar.is-done .free-bar__track > span { background: #1f7a4d; }
+.free-bar--compact { margin-bottom: 12px; padding: 10px 12px; }
+
+/* الكوبون */
+.coupon { display: grid; gap: 6px; margin-bottom: 12px; }
+.coupon__row { display: flex; gap: 8px; }
+.coupon__row .form-field { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .04em; }
+.coupon__hint { font-size: 12px; color: var(--c-ink-3); }
+.coupon--applied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 10px 12px; border: 1px dashed #1f7a4d; border-radius: var(--rad-md); background: #F3FBF6; font-size: 14px; color: #1f7a4d; }
+.coupon--applied > span { display: inline-flex; align-items: center; gap: 6px; }
+.coupon--applied small { width: 100%; font-size: 12px; color: var(--c-ink-3); }
+.coupon-toggle { display: inline-block; margin-bottom: 12px; font-size: 13px; }
+
+/* أضيفي معه */
+.cart-suggest { margin-top: var(--sp-12); }
+.cart-suggest--compact { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid var(--c-line); }
+.cart-suggest--compact h3 { margin-bottom: 10px; font-size: 14px; font-weight: 700; color: var(--c-ink); }
+.cart-suggest--compact ul { display: grid; gap: 8px; list-style: none; }
+.cart-suggest--compact a { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px; border-radius: var(--rad-md); }
+@media (hover: hover) { .cart-suggest--compact a:hover { background: var(--c-soft); } }
+.cart-suggest__img { width: 48px; height: 56px; flex-shrink: 0; overflow: hidden; border-radius: var(--rad-sm); }
+.cart-suggest__name { flex: 1; min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; color: var(--c-ink); }
+.cart-suggest--compact b { font-size: 13px; color: var(--c-brand); }
+
+/* دفتر العناوين في الدفع */
+.co-book { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.co-book__title { width: 100%; font-size: 13px; font-weight: 600; color: var(--c-ink-2); }
+.co-book__item { display: grid; gap: 2px; min-height: 48px; padding: 8px 12px; border: 1.5px solid var(--c-line); border-radius: var(--rad-md); background: #fff; text-align: start; }
+.co-book__item b { font-size: 14px; color: var(--c-ink); }
+.co-book__item small { font-size: 12px; color: var(--c-ink-3); }
+.co-book__item[aria-checked="true"] { border-color: var(--c-brand); box-shadow: 0 0 0 3px var(--c-brand-tint); }
+.co-save-addr { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; color: var(--c-ink-2); }
+.co-save-addr input, .addr-form__default input { width: 18px; height: 18px; accent-color: var(--c-brand); }
+
+/* صفحة عناويني */
+.addr-page__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: var(--sp-5); }
+.addr-page__head h2 { font-size: var(--fs-lg); font-weight: 700; }
+.addr-empty { display: grid; justify-items: center; gap: 10px; padding: var(--sp-8); border: 1px dashed var(--c-line); border-radius: var(--rad-lg); color: var(--c-ink-3); text-align: center; }
+.addr-list { display: grid; gap: var(--sp-3); list-style: none; }
+@media (min-width: 768px) { .addr-list { grid-template-columns: repeat(2, 1fr); } }
+.addr-card { display: grid; gap: 10px; padding: var(--sp-4); border: 1px solid var(--c-line); border-radius: var(--rad-lg); background: #fff; }
+.addr-card.is-default { border-color: var(--c-brand); }
+.addr-card b { font-size: 15px; color: var(--c-ink); }
+.addr-card p { margin-top: 4px; font-size: 13px; line-height: 1.8; color: var(--c-ink-2); }
+.addr-card__badge { margin-inline-start: 8px; padding: 2px 8px; border-radius: var(--rad-pill); background: var(--c-brand-tint); color: var(--c-brand); font-size: 11px; font-weight: 600; }
+.addr-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 13px; }
+.addr-card__actions .text-link { min-height: 44px; }
+.addr-form { display: grid; gap: var(--sp-3); }
+.addr-form fieldset { border: 0; padding: 0; }
+.addr-form__labels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.addr-form__labels .swatch[aria-pressed="true"] { border-color: var(--c-brand); box-shadow: 0 0 0 3px var(--c-brand-tint); font-weight: 600; }
+.addr-form__default { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; }

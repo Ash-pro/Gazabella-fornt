@@ -22,7 +22,12 @@ import { formatPrice, money } from '../lib/format'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { saveLastOrder } from '../lib/lastOrder'
 import { formatEta } from '../content/storeInfo'
+import { DemoBadge } from '../components/ui/DemoBadge'
 import { savedAddressFrom } from '../lib/savedAddress'
+import { FreeDeliveryBar } from '../components/cart/FreeDeliveryBar'
+import { CouponField } from '../components/cart/CouponField'
+import { addressBookEnabled, saveAddress } from '../api/cartExtras'
+import { useAddresses } from '../hooks/useAddresses'
 import { classifyCheckoutError, clearCheckoutAttempt, idempotencyKeyFor } from '../lib/checkoutAttempt'
 
 // ─── Schema (no email — phone is the primary identifier) ───────────────────
@@ -191,6 +196,20 @@ function LegacyCheckoutPage() {
   const saved = savedAddressFrom(profile, zoneNames ? zoneNames.split('|') : [])
   const savedKey = saved ? `${saved.city}|${saved.neighborhood}|${saved.street}` : ''
   const [choice, setChoice] = useState<AddressMode | null>(null)
+  // P2-4 دفتر العناوين: اختيار عنوان محفوظ يعبّئ الحقول، وخيار حفظ العنوان الجديد بعد الطلب
+  const addresses = useAddresses()
+  const addressBook = addresses.data?.data ?? []
+  const [saveToBook, setSaveToBook] = useState(false)
+  const [bookId, setBookId] = useState<number | null>(null)
+  function pickAddress(id: number) {
+    const a = addressBook.find((x) => x.id === id)
+    if (!a) return
+    setBookId(id); setChoice('other')
+    form.setValue('name', a.recipient_name); form.setValue('phone', a.phone)
+    form.setValue('city', a.city); form.setValue('neighborhood', a.neighborhood); form.setValue('street', a.street)
+    form.setValue('is_gift', false)
+    form.clearErrors(['name', 'phone', 'city', 'neighborhood', 'street'])
+  }
   const mode: AddressMode = choice ?? (saved ? 'saved' : 'other')
   const prefilled = useRef('')
   useEffect(() => {
@@ -204,6 +223,7 @@ function LegacyCheckoutPage() {
 
   function chooseMode(next: AddressMode) {
     setChoice(next)
+    setBookId(null)
     const fill = next === 'saved' && saved ? saved : { city: '', neighborhood: '', street: '' }
     form.setValue('city', fill.city); form.setValue('neighborhood', fill.neighborhood); form.setValue('street', fill.street)
     form.setValue('is_gift', next === 'gift')
@@ -229,6 +249,8 @@ function LegacyCheckoutPage() {
         payment_method: paymentMethod,
         // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها
         ...(zoneId ? { delivery_zone_id: zoneId } : {}),
+        // P2-2: كوبون السلة الحقيقي فقط (خصم وضع العرض لا يُرسل)
+        ...(cartQuery.data?.coupon && !cartQuery.data.coupon.demo ? { coupon_code: cartQuery.data.coupon.code } : {}),
       }
       // البصمة تشمل محتوى السلة (لا يُرسل في الجسم) حتى لا يُعاد طلب قديم لسلة جديدة بنفس العنوان
       const cartSignature = (cartQuery.data?.items ?? []).map((i) => `${i.id}:${i.quantity}`).sort().join(',')
@@ -239,6 +261,8 @@ function LegacyCheckoutPage() {
       setUncertain(false)
       trackPurchase(order)
       saveLastOrder(order, v.phone, `${v.city}، ${v.neighborhood}، ${v.street}`)
+      // P2-4: حفظ العنوان في الدفتر إن طلبت ذلك (لا يوقف إتمام الطلب إن فشل)
+      if (saveToBook && !v.is_gift) void saveAddress({ label: addressBook.length ? t('عنوان {n}', { n: addressBook.length + 1 }) : t('البيت'), recipient_name: v.name, phone: v.phone, city: v.city, neighborhood: v.neighborhood, street: v.street, is_default: !addressBook.length }).then(() => queryClient.invalidateQueries({ queryKey: ['addresses'] })).catch(() => undefined)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
       queryClient.setQueryData(['order', order.order_number], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -322,15 +346,23 @@ function LegacyCheckoutPage() {
   const isSubmitting = checkout.isPending
   const zone = store.deliveryZones.find((z) => z.name === selectedCity) ?? null
   const freeDelivery = Boolean(store.freeDeliveryThreshold && Number(cart.subtotal) >= store.freeDeliveryThreshold)
-  const total = Number(cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
+  // P2-2: الخصم من الخادم (cart.total = المنتجات − الخصم)؛ خصم وضع العرض للعرض فقط
+  const discount = Number(cart.discount ?? 0)
+  const total = Number(cart.total ?? cart.subtotal) + (zone && !freeDelivery ? zone.fee : 0)
   const itemsCount = cart.items.reduce((n, i) => n + i.quantity, 0)
   const cod = paymentMethod === 'cod'
   const paymentLabel = t(paymentOptions.find((o) => o.code === paymentMethod)?.label ?? '')
-  const totalLabel = zone ? formatPrice(total) : <>{money(cart.subtotal)} <span className="co-plus">{t('+ التوصيل')}</span></>
+  const totalLabel = zone ? formatPrice(total) : <>{money(cart.total ?? cart.subtotal)} <span className="co-plus">{t('+ التوصيل')}</span></>
   const confirmLabel = isSubmitting ? t('جارٍ تأكيد طلبكِ…')
     : isMockMode() ? t('إنشاء طلب تجريبي')
     : <>{cod ? t('تأكيد الطلب') : t('إنشاء الطلب والدفع')} · <span className="num">{formatPrice(total)}</span></>
 
+  const discountRow = discount > 0 ? (
+    <div className="flex justify-between gap-3 text-sm text-[var(--success,#1f7a4d)]">
+      <span>{t('الخصم')}{cart.coupon ? <span dir="ltr"> ({cart.coupon.code})</span> : null}</span>
+      <b className="num">−{formatPrice(discount)}</b>
+    </div>
+  ) : null
   const deliveryRow = (
     <div className="flex justify-between gap-3 text-sm">
       <span className="text-[var(--text-2)]">{t('التوصيل')}{zone ? ` (${zone.name})` : ''}</span>
@@ -409,6 +441,12 @@ function LegacyCheckoutPage() {
                       <button type="button" role="radio" aria-checked={mode === 'other'} className="co-mode" onClick={() => chooseMode('other')}><Icon name="truck" className="size-4" /><span><b>{saved ? t('عنوان آخر') : t('عنواني')}</b><small>{t('أنا المستلمة في مكان مختلف')}</small></span></button>
                       <button type="button" role="radio" aria-checked={mode === 'gift'} className="co-mode co-mode--gift" onClick={() => chooseMode('gift')}><Icon name="sparkle" className="size-4" /><span><b>{t('إرسال كهدية')}</b><small>{t('نوصله لشخص عزيز عليكِ')}</small></span></button>
                     </div>
+                    {!!addressBook.length && mode !== 'gift' && (
+                      <div className="co-book" role="radiogroup" aria-label={t('عناويني المحفوظة')}>
+                        <span className="co-book__title">{t('عناويني المحفوظة')} <DemoBadge show={!!addresses.data?.demo} /></span>
+                        {addressBook.map((a) => <button key={a.id} type="button" role="radio" aria-checked={bookId === a.id} className="co-book__item" onClick={() => pickAddress(a.id)}><b>{a.label}</b><small>{[a.city, a.neighborhood].join(t('، '))}</small></button>)}
+                      </div>
+                    )}
                     {mode === 'saved' && <p className="co-saved-hint">{t('عبّأنا عنوانكِ المحفوظ — يمكنكِ تعديله لهذا الطلب فقط.')} <Link className="text-link" to="/profile#address">{t('تغيير العنوان المحفوظ')}</Link></p>}
                     {mode === 'gift' && (
                       <div className="co-gift">
@@ -445,6 +483,9 @@ function LegacyCheckoutPage() {
                         {(inputProps) => <input id="street" type="text" autoComplete="street-address" placeholder={t('مثال: شارع جلال، بجانب صيدلية النور')} {...inputProps} {...form.register('street')} />}
                       </Field>
                     </div>
+                    {!!token && addressBookEnabled() && mode === 'other' && bookId === null && (
+                      <label className="co-save-addr"><input type="checkbox" checked={saveToBook} onChange={(e) => setSaveToBook(e.target.checked)} /> {t('احفظي هذا العنوان في عناويني')}</label>
+                    )}
                   </div>
                 </div>
 
@@ -457,6 +498,7 @@ function LegacyCheckoutPage() {
               <aside className="hidden space-y-4 self-start lg:sticky lg:top-6 lg:block">
                 <div className="order-summary space-y-3">
                   <h2 className="text-base font-bold">{t('ملخص الطلب')}</h2>
+                  <FreeDeliveryBar subtotal={Number(cart.subtotal) || 0} compact />
                   <div className="space-y-2">
                     {cart.items.map((item) => (
                       <div key={item.id} className="flex justify-between gap-3 text-sm">
@@ -466,6 +508,7 @@ function LegacyCheckoutPage() {
                     ))}
                   </div>
                   <div className="flex justify-between border-t border-[var(--border)] pt-3 text-sm"><span className="text-[var(--text-2)]">{t('قيمة المنتجات')}</span><b>{money(cart.subtotal)}</b></div>
+                  {discountRow}
                   {deliveryRow}
                   <div className="flex items-baseline justify-between border-t border-[var(--border)] pt-3"><span className="font-bold">{t('الإجمالي')}</span><b className="text-[var(--primary)]">{totalLabel}</b></div>
                 </div>
@@ -525,7 +568,9 @@ function LegacyCheckoutPage() {
               <aside className="space-y-4 self-start lg:sticky lg:top-6">
                 <div className="order-summary space-y-3">
                   <h2 className="text-base font-bold">{t('الحساب')}</h2>
+                  <CouponField cart={cart} collapsible />
                   <div className="flex justify-between text-sm"><span className="text-[var(--text-2)]">{t('قيمة المنتجات')}</span><b>{money(cart.subtotal)}</b></div>
+                  {discountRow}
                   {deliveryRow}
                   <div className="co-total"><span>{cod ? t('المبلغ عند الاستلام') : t('الإجمالي')}</span><strong className="num">{formatPrice(total)}</strong></div>
                 </div>
