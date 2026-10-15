@@ -18,7 +18,7 @@ export function JawwalReferenceForm({
   const confirm = useMutation({
     mutationFn: () => gazabellaApi.confirmJawwalPayment(order.order_number, reference.trim()),
     onSuccess: (updated) => {
-      client.setQueryData(['order', String(updated.id)], updated)
+      client.setQueryData(['order', updated.order_number], updated)
       void client.invalidateQueries({ queryKey: ['orders'] })
       onConfirmed?.(updated)
     },

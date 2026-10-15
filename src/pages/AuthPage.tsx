@@ -44,11 +44,20 @@ export function AuthPage() {
     return () => clearTimeout(timer)
   }, [countdown])
 
-  function onSuccess(token: string, user: User) {
+  // حساب معطّل أُعيد تفعيله بهذا الدخول: نرحّب قبل المتابعة
+  const [welcomeBack, setWelcomeBack] = useState(false)
+  useEffect(() => {
+    if (!welcomeBack) return
+    const timer = setTimeout(() => navigate(safeNext, { replace: true }), 4000)
+    return () => clearTimeout(timer)
+  }, [welcomeBack, navigate, safeNext])
+
+  function onSuccess(token: string, user: User, reactivated = false) {
     useAuthStore.getState().setSession(token, user)
     track('login', { method: 'otp' })
     void queryClient.invalidateQueries({ queryKey: ['cart'] })
-    navigate(safeNext, { replace: true })
+    if (reactivated) setWelcomeBack(true)
+    else navigate(safeNext, { replace: true })
   }
 
   const sendOtp = useMutation({
@@ -58,7 +67,7 @@ export function AuthPage() {
 
   const verifyOtp = useMutation({
     mutationFn: () => gazabellaApi.otpVerify(phone.trim(), otp.trim(), isNewUser ? name.trim() : undefined),
-    onSuccess: (result) => onSuccess(result.token, result.user),
+    onSuccess: (result) => onSuccess(result.token, result.user, result.reactivated === true),
   })
 
   function submitPhone(e: FormEvent) {
@@ -88,6 +97,20 @@ export function AuthPage() {
   }
 
   const pending = sendOtp.isPending || verifyOtp.isPending
+
+  if (welcomeBack) {
+    return (
+      <div className="container-page auth-page">
+        <div className="auth-layout auth-layout--refined">
+          <div className="auth-form" role="status" aria-live="polite">
+            <h1 className="section-title">{t('أهلاً بعودتكِ!')}</h1>
+            <p className="mt-3">{t('أعدنا تفعيل حسابكِ بهذا الدخول. يسعدنا رجوعكِ.')}</p>
+            <button type="button" className="btn-primary mt-6 w-full" onClick={() => navigate(safeNext, { replace: true })}>{t('متابعة')}</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container-page auth-page">

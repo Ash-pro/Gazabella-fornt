@@ -8,6 +8,7 @@ import { whatsappLink } from '../content/storeInfo'
 import { orderPath } from '../hooks/useAccountOrders'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { money } from '../lib/format'
+import { amountDue, walletApplied } from '../lib/orderAmounts'
 import { loadLastOrder, maskPhone, updateLastOrder } from '../lib/lastOrder'
 import { isCashOnDelivery, paymentMethodLabel } from '../lib/orderStatus'
 import { useAuthStore } from '../stores/authStore'
@@ -59,7 +60,7 @@ export function CheckoutReceiptPage() {
     { icon: 'clock', title: t('نراجع طلبكِ ونؤكده'), text: t('عادةً خلال {acceptanceWindowMinutes} دقيقة في أوقات الدوام.', { acceptanceWindowMinutes: store.acceptanceWindowMinutes }) },
     { icon: 'truck', title: t('نجهّزه ونرسله مع المندوب'), text: address ? t('إلى: {address}', { address: address }) : t('إلى العنوان الذي أدخلتِه.') },
     cod
-      ? { icon: 'dollar', title: t('تدفعين عند الاستلام'), text: t('جهّزي {v1} نقداً، وافحصي المنتجات قبل الدفع.', { v1: money(order.total) }) }
+      ? { icon: 'dollar', title: t('تدفعين عند الاستلام'), text: t('جهّزي {v1} نقداً، وافحصي المنتجات قبل الدفع.', { v1: money(amountDue(order)) }) }
       : { icon: 'dollar', title: paid ? t('تم تأكيد الدفع') : t('أكملي الدفع'), text: paid ? t('وصلنا دفعكِ، شكراً لكِ.') : t('حوّلي المبلغ ثم أدخلي مرجع الدفع في الأسفل ليُؤكَّد الطلب.') },
   ]
 
@@ -108,7 +109,11 @@ export function CheckoutReceiptPage() {
             <div className="flex justify-between gap-4"><span>{t('قيمة المنتجات')}</span><span className="num">{money(order.subtotal)}</span></div>
             <DeliveryFeeRow fees={order} />
             <div className="flex justify-between gap-4"><span>{t('طريقة الدفع')}</span><span>{paymentMethodLabel(order.payment_method)}</span></div>
-            <div className="thx-total"><span>{cod ? t('المبلغ عند الاستلام') : t('الإجمالي')}</span><strong className="num">{money(order.total)}</strong></div>
+            {walletApplied(order) && <>
+              <div className="flex justify-between gap-4"><span>{t('الإجمالي')}</span><span className="num">{money(order.total)}</span></div>
+              <div className="flex justify-between gap-4"><span>{t('خُصم من محفظتكِ')}</span><span className="num">−{money(walletApplied(order)!)}</span></div>
+            </>}
+            <div className="thx-total"><span>{cod ? t('المبلغ عند الاستلام') : t('الإجمالي')}</span><strong className="num">{money(cod ? amountDue(order) : order.total)}</strong></div>
           </div>
           {!cod && <p role="status" className="thx-pay-status" data-paid={paid}>{paid ? t('تم تأكيد الدفع') : t('لم يُؤكَّد الدفع بعد')}</p>}
         </section>

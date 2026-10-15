@@ -169,13 +169,22 @@ test('Jawwal confirmation and reference lookup use the new contracts',async()=>{
       assert.deepEqual(JSON.parse(config.data),{order_number:rawOrder.order_number,reference:'ref-123'})
     } else {
       assert.equal(config.url,'/orders/lookup-by-reference')
-      assert.deepEqual(config.params,{reference:'ref-123',lang:'ar'})
+      // الخادم يشترط آخر 4 أرقام من جوال الطلب (422 بدونها)
+      assert.deepEqual(config.params,{reference:'ref-123',phone_last4:'4567',lang:'ar'})
     }
     return respond({data:{...rawOrder,payment_status:'paid',payment_reference:'ref-123',store_id:2,commission_amount:3}},config)
   }
-  for(const order of [await api.confirmJawwalPayment(rawOrder.order_number,'ref-123'),await api.lookupOrderByReference('ref-123')]) {
+  for(const order of [await api.confirmJawwalPayment(rawOrder.order_number,'ref-123'),await api.lookupOrderByReference('ref-123','4567')]) {
     assert.equal(order.payment_status,'paid');assert.equal(order.payment_reference,'ref-123')
     assert(!('store_id' in order));assert(!('commission_amount' in order))
   }
   for(const status of ['pending','paid','failed','refunded']) assert.equal(module.normalizeOrder({...rawOrder,payment_status:status}).payment_status,status)
+})
+
+test('wallet fields: wallet_applied (or legacy wallet_amount) and amount_due; null when unused',()=>{
+  const used=module.normalizeOrder({...rawOrder,wallet_applied:'15.00',amount_due:'35.00'})
+  assert.equal(used.wallet_applied,'15.00');assert.equal(used.amount_due,'35.00')
+  assert.equal(module.normalizeOrder({...rawOrder,wallet_amount:'5.00'}).wallet_applied,'5.00')
+  const unused=module.normalizeOrder({...rawOrder,wallet_applied:null,amount_due:null})
+  assert.equal(unused.wallet_applied,null);assert.equal(unused.amount_due,null)
 })

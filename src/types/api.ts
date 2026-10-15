@@ -175,18 +175,12 @@ export interface ProfileUpdate {
   longitude?: number
 }
 
-/** GET /auth/me/export (B-10) */
-export interface PersonalDataExport {
-  exported_at: string
-  profile: Record<string, unknown>
-  orders: unknown[]
-  [key: string]: unknown
-}
-
 export interface AuthResponse {
   token: string
   token_type: 'Bearer'
   user: User
+  /** الحساب كان معطّلاً وأُعيد تفعيله بهذا الدخول */
+  reactivated?: boolean
 }
 
 export interface CheckoutPayload {
@@ -254,6 +248,10 @@ export interface Order {
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
   /** يحدده الخادم؛ إن غاب نعتمد الحالة */
   can_cancel?: boolean
+  /** المبلغ المخصوم من المحفظة — null إن لم تُستخدم */
+  wallet_applied?: string | null
+  /** المتبقي للدفع عند الاستلام — null إن لم تُستخدم المحفظة */
+  amount_due?: string | null
   created_at: string
 }
 

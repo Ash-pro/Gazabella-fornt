@@ -22,7 +22,6 @@ import type {
   BannerType,
   Collection,
   SiteSettings,
-  PersonalDataExport,
   DeliveryZoneInfo,
 } from '../types/api'
 import type { ProductFilters } from '../api/gazabella'
@@ -80,14 +79,6 @@ export const mockServices = {
   },
 
   logout: async () => delay({ message: 'تم تسجيل الخروج بنجاح' }),
-
-  // نفس شكل GET /auth/me/export (B-10)
-  exportMyData: async (): Promise<PersonalDataExport> =>
-    delay({
-      exported_at: new Date().toISOString(),
-      profile: { id: 101, name: 'أمل النجار', phone: '0591234567', email: 'amal@example.com', terms_version: '2026-10-01' },
-      orders: (await mockServices.getOrders()).data,
-    }),
 
   deleteMyAccount: async (): Promise<void> => { await delay(null) },
 

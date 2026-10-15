@@ -216,12 +216,11 @@ function LegacyCheckoutPage() {
     mutationFn: (v: Values) => {
       const { city, neighborhood, street, is_gift, recipient_name, recipient_phone, gift_message, notes, ...rest } = v
       const zoneId = store.deliveryZones.find((z) => z.name === city)?.id
-      // إلى أن يدعم الخادم حقول الهدية: نكتبها أيضاً في الملاحظات حتى تصل للمتجر والمندوب من الآن
-      const giftNote = is_gift ? `هدية إلى: ${recipient_name} — جوال المستلم: ${recipient_phone}${gift_message ? ` — رسالة الهدية: ${gift_message}` : ''}` : ''
-      const allNotes = [giftNote, notes].filter(Boolean).join(' | ').slice(0, 500)
+      // الخادم يحفظ حقول الهدية ويعرضها للتاجر والمندوب — لم نعد ننسخها داخل الملاحظات
+      const cleanNotes = notes?.trim()
       return gazabellaApi.checkout({
         ...rest,
-        ...(allNotes ? { notes: allNotes } : {}),
+        ...(cleanNotes ? { notes: cleanNotes } : {}),
         ...(is_gift ? { is_gift: true, recipient_name, recipient_phone, ...(gift_message ? { gift_message } : {}) } : {}),
         address: `${city}، ${neighborhood}، ${street}`,
         payment_method: paymentMethod,
@@ -233,7 +232,7 @@ function LegacyCheckoutPage() {
       trackPurchase(order)
       saveLastOrder(order, v.phone, `${v.city}، ${v.neighborhood}، ${v.street}`)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
-      queryClient.setQueryData(['order', String(isMockMode() ? order.order_number : order.id)], order)
+      queryClient.setQueryData(['order', order.order_number], order)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
       navigate(
         isMockMode() ? `/orders/${encodeURIComponent(order.order_number)}` : '/checkout/receipt',

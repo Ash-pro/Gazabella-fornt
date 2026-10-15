@@ -102,7 +102,7 @@ export const mvp0Api = {
   getOrder: (number: string | number) => apiClient.get(`/orders/${encodeURIComponent(number)}`).then(r => normalizeMvp0Order(r.data.data)),
   checkout: unavailable,
   confirmJawwalPayment: unavailable,
-  lookupOrderByReference: unavailable,
+  lookupOrderByReference: unavailable as (reference: string, phoneLast4: string) => Promise<never>,
   initPayment: async (number: string): Promise<{ payment_url: string }> => {
     const order = await mvp0Api.getOrder(number)
     const { data } = await apiClient.post('/payments/init', { order_id: order.id })

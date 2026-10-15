@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { gazabellaApi, isMockMode } from '../api/gazabella'
-import { isMvp0Api } from '../lib/apiContract'
+import { gazabellaApi } from '../api/gazabella'
 import type { Order } from '../types/api'
 
 /** حد أعلى معقول لسجل العميلة (7 صفحات × 15 ≈ 105 طلبات) — البحث والفلترة على الجهاز */
@@ -24,5 +23,6 @@ export function useAccountOrders() {
   return useQuery({ queryKey: ['orders', 'all'], queryFn: fetchAllOrders, staleTime: 30_000 })
 }
 
-export const orderPath = (order: Pick<Order, 'id' | 'order_number'>) =>
-  `/orders/${encodeURIComponent(String(isMockMode() || isMvp0Api() ? order.order_number : order.id))}`
+export const orderPath = (order: Pick<Order, 'order_number'>) =>
+  // الخادم يقبل order_number في كل مسارات الطلب — لا نكشف المعرّف الرقمي المتسلسل في الروابط
+  `/orders/${encodeURIComponent(order.order_number)}`

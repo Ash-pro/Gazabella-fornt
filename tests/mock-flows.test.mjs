@@ -125,7 +125,7 @@ test('public mock API supports OTP through checkout and Jawwal confirmation with
   const paid=await front.confirmJawwalPayment(order.order_number,'mock-ref')
   assert.equal(paid.payment_status,'paid');assert.equal(paid.payment_reference,'mock-ref')
   await assert.rejects(front.confirmJawwalPayment('missing','mock-ref'),/Order not found in mock/)
-  await assert.rejects(front.lookupOrderByReference('mock-ref'),/غير متاح في الوضع التجريبي/)
+  await assert.rejects(front.lookupOrderByReference('mock-ref','1234'),/غير متاح في الوضع التجريبي/)
   query.clear();auth.getState().clearSession()
 })
 

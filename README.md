@@ -8,12 +8,13 @@
 
 ```sh
 npm install
-npm run dev
+npm run dev:mvp0   # الواجهة + API محلي (العقد MVP0)
+npm run dev        # الواجهة فقط (Vite) بإعدادات .env
 ```
 
-يفتح التشغيل المحلي على `http://127.0.0.1:5173` ويشغّل API على `http://127.0.0.1:8000` وتنظيف الحجوزات معًا. يستخدم OTP ثابتًا `123456`، وقاعدة تطوير مستقلة محفوظة في `.gazabella-local/database.sqlite`. يُنشئ البيانات التجريبية مرة واحدة فقط؛ إعادة التشغيل تحفظ بياناتك. يتطلب Backend مع dependencies في `../GazabellaOnlineStore/backend` وPHP في `C:/xampp/php/php.exe`، أو تخصيص `MVP0_BACKEND_PATH` و`PHP_BINARY`.
+`npm run dev:mvp0` يفتح الواجهة على `http://127.0.0.1:5173` ويشغّل API على `http://127.0.0.1:8000` وتنظيف الحجوزات معًا. يستخدم OTP ثابتًا `123456`، وقاعدة تطوير مستقلة محفوظة في `.gazabella-local/database.sqlite`. يُنشئ البيانات التجريبية مرة واحدة فقط؛ إعادة التشغيل تحفظ بياناتك. يتطلب Backend مع dependencies في `../GazabellaOnlineStore/backend` وPHP في `C:/xampp/php/php.exe`، أو تخصيص `MVP0_BACKEND_PATH` و`PHP_BINARY`.
 
-`npm run dev:remote` هو الأمر الصريح للاتصال بإعدادات الخادم السابق في `.env`. لا تشغّل الأمرين على المنفذ نفسه.
+`npm run dev` (وكذلك `npm run dev:remote`) يشغّل Vite فقط ويتصل بالخادم المحدد في `.env`. الأمران يستخدمان المنفذ 5173؛ لا تشغّلهما معًا.
 
 حدد `VITE_API_BASE_URL` (يشمل `/api/v1`) و`VITE_STORAGE_URL` في `.env`. القيم العامة التي تبدأ VITE ليست مكانًا للأسرار. نموذج الإعدادات في `.env.example`.
 

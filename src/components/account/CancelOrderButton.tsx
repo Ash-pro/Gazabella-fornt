@@ -37,7 +37,7 @@ export function CancelOrderButton({ order, className = 'btn-cancel' }: { order: 
   const valid = reason.trim().length >= MIN_REASON
 
   const cancel = useMutation({
-    mutationFn: () => gazabellaApi.cancelOrder(order.id, { reason: reason.trim(), reason_code: code }),
+    mutationFn: () => gazabellaApi.cancelOrder(order.order_number, { reason: reason.trim(), reason_code: code }),
     onSuccess: () => {
       track('order_cancel', { reason_code: code ?? 'other' })
       void queryClient.invalidateQueries({ queryKey: ['orders'] })

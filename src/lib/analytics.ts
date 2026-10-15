@@ -38,7 +38,7 @@ export interface AnalyticsEvents {
   search: { search_term: string }
   contact: { channel: 'whatsapp' | 'phone' | 'email'; page: string }
   location_consent: { outcome: 'accepted' | 'dismissed' | 'failed' | 'skipped' }
-  privacy_action: { action: 'export' | 'delete' }
+  privacy_action: { action: 'deactivate' }
 }
 
 type Provider = 'none' | 'plausible' | 'ga4'

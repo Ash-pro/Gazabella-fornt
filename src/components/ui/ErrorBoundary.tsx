@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="size-16 rounded-full bg-rose-100 text-rose-800 grid place-items-center text-3xl mb-4 shadow-sm">
             ✨
           </div>
-          <h2 className="text-xl font-black text-[#2A1A1F]">{t('نعتذر منكِ، حدث خطأ مؤقت في العرض')}</h2>
+          <h2 className="text-xl font-black text-[var(--c-ink-deep)]">{t('نعتذر منكِ، حدث خطأ مؤقت في العرض')}</h2>
           <p className="mt-2 text-sm text-[#735A63] max-w-md">
             {t('نقوم بترتيب المنتجات والواجهات الآن. يمكنكِ النقر أدناه لتحديث الصفحة والمتابعة فوراً.')}
           </p>

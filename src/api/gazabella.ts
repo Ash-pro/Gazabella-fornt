@@ -43,7 +43,6 @@ import type {
   ProductBrief,
   ProductDetail,
   SiteSettings,
-  PersonalDataExport,
   StoreSupport,
   DeliveryZoneInfo,
   User,
@@ -184,7 +183,19 @@ interface RawOrder {
   escrow_expires_at?: string
   delivery_pin?: string
   tracking?: Array<{ status: string; note: string | null; created_at: string }>
+  /** المبلغ المخصوم من المحفظة (الاسم القديم wallet_amount متاح كبديل) */
+  wallet_applied?: number | string | null
+  wallet_amount?: number | string | null
+  /** المتبقي للدفع عند الاستلام */
+  amount_due?: number | string | null
   created_at: string
+}
+
+/** قيمة مالية اختيارية: null إن غابت أو كانت غير صالحة، وإلا نص */
+function optionalAmount(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) && n >= 0 ? String(value) : null
 }
 
 export function normalizeOrder(raw: RawOrder): Order {
@@ -237,6 +248,9 @@ export function normalizeOrder(raw: RawOrder): Order {
     tracking: raw.tracking ?? [],
     can_cancel: (raw as unknown as { can_cancel?: boolean }).can_cancel,
     items_count: (raw as unknown as { items_count?: number }).items_count ?? rawItems.length,
+    // null = لم تُستخدم المحفظة؛ لا نحوّلها لصفر حتى لا نعرض سطراً فارغاً
+    wallet_applied: optionalAmount(raw.wallet_applied ?? raw.wallet_amount),
+    amount_due: optionalAmount(raw.amount_due),
     created_at: raw.created_at,
   }
 }
@@ -371,13 +385,7 @@ const legacyGazabellaApi = {
     return data.data
   },
 
-  /** B-10 — نسخة كاملة من بيانات العميلة (JSON) */
-  exportMyData: (): Promise<PersonalDataExport> =>
-    isMockMode()
-      ? mockServices.exportMyData()
-      : apiClient.get<ApiData<PersonalDataExport>>('/auth/me/export').then((r) => r.data.data),
-
-  /** B-10 — إخفاء الهوية وحذف البيانات الشخصية (لا رجعة) */
+  /** B-10 — تعطيل الحساب (الخادم يعيد تفعيله عند تسجيل الدخول). تصدير البيانات أُلغي: /auth/me/export → 410 */
   deleteMyAccount: (): Promise<void> =>
     isMockMode()
       ? mockServices.deleteMyAccount()
@@ -506,10 +514,12 @@ const legacyGazabellaApi = {
    * «اطلبيها مرة أخرى»: طلب واحد للخادم يضيف المتوفر من الطلب للسلة بالأسعار الحالية.
    * احتياط (الوضع التجريبي أو تعذّر المسار): نضيف المنتجات واحداً واحداً.
    */
-  async reorder(order: Pick<Order, 'id' | 'items'>): Promise<{ added: number; missing: number }> {
+  async reorder(order: Pick<Order, 'order_number' | 'items'>): Promise<{ added: number; missing: number }> {
     if (!isMockMode()) {
       try {
-        const { data } = await apiClient.post<ApiData<{ added?: unknown[]; skipped?: unknown[] }>>(`/orders/${encodeURIComponent(order.id)}/reorder`)
+        const { data } = await apiClient.post<ApiData<{ cart?: RawCart; added?: unknown[]; skipped?: unknown[] }>>(`/orders/${encodeURIComponent(order.order_number)}/reorder`)
+        // الخادم يعيد السلة المحدّثة — نحدّث الكاش مباشرة بدل طلب إضافي
+        if (data.data.cart) queryClient.setQueryData(['cart'], normalizeCart(data.data.cart))
         return { added: data.data.added?.length ?? 0, missing: data.data.skipped?.length ?? 0 }
       } catch (error) {
         const status = axios.isAxiosError(error) ? error.response?.status : undefined
@@ -591,9 +601,10 @@ const legacyGazabellaApi = {
     }
   },
 
-  async lookupOrderByReference(reference: string): Promise<Order> {
+  /** البحث بمرجع الدفع — الخادم يشترط آخر 4 أرقام من جوال الطلب (phone_last4) كعامل تحقق ثانٍ */
+  async lookupOrderByReference(reference: string, phoneLast4: string): Promise<Order> {
     if (isMockMode()) throw new Error(t('غير متاح في الوضع التجريبي'))
-    const { data } = await apiClient.get<ApiData<RawOrder>>('/orders/lookup-by-reference', { params: { reference } })
+    const { data } = await apiClient.get<ApiData<RawOrder>>('/orders/lookup-by-reference', { params: { reference, phone_last4: phoneLast4 } })
     return normalizeOrder(data.data)
   },
 

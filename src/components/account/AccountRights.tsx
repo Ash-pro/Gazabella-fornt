@@ -9,9 +9,13 @@ import { track } from '../../lib/analytics'
 import { useAuthStore } from '../../stores/authStore'
 import { Dialog } from '../ui/Dialog'
 
-const CONFIRM_WORD = 'حذف'
+const CONFIRM_WORD = 'تعطيل'
 
-/** حقوق البيانات (B-10): حذف الحساب نهائياً (أُزيل تنزيل نسخة البيانات بطلب المالك) */
+/**
+ * حقوق البيانات (B-10): تعطيل الحساب.
+ * DELETE /auth/me يعطّل الحساب (لا يحذفه) ويعيد الخادم تفعيله تلقائياً عند تسجيل الدخول بنفس الرقم.
+ * لا نعد بالحذف النهائي حتى يعتمد الباك اند سياسة حذف بعد مدة.
+ */
 export function AccountRights() {
   const navigate = useNavigate()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -19,7 +23,7 @@ export function AccountRights() {
 
   const remove = useMutation({
     mutationFn: gazabellaApi.deleteMyAccount,
-    onSuccess: () => track('privacy_action', { action: 'delete' }),
+    onSuccess: () => track('privacy_action', { action: 'deactivate' }),
   })
 
   function finish() {
@@ -45,38 +49,36 @@ export function AccountRights() {
 
       <div className="account-rights__row account-rights__row--danger">
         <div>
-          <h3>{t('حذف حسابي')}</h3>
-          <p>{t('حذف نهائي لبياناتكِ الشخصية. لا يمكن التراجع عنه.')}</p>
+          <h3>{t('تعطيل حسابي')}</h3>
+          <p>{t('يوقف حسابكِ ويسجّل خروجكِ من كل الأجهزة. تستطيعين إعادة تفعيله بتسجيل الدخول برقمكِ.')}</p>
         </div>
-        <button type="button" className="btn-danger" onClick={() => setConfirmOpen(true)}>{t('حذف حسابي')}</button>
+        <button type="button" className="btn-danger" onClick={() => setConfirmOpen(true)}>{t('تعطيل حسابي')}</button>
       </div>
 
       {confirmOpen && (
-        <Dialog title={remove.isSuccess ? t('تم حذف حسابكِ') : t('حذف الحساب نهائياً')} onClose={close}>
+        <Dialog title={remove.isSuccess ? t('تم تعطيل حسابكِ') : t('تعطيل الحساب')} onClose={close}>
           <div className="danger-dialog">
             {remove.isSuccess ? (
               <>
-                <p>{t('تم حذف بياناتكِ الشخصية وتسجيل خروجكِ من كل الأجهزة. شكراً لأنكِ كنتِ معنا.')}</p>
+                <p>{t('عطّلنا حسابكِ وسجّلنا خروجكِ من كل الأجهزة. للعودة سجّلي الدخول برقمكِ في أي وقت.')}</p>
                 <button type="button" className="btn-primary" onClick={finish}>{t('العودة للمتجر')}</button>
               </>
             ) : (
               <form onSubmit={(e) => { e.preventDefault(); if (typed.trim() === t(CONFIRM_WORD)) remove.mutate() }}>
-                <p>{t('عند الحذف:')}</p>
+                <p>{t('عند التعطيل:')}</p>
                 <ul>
-                  <li>{t('يُحذف اسمكِ ورقمكِ وعنوانكِ وموقعكِ وبريدكِ نهائياً.')}</li>
-                  <li>{t('تبقى سجلات الطلبات')} <b>{t('بدون أي بيانات تعريفية')}</b> {t('لأغراض المحاسبة.')}</li>
-                  <li>{t('يُسجَّل خروجكِ من كل الأجهزة.')}</li>
-                  <li>{t('يمكنكِ إنشاء حساب جديد لاحقاً بنفس الرقم، لكن بدون سجلكِ السابق.')}</li>
+                  <li>{t('يُسجَّل خروجكِ من كل الأجهزة ولا يمكن استخدام الحساب.')}</li>
+                  <li>{t('يُعاد تفعيل الحساب تلقائياً إن سجّلتِ الدخول برقمكِ مرة أخرى.')}</li>
+                  <li>{t('لطلب حذف بياناتكِ نهائياً تواصلي معنا من صفحة')} <Link className="text-link" to="/contact">{t('اتصلي بنا')}</Link>.</li>
                 </ul>
                 <label className="field-label block">
                   {t('للتأكيد اكتبي كلمة «{word}»', { word: t(CONFIRM_WORD) })}
-                  <input className="form-field mt-2" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" disabled={remove.isPending} aria-describedby="delete-hint" />
+                  <input className="form-field mt-2" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" disabled={remove.isPending} />
                 </label>
-                <p id="delete-hint" className="sr-only">{t('هذا الإجراء لا يمكن التراجع عنه')}</p>
                 {remove.isError && <p role="alert" className="field-error">{getApiErrorMessage(remove.error)}</p>}
                 <div className="danger-dialog__actions">
                   <button type="submit" className="btn-danger" disabled={typed.trim() !== t(CONFIRM_WORD) || remove.isPending}>
-                    {remove.isPending ? t('جارٍ الحذف…') : t('حذف حسابي نهائياً')}
+                    {remove.isPending ? t('جارٍ التعطيل…') : t('تعطيل حسابي')}
                   </button>
                   <button type="button" className="btn-ghost" onClick={close} disabled={remove.isPending}>{t('إلغاء')}</button>
                 </div>
