@@ -162,6 +162,8 @@ async function botPreview(request: Request): Promise<Response | null> {
   const base: Meta = { title: fullTitle(null), description: DEFAULT_DESCRIPTION, image: `${origin}${DEFAULT_OG_IMAGE}`, url: categorySlug ? `${origin}/?category=${encodeURIComponent(categorySlug)}` : `${origin}${path}`, type: 'website', noindex: isPrivatePath(path) }
   const route = ROUTE_SEO[path]
   if (route) Object.assign(base, { title: fullTitle(route.title), description: route.description, noindex: Boolean(route.noindex) })
+  // P4-3 قائمة مفضلة مشتركة: معاينة جذابة في واتساب/فيسبوك، ولا تُفهرس
+  if (path.startsWith('/w/')) Object.assign(base, { title: fullTitle('قائمة مفضلات مشتركة 💗'), description: 'اختيارات جميلة شاركتها صديقتكِ على Gazabella — اكتشفيها واطلبي بسهولة. توصيل للبيت ودفع عند الاستلام.', noindex: true })
   const slug = /^\/products\/([^/]+)$/.exec(path)?.[1]
   if (slug) {
     const product = await productMeta(decodeURIComponent(slug), origin)

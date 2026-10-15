@@ -5,6 +5,8 @@ import { AccountShell } from '../components/account/AccountShell'
 import { OrderProgress } from '../components/account/OrderCard'
 import { CancelOrderButton } from '../components/account/CancelOrderButton'
 import { ReorderButton } from '../components/account/ReorderButton'
+import { ReviewRequests } from '../components/account/ReviewRequests'
+import { pendingReviews } from '../lib/reviewed'
 import { ErrorState } from '../components/ui/AsyncState'
 import { Icon } from '../components/ui/Icon'
 import { whatsappLink } from '../content/storeInfo'
@@ -90,6 +92,7 @@ export function AccountPage() {
               </div>
             )}
 
+          <ReviewRequests items={pendingReviews(orders, 3)} title={t('بانتظار تقييمكِ')} compact />
           {past.length > 0 && (
             <>
               <div className="dash-head"><h2>{t('اطلبيها مرة أخرى')}</h2><Link className="text-link" to="/orders">{t('كل الطلبات')}</Link></div>

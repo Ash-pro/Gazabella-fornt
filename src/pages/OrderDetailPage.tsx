@@ -9,6 +9,8 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { gazabellaApi, isMockMode } from '../api/gazabella'
 import { ProductVisual } from '../components/product/ProductVisual'
 import { OrderProgress } from '../components/account/OrderCard'
+import { ReviewRequests } from '../components/account/ReviewRequests'
+import { pendingReviews } from '../lib/reviewed'
 import { CancelOrderButton } from '../components/account/CancelOrderButton'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
@@ -250,6 +252,7 @@ export function OrderDetailPage() {
               ))}
             </div>
           </section>
+          {order.status === 'delivered' && <ReviewRequests items={pendingReviews([order], 20)} />}
           {order.status === 'delivered' && (
             <section className="checkout-card">
               <h2 className="text-lg font-bold">{t('متابعة ما بعد الاستلام')}</h2>

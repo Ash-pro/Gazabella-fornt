@@ -232,7 +232,7 @@ function ProductContent({ slug }: { slug: string }) {
               <span className="eyebrow">{product.category?.name}</span>
               <h1>{product.name}</h1>
             </div>
-            <ShareButton title={product.name} url={window.location.href.split('?')[0]} />
+            <ShareButton title={product.name} text={`${formatPrice(displayPrice)} · ${product.category?.name ?? 'Gazabella'}`} image={seoImage} url={window.location.href.split('?')[0]} />
           </div>
           {product.brand && <Link className="detail-brand" to={`/brands/${encodeURIComponent(product.brand.slug)}`}>{t('من')} <b>{product.brand.name}</b></Link>}
           {!!product.rating_count && product.rating_avg != null && (

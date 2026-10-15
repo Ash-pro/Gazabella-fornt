@@ -109,6 +109,20 @@ export interface Cart {
   total?: string | null
 }
 
+/** P4-2 أدلة الجمال — المحتوى كتل منظمة (لا HTML) */
+export type GuideBlock =
+  | { type: 'h2'; text: string }
+  | { type: 'p'; text: string }
+  | { type: 'tip'; text: string }
+  | { type: 'steps'; items: string[] }
+  | { type: 'products'; title?: string; category_slug?: string; product_slugs?: string[] }
+
+export interface GuideSummary { slug: string; title: string; excerpt: string; cover_url: string | null; reading_minutes: number; tag: string; published_at: string }
+export interface Guide extends GuideSummary { blocks: GuideBlock[] }
+
+/** P4-3 قائمة مفضلة مشتركة (قراءة فقط) */
+export interface SharedWishlist { token: string; owner_name: string; items: ProductBrief[]; created_at: string }
+
 export interface CartCoupon { code: string; discount: string; description?: string | null; /** واجهة فقط: مصدره وضع العرض */ demo?: boolean }
 
 /** P2-4 عنوان في دفتر العناوين — city من أسماء مناطق التوصيل */
@@ -307,6 +321,10 @@ export interface Order {
     quantity: number
     subtotal: string
     image_url: string | null
+    /** P4-1: لتقييم المنتج من صفحة الطلب */
+    product_slug?: string | null
+    /** P4-1: قيّمته المستخدمة من قبل */
+    reviewed?: boolean
   }>
   subtotal: string
   delivery_fee: string

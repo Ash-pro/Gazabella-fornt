@@ -42,7 +42,8 @@ export interface AnalyticsEvents {
   /** المرحلة 1 — صفحة المنتج */
   review_submitted: { rating: number; photos: number }
   stock_alert: { slug: string }
-  share: { method: 'native' | 'whatsapp' | 'copy' }
+  share: { method: string; campaign?: string }
+  wishlist_shared: { items: number }
 }
 
 type Provider = 'none' | 'plausible' | 'ga4'

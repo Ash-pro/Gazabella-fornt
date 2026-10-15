@@ -19,6 +19,9 @@ import { ProductsPage } from './pages/ProductsPage'
 const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage').then((module) => ({ default: module.OrderLookupPage })))
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })))
 const CheckoutReceiptPage = lazy(() => import('./pages/CheckoutReceiptPage').then((module) => ({ default: module.CheckoutReceiptPage })))
+const GuidesPage = lazy(() => import('./pages/GuidesPage').then((module) => ({ default: module.GuidesPage })))
+const GuidePage = lazy(() => import('./pages/GuidePage').then((module) => ({ default: module.GuidePage })))
+const SharedWishlistPage = lazy(() => import('./pages/SharedWishlistPage').then((module) => ({ default: module.SharedWishlistPage })))
 const BrandPage = lazy(() => import('./pages/BrandPage').then((module) => ({ default: module.BrandPage })))
 const AddressesPage = lazy(() => import('./pages/AddressesPage').then((module) => ({ default: module.AddressesPage })))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
@@ -73,6 +76,9 @@ export default function App() {
               <Route path="checkout" element={<Suspense fallback={<PageLoader />}>{isMvp0Api() ? <ProtectedRoute><CheckoutPage /></ProtectedRoute> : <CheckoutPage />}</Suspense>} />
               <Route path="checkout/receipt" element={<Suspense fallback={<PageLoader />}><CheckoutReceiptPage /></Suspense>} />
               <Route path="account" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><AccountPage /></ProtectedRoute></Suspense>} />
+              <Route path="guides" element={<Suspense fallback={<PageLoader />}><GuidesPage /></Suspense>} />
+              <Route path="guides/:slug" element={<Suspense fallback={<PageLoader />}><GuidePage /></Suspense>} />
+              <Route path="w/:token" element={<Suspense fallback={<PageLoader />}><SharedWishlistPage /></Suspense>} />
               <Route path="brands/:slug" element={<Suspense fallback={<PageLoader />}><BrandPage /></Suspense>} />
               <Route path="addresses" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><AddressesPage /></ProtectedRoute></Suspense>} />
               <Route path="wallet" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><WalletPage /></ProtectedRoute></Suspense>} />

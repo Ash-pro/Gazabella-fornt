@@ -245,6 +245,8 @@ export function normalizeOrder(raw: RawOrder): Order {
         quantity: item.quantity,
         subtotal: amount(item.line_total ?? item.subtotal),
         image_url: item.image_url ?? img?.url ?? null,
+        product_slug: item.product?.slug ?? (item as { product_slug?: string | null }).product_slug ?? null,
+        reviewed: Boolean((item as { reviewed?: boolean }).reviewed),
       }
     }),
     subtotal: amount(raw.subtotal, '0.00'),

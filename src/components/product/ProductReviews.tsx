@@ -11,6 +11,7 @@ import { DemoBadge } from '../ui/DemoBadge'
 import { Dialog } from '../ui/Dialog'
 import { Icon } from '../ui/Icon'
 import { ReviewForm } from './ReviewForm'
+import { markReviewed } from '../../lib/reviewed'
 import { Stars } from './StarRating'
 import { REVIEW_FORMS } from '../../lib/reviewForms'
 import { plural } from '../../i18n'
@@ -89,7 +90,7 @@ export function ProductReviews({ product, variantId }: { product: { id: number; 
         </div>
       )}
 
-      {writing && <ReviewForm slug={product.slug} productName={product.name} variantId={variantId} onClose={() => setWriting(false)} onDone={() => { setWriting(false); setThanks(true) }} />}
+      {writing && <ReviewForm slug={product.slug} productName={product.name} variantId={variantId} onClose={() => setWriting(false)} onDone={() => { markReviewed(product.slug); setWriting(false); setThanks(true) }} />}
       {photo && <Dialog title={t('صورة من التقييم')} onClose={() => setPhoto(null)}><img src={photo} alt="" className="w-full rounded-xl object-contain" /></Dialog>}
     </section>
   )

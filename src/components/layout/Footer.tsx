@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../../api/gazabella'
 import { displayEmail, displayPhone, resolveWhatsapp, whatsappLink } from '../../content/storeInfo'
+import { guidesEnabled } from '../../api/loyalty'
 import { Icon } from '../ui/Icon'
 import { track } from '../../lib/analytics'
 
@@ -33,6 +34,7 @@ export function Footer() {
           {settings?.policies?.payment_methods?.includes('jawwal_pay') && <Link to="/orders/lookup">{t('تتبع طلب بمرجع الدفع')}</Link>}
           <Link to="/delivery-info">{t('التوصيل والرسوم')}</Link>
           <Link to="/returns">{t('الاسترجاع والاستبدال')}</Link>
+          {guidesEnabled() && <Link to="/guides">{t('أدلة الجمال')}</Link>}
           <Link to="/faq">{t('الأسئلة الشائعة')}</Link>
           <Link to="/contact">{t('تواصلي معنا')}</Link>
           <p className="flex items-center gap-2"><Icon name="truck" className="size-4" /> {settings?.address || t('التوصيل حسب التغطية المتاحة')}</p>
