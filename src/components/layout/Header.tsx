@@ -53,7 +53,7 @@ export function Header() {
   }, [count])
   const searchField = <SearchBox />
   return <>
-    <aside className="announcement" aria-label={announcementText ? t('إعلان') : undefined}><span className="announcement__text" title={announcementText || undefined}>{announcementText || t('متاجر متعددة. تجربة واحدة. Gazabella.')}</span></aside>
+    <aside className="announcement" aria-label={announcementText ? t('إعلان') : undefined}><span className="announcement__text" title={announcementText || undefined}>{announcementText || t('Gazabella · الجمال، أقرب إليكِ.')}</span></aside>
     <header ref={headerRef} className="store-header">
       <div className="container-page header-main">
         <button className="icon-button menu-trigger" aria-label={t('فتح التصنيفات')} onClick={() => setMenuOpen(true)}><Icon name="menu" className="size-5" /></button>
