@@ -1,5 +1,5 @@
 import { t } from '../../i18n'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Icon } from '../ui/Icon'
 
 /** نجوم للعرض فقط — تدعم الكسور (4.6 ← أربع نجوم وجزء من الخامسة) */
@@ -13,24 +13,27 @@ export function Stars({ value, size = 'size-4' }: { value: number; size?: string
   )
 }
 
-/** إدخال التقييم: مجموعة أزرار راديو (لوحة المفاتيح وقارئ الشاشة) */
+const starLabels = () => [t('سيئ'), t('مقبول'), t('جيد'), t('جيد جداً'), t('ممتاز')]
+
+/** إدخال التقييم: مجموعة أزرار راديو (لوحة المفاتيح وقارئ الشاشة) + معاينة بالهوفر */
 export function StarInput({ value, onChange, invalid }: { value: number; onChange: (v: number) => void; invalid?: boolean }) {
   const name = useId()
-  const labels = [t('سيئ'), t('مقبول'), t('جيد'), t('جيد جداً'), t('ممتاز')]
+  const [hover, setHover] = useState(0)
+  const labels = starLabels()
+  const shown = hover || value
   return (
     <fieldset className={`star-input${invalid ? ' is-invalid' : ''}`}>
       <legend className="field-label">{t('تقييمكِ')} <span aria-hidden="true">*</span></legend>
-      <div className="star-input__row">
+      <div className="star-input__row" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((n) => (
-          <label key={n} className={n <= value ? 'is-on' : ''}>
+          <label key={n} className={n <= shown ? 'is-on' : ''} onMouseEnter={() => setHover(n)}>
             <input type="radio" name={name} value={n} checked={value === n} onChange={() => onChange(n)} className="sr-only" />
             <Icon name="star" className="size-8" />
             <span className="sr-only">{labels[n - 1]}</span>
           </label>
         ))}
-        {value > 0 && <span className="star-input__label">{labels[value - 1]}</span>}
       </div>
+      <p className={`star-input__label${shown ? ' is-set' : ''}`} aria-hidden="true">{shown ? labels[shown - 1] : t('اضغطي على نجمة للتقييم')}</p>
     </fieldset>
   )
 }
-

@@ -357,7 +357,7 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .stars { position: relative; display: inline-flex; line-height: 0; vertical-align: middle; }
 .stars__base, .stars__fill { display: inline-flex; gap: 1px; }
 .stars__base { color: #E5DCE3; }
-.stars__base svg, .stars__fill svg { fill: currentColor; stroke: none; }
+.stars__base svg, .stars__fill svg { flex-shrink: 0; fill: currentColor; stroke: none; }
 .stars__fill { position: absolute; inset-block: 0; inset-inline-start: 0; overflow: hidden; color: #E0A526; white-space: nowrap; }
 .pcard__rating { display: flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 12px; color: var(--c-ink-3); }
 
@@ -436,24 +436,87 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .reviews__pager { display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
 
 /* نموذج المراجعة */
-.review-form { display: grid; gap: var(--sp-3); }
-.star-input { border: 0; padding: 0; }
-.star-input__row { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
-.star-input label { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--rad-sm); color: #E5DCE3; cursor: pointer; }
-.star-input label svg { fill: currentColor; stroke: none; }
-.star-input label.is-on { color: #E0A526; }
+/* ── زر «اكتبي تقييمكِ» ───────────────────────────────────────── */
+.review-cta { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 6px 18px 6px 8px; border: 1.5px solid var(--c-brand); border-radius: var(--rad-pill, 999px); background: #fff; color: var(--c-brand); font-size: 15px; font-weight: 700; box-shadow: 0 6px 18px -12px var(--c-brand); transition: background 220ms ease, color 220ms ease, transform 220ms ease, box-shadow 220ms ease; }
+[dir="rtl"] .review-cta { padding: 6px 8px 6px 18px; }
+.review-cta__icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #F4C451, #E0A526); color: #fff; transition: transform 300ms ease; }
+.review-cta__icon svg { fill: currentColor; stroke: none; }
+@media (hover: hover) { .review-cta:hover { background: var(--c-brand); color: #fff; transform: translateY(-1px); box-shadow: 0 12px 26px -12px var(--c-brand); } .review-cta:hover .review-cta__icon { transform: rotate(-18deg) scale(1.08); } }
+.review-cta:focus-visible { outline: 3px solid var(--c-brand); outline-offset: 3px; }
+.review-cta--muted { border-color: var(--c-line); color: var(--c-ink); box-shadow: none; }
+.reviews__empty { display: grid; justify-items: center; gap: 12px; }
+.reviews__empty-stars { display: flex; gap: 4px; color: #E5DCE3; }
+.reviews__empty-stars svg { fill: currentColor; stroke: none; }
+
+/* ── نموذج التقييم ───────────────────────────────────────────── */
+.review-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.review-form__scroll { display: grid; gap: 20px; flex: 1; min-height: 0; overflow-y: auto; padding: 20px 22px 24px; }
+.review-form__product { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--c-line); border-radius: var(--rad-lg); background: var(--c-soft); }
+.review-form__product img { flex-shrink: 0; width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #fff; border: 1px solid var(--c-line); }
+.review-form__product div { display: grid; gap: 2px; min-width: 0; }
+.review-form__product small { font-size: 12px; color: var(--c-ink-3); }
+.review-form__product b { overflow: hidden; font-size: 15px; font-weight: 650; color: var(--c-ink); text-overflow: ellipsis; white-space: nowrap; }
+.review-form__stars { display: grid; gap: 6px; padding: 16px 12px 12px; border-radius: var(--rad-lg); background: linear-gradient(180deg, #FFF8EC, #fff); border: 1px solid #F3E3C3; text-align: center; }
+.star-input { border: 0; padding: 0; min-width: 0; }
+.star-input legend { margin-inline: auto; margin-bottom: 4px; }
+.review-form__stars .star-input legend { float: none; width: 100%; text-align: center; }
+.star-input__row { display: flex; align-items: center; justify-content: center; gap: 2px; }
+.star-input label { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #E5DCE3; cursor: pointer; transition: transform 160ms ease, color 160ms ease; }
+.star-input label svg { width: 34px; height: 34px; fill: currentColor; stroke: none; }
+.star-input label.is-on { color: #E8A920; }
+@media (hover: hover) { .star-input label:hover { transform: scale(1.15); } }
+.star-input label:has(input:checked) { animation: star-pop 320ms ease; }
+@keyframes star-pop { 50% { transform: scale(1.3); } }
 .star-input label:has(input:focus-visible) { outline: 2px solid var(--c-brand); outline-offset: 2px; }
-.star-input__label { margin-inline-start: 8px; font-size: 14px; font-weight: 600; color: var(--c-ink-2); }
-.star-input.is-invalid .star-input__row { border-radius: var(--rad-sm); box-shadow: 0 0 0 1.5px var(--error, #B42318); }
-.review-form__count { margin-top: -6px; font-size: 12px; color: var(--c-ink-3); text-align: end; }
-.review-form__count.is-error { color: var(--error, #B42318); }
-.review-form__photos { display: flex; flex-wrap: wrap; gap: 8px; }
-.review-form__thumb { position: relative; width: 76px; height: 76px; overflow: hidden; border-radius: var(--rad-md); }
+.star-input__label { min-height: 22px; font-size: 14px; font-weight: 600; color: var(--c-ink-3); }
+.star-input__label.is-set { color: #9A6B0C; }
+.star-input.is-invalid .star-input__row label { color: #F2C9C6; }
+.review-form__field { display: grid; gap: 8px; }
+.review-form__field > .field-label { margin: 0; }
+.review-form__textarea { display: grid; border: 1px solid var(--c-line); border-radius: var(--rad-md); background: #fff; transition: border-color 200ms ease, box-shadow 200ms ease; }
+.review-form__textarea:focus-within { border-color: var(--c-brand); box-shadow: 0 0 0 3px var(--c-brand-tint); }
+.review-form__textarea.is-error { border-color: var(--error, #B42318); }
+.review-form__textarea textarea { min-height: 120px; padding: 12px 14px 4px; border: 0; background: transparent; font: inherit; font-size: 15px; line-height: 1.8; color: var(--c-ink); resize: vertical; outline: none; }
+.review-form__count { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 14px 10px; font-size: 12px; color: var(--c-ink-3); }
+.review-form__count > span:first-child { display: inline-flex; align-items: center; gap: 4px; }
+.review-form__textarea:not(.is-error) .review-form__count svg { color: #1f7a4d; }
+.review-form__textarea.is-error .review-form__count > span:first-child { color: var(--error, #B42318); font-weight: 600; }
+.review-form__photos { display: flex; flex-wrap: wrap; gap: 10px; }
+.review-form__thumb { position: relative; width: 84px; height: 84px; overflow: hidden; border-radius: var(--rad-md); border: 1px solid var(--c-line); }
 .review-form__thumb img { width: 100%; height: 100%; object-fit: cover; }
-.review-form__thumb button { position: absolute; top: 4px; inset-inline-end: 4px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(29, 18, 32, .7); color: #fff; }
-.review-form__add { display: grid; place-items: center; align-content: center; gap: 2px; width: 76px; height: 76px; border: 1.5px dashed var(--c-line); border-radius: var(--rad-md); color: var(--c-ink-3); font-size: 11px; cursor: pointer; }
+.review-form__thumb button { position: absolute; top: 4px; inset-inline-end: 4px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(29, 18, 32, .72); color: #fff; }
+.review-form__add { display: grid; place-items: center; align-content: center; gap: 2px; width: 84px; height: 84px; border: 1.5px dashed #D9C3CD; border-radius: var(--rad-md); background: #FDF8FA; color: var(--c-brand); font-size: 12px; font-weight: 600; cursor: pointer; transition: background 200ms ease, border-color 200ms ease; }
+.review-form__add small { font-size: 11px; font-weight: 500; color: var(--c-ink-3); }
+@media (hover: hover) { .review-form__add:hover { border-color: var(--c-brand); background: var(--c-brand-tint); } }
 .review-form__add:has(input:focus-visible) { outline: 2px solid var(--c-brand); outline-offset: 2px; }
-.review-form__hint { font-size: 12px; color: var(--c-ink-3); }
+.review-form__hint { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; line-height: 1.7; color: var(--c-ink-3); }
+.review-form__field .review-form__hint { justify-content: flex-start; }
+.review-form__footer { display: grid; gap: 8px; flex-shrink: 0; padding: 14px 22px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--c-line); background: var(--c-card, #fff); box-shadow: 0 -10px 24px -18px rgba(29, 18, 32, .35); }
+.review-form__footer .btn-primary { min-height: 50px; gap: 8px; font-size: 16px; }
+.app-dialog.review-dialog { overflow: hidden; }
+.review-dialog .dialog-inner { height: 100%; min-height: 0; }
+.review-dialog .dialog-heading .icon-button:focus { box-shadow: none; }
+.review-dialog .dialog-heading .icon-button:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
+
+/* ── نافذة الشكر ─────────────────────────────────────────────── */
+.app-dialog.review-thanks { width: min(92vw, 420px); }
+.review-thanks .dialog-heading { border-bottom: 0; background: transparent; }
+.review-thanks .dialog-heading h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.review-thanks__body { display: grid; justify-items: center; gap: 10px; padding: 0 26px 26px; text-align: center; }
+.review-thanks__body h3 { margin-top: 6px; font-size: 22px; font-weight: 700; color: var(--c-ink); }
+.review-thanks__body > p { font-size: 15px; line-height: 1.9; color: var(--c-ink-2); }
+.review-thanks__note { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--rad-pill, 999px); background: #FFF8EC; color: #8A5E0B !important; font-size: 13px !important; font-weight: 600; }
+.review-thanks__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 8px; }
+.review-thanks__actions > * { justify-content: center; min-height: 46px; }
+.review-thanks__badge { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #2FA36B, #1f7a4d); color: #fff; box-shadow: 0 14px 30px -14px #1f7a4d; animation: rt-pop 520ms cubic-bezier(.34, 1.56, .64, 1) both; }
+.review-thanks__badge svg { stroke-width: 3; }
+.review-thanks__ring { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid #2FA36B; opacity: 0; animation: rt-ring 900ms 200ms ease-out; }
+.review-thanks__badge i { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #E8A920; opacity: 0; transform: rotate(calc(var(--i) * 60deg)) translateY(0); animation: rt-burst 700ms 250ms ease-out forwards; }
+.review-thanks__badge i:nth-of-type(even) { background: var(--c-brand); width: 6px; height: 6px; margin: -3px; }
+@keyframes rt-pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rt-ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes rt-burst { 0% { opacity: 1; transform: rotate(calc(var(--i) * 60deg)) translateY(0); } 100% { opacity: 0; transform: rotate(calc(var(--i) * 60deg)) translateY(-64px); } }
+@media (prefers-reduced-motion: reduce) { .review-thanks__badge, .review-thanks__ring, .review-thanks__badge i, .star-input label { animation: none !important; } .review-cta, .review-cta__icon, .star-input label { transition: none; } }
 
 /* ══════════ المرحلة 2 — السلة والدفع ══════════ */
 /* شريط التوصيل المجاني */

@@ -11,6 +11,7 @@ import { DemoBadge } from '../ui/DemoBadge'
 import { Dialog } from '../ui/Dialog'
 import { Icon } from '../ui/Icon'
 import { ReviewForm } from './ReviewForm'
+import { ReviewThanks } from './ReviewThanks'
 import { markReviewed } from '../../lib/reviewed'
 import { Stars } from './StarRating'
 import { REVIEW_FORMS } from '../../lib/reviewForms'
@@ -22,6 +23,7 @@ export function ProductReviews({ product, variantId }: { product: { id: number; 
   const [page, setPage] = useState(1)
   const [writing, setWriting] = useState(false)
   const [thanks, setThanks] = useState(false)
+  const [thanksPopup, setThanksPopup] = useState(0)
   const [photo, setPhoto] = useState<string | null>(null)
   const loggedIn = Boolean(useAuthStore((s) => s.token))
   const { pathname } = useLocation()
@@ -39,8 +41,8 @@ export function ProductReviews({ product, variantId }: { product: { id: number; 
   const s = res.summary
 
   const write = loggedIn
-    ? <button type="button" className="btn-ghost" onClick={() => setWriting(true)}><Icon name="star" className="size-4" /> {t('اكتبي تقييمكِ')}</button>
-    : <Link className="btn-ghost" to={`/auth?next=${encodeURIComponent(pathname + '#reviews')}`}><Icon name="star" className="size-4" /> {t('سجّلي الدخول للتقييم')}</Link>
+    ? <button type="button" className="review-cta" onClick={() => setWriting(true)}><span className="review-cta__icon"><Icon name="star" className="size-4" /></span> {t('اكتبي تقييمكِ')}</button>
+    : <Link className="review-cta review-cta--muted" to={`/auth?next=${encodeURIComponent(pathname + '#reviews')}`}><span className="review-cta__icon"><Icon name="star" className="size-4" /></span> {t('سجّلي الدخول للتقييم')}</Link>
 
   return (
     <section id="reviews" className="reviews" aria-labelledby="reviews-title">
@@ -52,7 +54,7 @@ export function ProductReviews({ product, variantId }: { product: { id: number; 
       {thanks && <p className="reviews__thanks" role="status"><Icon name="check" className="size-4" /> {t('شكراً لكِ! يظهر تقييمكِ بعد مراجعة سريعة.')}</p>}
 
       {s.count === 0 ? (
-        <p className="reviews__empty">{t('لا توجد تقييمات بعد — كوني أول من يقيّم هذا المنتج.')}</p>
+        <div className="reviews__empty"><span className="reviews__empty-stars" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <Icon key={i} name="star" className="size-5" />)}</span><p>{t('لا توجد تقييمات بعد — كوني أول من يقيّم هذا المنتج.')}</p>{write}</div>
       ) : (
         <div className="reviews__layout">
           <Summary summary={s} active={rating} onFilter={(n) => { setRating(n); setPage(1) }} />
@@ -90,7 +92,8 @@ export function ProductReviews({ product, variantId }: { product: { id: number; 
         </div>
       )}
 
-      {writing && <ReviewForm slug={product.slug} productName={product.name} variantId={variantId} onClose={() => setWriting(false)} onDone={() => { markReviewed(product.slug); setWriting(false); setThanks(true) }} />}
+      {writing && <ReviewForm slug={product.slug} productName={product.name} productImage={product.image} variantId={variantId} onClose={() => setWriting(false)} onDone={(stars) => { markReviewed(product.slug); setWriting(false); setThanks(true); setThanksPopup(stars) }} />}
+      {thanksPopup > 0 && <ReviewThanks rating={thanksPopup} productName={product.name} onClose={() => setThanksPopup(0)} />}
       {photo && <Dialog title={t('صورة من التقييم')} onClose={() => setPhoto(null)}><img src={photo} alt="" className="w-full rounded-xl object-contain" /></Dialog>}
     </section>
   )

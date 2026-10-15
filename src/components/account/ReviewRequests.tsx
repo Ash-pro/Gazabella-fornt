@@ -5,6 +5,7 @@ import { getImageUrl } from '../../lib/apiClient'
 import { markReviewed } from '../../lib/reviewed'
 import type { Order } from '../../types/api'
 import { ReviewForm } from '../product/ReviewForm'
+import { ReviewThanks } from '../product/ReviewThanks'
 import { Icon } from '../ui/Icon'
 
 type Item = Order['items'][number]
@@ -13,6 +14,7 @@ type Item = Order['items'][number]
 export function ReviewRequests({ items, title = t('قيّمي مشترياتكِ'), compact = false }: { items: Item[]; title?: string; compact?: boolean }) {
   const [active, setActive] = useState<Item | null>(null)
   const [done, setDone] = useState<string[]>([])
+  const [thanks, setThanks] = useState<{ rating: number; name: string } | null>(null)
   const list = items.filter((i) => i.product_slug && !done.includes(i.product_slug))
   if (!list.length && !done.length) return null
   return (
@@ -32,7 +34,8 @@ export function ReviewRequests({ items, title = t('قيّمي مشترياتكِ
           })}
         </ul>
       )}
-      {active && <ReviewForm slug={active.product_slug!} productName={active.product_name} onClose={() => setActive(null)} onDone={() => { markReviewed(active.product_slug!); setDone((d) => [...d, active.product_slug!]); setActive(null) }} />}
+      {active && <ReviewForm slug={active.product_slug!} productName={active.product_name} productImage={active.image_url} onClose={() => setActive(null)} onDone={(stars) => { markReviewed(active.product_slug!); setDone((d) => [...d, active.product_slug!]); setThanks({ rating: stars, name: active.product_name }); setActive(null) }} />}
+      {thanks && <ReviewThanks rating={thanks.rating} productName={thanks.name} onClose={() => setThanks(null)} />}
     </section>
   )
 }
