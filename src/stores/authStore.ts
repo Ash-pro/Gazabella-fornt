@@ -9,6 +9,9 @@ interface AuthState {
   clearSession: () => void
 }
 
+/** اسم مفتاح الجلسة الحالي — يُستخدم أيضاً لتنظيف المفاتيح القديمة (storageCleanup) */
+export const AUTH_STORAGE_KEY = `gazabella_auth:${import.meta.env.VITE_API_CONTRACT || 'legacy'}:${import.meta.env.VITE_DATA_SOURCE === 'mock' ? 'mock' : import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -18,7 +21,7 @@ export const useAuthStore = create<AuthState>()(
       clearSession: () => set({ token: null, user: null }),
     }),
     {
-      name: `gazabella_auth:${import.meta.env.VITE_API_CONTRACT || 'legacy'}:${import.meta.env.VITE_DATA_SOURCE === 'mock' ? 'mock' : import.meta.env.VITE_API_BASE_URL || '/api/v1'}`,
+      name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
     },
   ),

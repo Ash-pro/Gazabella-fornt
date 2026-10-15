@@ -9,12 +9,14 @@ import './index.css'
 import './styles/tokens.css'
 import './styles/chrome.css'
 import './styles/storefront.css'
-import { useAuthStore } from './stores/authStore'
+import { AUTH_STORAGE_KEY, useAuthStore } from './stores/authStore'
+import { cleanupLegacyStorage } from './lib/storageCleanup'
 import { useCheckoutStore } from './stores/checkoutStore'
 import { initAnalytics } from './lib/analytics'
 import { initLocale, onLocaleChange } from './i18n'
 import { initMonitoring, installChunkReloadGuard, setMonitoringUser } from './lib/monitoring'
 
+cleanupLegacyStorage(AUTH_STORAGE_KEY)
 initMonitoring()
 installChunkReloadGuard()
 initAnalytics()
