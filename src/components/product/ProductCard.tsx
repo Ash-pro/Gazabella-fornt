@@ -3,17 +3,18 @@ import { isMvp0Api } from '../../lib/apiContract'
 import { QuickBuy } from './QuickBuy'
 import { Link } from 'react-router-dom'
 import { ProductVisual } from './ProductVisual'
+import { imageSrcSet } from '../../lib/images'
 import { Icon } from '../ui/Icon'
 import { formatPrice } from '../../lib/format'
 import { productPricing } from '../../lib/productPricing'
 import { getApiErrorMessage } from '../../lib/apiClient'
 import { useWishlist } from '../../hooks/useWishlist'
 import type { ProductBrief } from '../../types/api'
+import { prefetchProduct } from '../../lib/prefetch'
 
-function getPrimaryImage(product: ProductBrief): string | null {
+function getPrimaryImage(product: ProductBrief) {
   const imgs = product.images ?? []
-  const primary = imgs.find((img) => img.is_primary)
-  return primary?.url ?? imgs[0]?.url ?? null
+  return imgs.find((img) => img.is_primary) ?? imgs[0] ?? null
 }
 
 /** هيكل تحميل بنفس تركيب البطاقة حتى لا يقفز التخطيط عند وصول البيانات */
@@ -37,15 +38,20 @@ export function ProductCardSkeleton() {
 export function ProductCard({ product }: { product: ProductBrief }) {
   const wishlist = useWishlist()
   const saved = wishlist.authenticated && !!wishlist.query.data?.some((item) => item.id === product.id)
-  const imageUrl = getPrimaryImage(product)
+  const image = getPrimaryImage(product)
   const { current, original, percent: discount } = productPricing(product)
   const href = `/products/${product.slug}`
 
   return (
-    <article className={`pcard${product.in_stock ? '' : ' is-out'}${original !== null ? ' has-discount' : ''}`}>
+    <article
+      className={`pcard${product.in_stock ? '' : ' is-out'}${original !== null ? ' has-discount' : ''}`}
+      onPointerEnter={() => prefetchProduct(product.slug)}
+      onTouchStart={() => prefetchProduct(product.slug)}
+      onFocusCapture={() => prefetchProduct(product.slug)}
+    >
       <div className="pcard__media">
         <Link to={href} aria-label={t('عرض {name}', { name: product.name })} tabIndex={-1}>
-          <ProductVisual src={imageUrl} alt={product.name} />
+          <ProductVisual src={image?.url ?? null} srcSet={imageSrcSet(image)} sizes="(min-width: 1024px) 22vw, 48vw" alt={product.name} />
         </Link>
         {discount > 0 && product.in_stock && <span className="pcard__badge" aria-label={t('خصم {n}%', { n: discount })}><span className="num" aria-hidden="true">−{discount}%</span></span>}
         {!product.in_stock && <span className="pcard__badge pcard__badge--out">{t('غير متوفر حاليًا')}</span>}

@@ -1,8 +1,5 @@
 import { t } from './i18n'
 import { useLocale } from './i18n'
-import { OrderLookupPage } from './pages/OrderLookupPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { CheckoutReceiptPage } from './pages/CheckoutReceiptPage'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { productsPathToRoute } from './lib/routes'
@@ -19,6 +16,9 @@ import { useAuthStore } from './stores/authStore'
 import { isMvp0Api } from './lib/apiContract'
 
 import { ProductsPage } from './pages/ProductsPage'
+const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage').then((module) => ({ default: module.OrderLookupPage })))
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })))
+const CheckoutReceiptPage = lazy(() => import('./pages/CheckoutReceiptPage').then((module) => ({ default: module.CheckoutReceiptPage })))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage').then((module) => ({ default: module.ProductDetailPage })))
 const CartPage = lazy(() => import('./pages/CartPage').then((module) => ({ default: module.CartPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
@@ -69,12 +69,12 @@ export default function App() {
               <Route path="cart" element={<Suspense fallback={<PageLoader />}><CartPage /></Suspense>} />
               <Route path="auth" element={<Suspense fallback={<PageLoader />}><AuthPage /></Suspense>} />
               <Route path="checkout" element={<Suspense fallback={<PageLoader />}>{isMvp0Api() ? <ProtectedRoute><CheckoutPage /></ProtectedRoute> : <CheckoutPage />}</Suspense>} />
-              <Route path="checkout/receipt" element={<CheckoutReceiptPage />} />
+              <Route path="checkout/receipt" element={<Suspense fallback={<PageLoader />}><CheckoutReceiptPage /></Suspense>} />
               <Route path="account" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><AccountPage /></ProtectedRoute></Suspense>} />
               <Route path="wallet" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><WalletPage /></ProtectedRoute></Suspense>} />
-              <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="profile" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><ProfilePage /></ProtectedRoute></Suspense>} />
               <Route path="track" element={<Suspense fallback={<PageLoader />}><TrackOrderPage /></Suspense>} />
-              <Route path="orders/lookup" element={<OrderLookupPage />} />
+              <Route path="orders/lookup" element={<Suspense fallback={<PageLoader />}><OrderLookupPage /></Suspense>} />
               <Route path="orders" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrdersPage /></ProtectedRoute></Suspense>} />
               <Route path="orders/:orderId" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><OrderDetailPage /></ProtectedRoute></Suspense>} />
               <Route path="delivery-info" element={<DeliveryPolicyPage />} />

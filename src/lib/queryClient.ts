@@ -19,7 +19,11 @@ export const queryClient = new QueryClient({
 
 // البيانات العامة: آخر نسخة محفوظة تُعرض فوراً (placeholder) ثم تُحدَّث من الخادم
 const publicKeys: readonly string[] = PUBLIC_QUERY_KEYS
-for (const key of publicKeys) queryClient.setQueryDefaults([key], { placeholderData: () => readPublicCache(key) })
+// staleTime موحّد لكل مفتاح عام: الرأس والتذييل والرئيسية تستخدم نفس المفاتيح بإعدادات مختلفة،
+// فكان أي مكوّن يُركَّب لاحقاً (أو عودة التركيز للنافذة) يعيد الطلب نفسه بعد أجزاء من الثانية.
+// هذه البيانات تتغير نادراً (بانرات · أقسام · إعدادات · مناطق) — 5 دقائق كافية، ويبقى ‎refetch‎ اليدوي متاحاً.
+const PUBLIC_STALE_MS = 5 * 60_000
+for (const key of publicKeys) queryClient.setQueryDefaults([key], { placeholderData: () => readPublicCache(key), staleTime: PUBLIC_STALE_MS })
 queryClient.getQueryCache().subscribe((event) => {
   if (event.type !== 'updated' || event.action.type !== 'success') return
   const key = event.query.queryKey

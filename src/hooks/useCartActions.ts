@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { prefetchCheckout } from '../lib/prefetch'
 import { useNavigate } from 'react-router-dom'
 import { queryClient } from '../lib/queryClient'
 import { useCartStore } from '../stores/cartStore'
@@ -23,6 +25,8 @@ export function trackCartView(cart: Cart | undefined) {
 
 export function useProceedToCheckout() {
   const navigate = useNavigate()
+  // السلة مفتوحة = الخطوة التالية غالباً الدفع: نجلب حزمته في الخلفية
+  useEffect(() => { prefetchCheckout() }, [])
   return useMutation({
     mutationFn: () => Promise.resolve(),
     onSuccess: () => {

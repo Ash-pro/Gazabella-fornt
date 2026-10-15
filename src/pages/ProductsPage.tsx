@@ -32,6 +32,9 @@ export function ProductsPage() {
   const { category, sub, search, page } = state
   const savedOnly = !isMvp0Api() && params.get('saved') === 'true'
   const validSort = state.sort
+  const active = Boolean(params.has('all') || params.has('collection') || category || sub || params.has('search') || validSort || state.minPrice !== undefined || state.maxPrice !== undefined || savedOnly || page > 1)
+  // الرئيسية (بلا فلتر) تعرض HomeShowcase بدل شبكة الكتالوج — لا نطلب صفحة منتجات لن تُعرض
+  const home = !active && !isMockMode() && !isMvp0Api()
   const categoriesData = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: 300_000 })
   // Resolve slug → category_id for API mode
   const resolvedCategorySlug = sub || category || undefined
@@ -51,9 +54,8 @@ export function ProductsPage() {
     page,
     per_page: 12,
   }
-  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), enabled: !state.priceRangeInvalid && (!resolvedCategorySlug || isMockMode() || resolvedCategoryId !== undefined), placeholderData: keepPreviousData, staleTime: 60_000 })
+  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), enabled: !home && !state.priceRangeInvalid && (!resolvedCategorySlug || isMockMode() || resolvedCategoryId !== undefined), placeholderData: keepPreviousData, staleTime: 60_000 })
   const currentCategory = categoriesData.data?.find((c) => c.slug === category)
-  const active = Boolean(params.has('all') || params.has('collection') || category || sub || params.has('search') || validSort || state.minPrice !== undefined || state.maxPrice !== undefined || savedOnly || page > 1)
   const CatalogTitle = active ? 'h1' : 'h2'
   const lastPage = products.data?.meta?.last_page
   // صفحة بعد آخر صفحة (رابط قديم أو تغيّر عدد النتائج): ننتقل لآخر صفحة موجودة بدل «لا نتائج» مضللة
@@ -74,7 +76,6 @@ export function ProductsPage() {
   const unknownCategory = !isMockMode() && !!resolvedCategorySlug && categoriesData.isSuccess && resolvedCategoryId === undefined
   const shownCount = unknownCategory ? 0 : savedOnly ? (wishlist.query.data ?? []).length : products.data?.meta?.total ?? 0
   const list = unknownCategory ? [] : savedOnly ? wishlist.query.data ?? [] : products.data?.data ?? []
-  const home = !active && !isMockMode() && !isMvp0Api()
   return <>
     {home && <HomeIntro />}
     {!active && (isMockMode() || isMvp0Api()) && <section className="container-page editorial-hero">

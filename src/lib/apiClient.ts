@@ -43,12 +43,21 @@ apiClient.interceptors.request.use((config) => {
     config.headers.set('Authorization', `Bearer ${token}`)
   } else if (isMvp0Api()) {
     config.headers.set('X-Guest-UUID', getGuestUuid())
-  } else {
+  } else if (!isPublicRead(config.method, config.url)) {
     const cartToken = getCartToken()
     if (cartToken) config.headers.set('X-Cart-Token', cartToken)
   }
   return config
 })
+
+/**
+ * قراءات الكتالوج العامة لا تحتاج هوية الضيف. إرسال X-Cart-Token (ترويسة غير قياسية) معها
+ * يجبر المتصفح على طلب preflight (OPTIONS) قبل كل طلب — أي ضعف عدد الرحلات للخادم على الشبكات البطيئة.
+ */
+const PUBLIC_READ = /^\/?(banners|categories|settings|collections|delivery-zones|products|brands|home|sitemap)(\/|\?|$)/
+export function isPublicRead(method: string | undefined, url: string | undefined): boolean {
+  return (method ?? 'get').toLowerCase() === 'get' && PUBLIC_READ.test(url ?? '')
+}
 
 // ── Response Interceptor ──────────────────────────────────────────────────
 apiClient.interceptors.response.use(
