@@ -414,6 +414,7 @@ const en: Record<string, string> = {
   'لم نتأكد من إتمام الطلب': 'We couldn’t confirm your order went through',
   'ربما وصل طلبكِ رغم انقطاع الاتصال. إعادة المحاولة آمنة ولن تُنشئ طلباً مكرراً.': 'Your order may have reached us despite the connection drop. Retrying is safe and won’t create a duplicate order.',
   'أعيدي المحاولة الآن': 'Try again now',
+  'يُباع من': 'Sold by',
   'راجعي طلبكِ قبل التأكيد': 'Review your order before confirming',
   'إتمام الطلب': 'Checkout',
   'معلومات التواصل': 'Contact details',

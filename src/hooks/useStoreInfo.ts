@@ -1,7 +1,7 @@
 import { t } from '../i18n'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../api/gazabella'
-import { resolveWhatsapp, STORE_INFO, type DeliveryZone } from '../content/storeInfo'
+import { displayEmail, displayPhone, resolveWhatsapp, STORE_INFO, type DeliveryZone } from '../content/storeInfo'
 
 const pos = (v: number | null | undefined, fallback: number) => (typeof v === 'number' && v > 0 ? v : fallback)
 
@@ -41,8 +41,8 @@ export function useStoreInfo() {
     minDeliveryFee: Math.min(...deliveryZones.map((z) => z.fee)),
     zonesFromServer: Boolean(liveZones),
     whatsapp: resolveWhatsapp(settings?.social_links),
-    phone: sup?.phone ?? settings?.phone ?? null,
-    email: sup?.email ?? settings?.email ?? null,
+    phone: displayPhone(sup?.phone ?? settings?.phone),
+    email: displayEmail(sup?.email ?? settings?.email),
     address: settings?.address ?? null,
   }
 }

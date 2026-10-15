@@ -10,6 +10,7 @@ import { queryClient } from '../lib/queryClient'
 import { RelatedProducts } from '../components/product/RelatedProducts'
 import { SupportLink } from '../components/support/SupportLink'
 import { ProductVisual } from '../components/product/ProductVisual'
+import { imageSrcSet } from '../lib/images'
 import { ErrorState } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
@@ -44,6 +45,9 @@ function ProductContent({ slug }: { slug: string }) {
     enabled: !!slug,
   })
   const product = query.data
+  const description = product?.description?.trim() ?? ''
+  const summary = summarize(description)
+  const hasFullDescription = description.length > summary.length
   const store = useStoreInfo()
   const zoneNames = store.deliveryZones.map((z) => z.name).join(t('، '))
 
@@ -151,7 +155,7 @@ function ProductContent({ slug }: { slug: string }) {
   const imageUrl = getImageUrl(image?.url ?? null)
   const zoomable = !!imageUrl && imageStatus[imageUrl] === 'ok'
   // مفتاح بالرابط: عند تبديل الصورة يُعاد إنشاء العنصر فلا تنتقل حالة فشل صورة سابقة إلى التالية
-  const mainVisual = <ProductVisual key={imageUrl ?? 'none'} src={image?.url ?? null} alt={image?.alt_text ?? product.name} priority onStatus={noteImage} />
+  const mainVisual = <ProductVisual key={imageUrl ?? 'none'} src={image?.url ?? null} srcSet={imageSrcSet(image)} sizes="(min-width: 1024px) 45vw, 92vw" alt={image?.alt_text ?? product.name} priority onStatus={noteImage} />
   const { current: displayPrice, original: originalPrice, percent } = productPricing(product, variant)
   const disabled = add.isPending || !product.in_stock || quantity > limit
 
@@ -196,7 +200,7 @@ function ProductContent({ slug }: { slug: string }) {
                   aria-label={t('عرض الصورة {v1}', { v1: i + 1 })}
                   aria-pressed={imageIndex === i}
                 >
-                  <ProductVisual src={img.url} alt="" />
+                  <ProductVisual src={img.thumb_url || img.url} alt="" />
                 </button>
               ))}
             </div>
@@ -206,8 +210,10 @@ function ProductContent({ slug }: { slug: string }) {
         <div className="detail-copy">
           <span className="eyebrow">{product.category?.name}</span>
           <h1>{product.name}</h1>
+          {product.store?.name && <p className="detail-store"><Icon name="store" className="size-4" /> {t('يُباع من')} <b>{product.store.name}</b></p>}
+          {/* ملخص قصير هنا، والنص الكامل في «وصف المنتج» فقط إن كان أطول — لا نكرر الفقرة نفسها مرتين */}
           <p className="detail-description">
-            {product.description ?? t('اكتشفي تفاصيل هذا المنتج الرائع.')}
+            {summary || t('اكتشفي تفاصيل هذا المنتج الرائع.')}
           </p>
 
           <div className="detail-price">
@@ -246,14 +252,14 @@ function ProductContent({ slug }: { slug: string }) {
           )}
 
           <div className="detail-benefits">
-            <p><Icon name="truck" className="size-4" /> {t('توصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('· دفع عند الاستلام')}</p>
-            <p><Icon name="clock" className="size-4" /> {t('إضافة المنتج للسلة لا تحجز المخزون')}</p>
+            <p><Icon name="truck" className="size-4" /> {t('توصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة')}</p>
+            <p><Icon name="shield" className="size-4" /> {t('ادفعي نقداً للمندوب بعد فحص طلبك')}</p>
           </div>
 
-          <details className="product-information" open>
+          {hasFullDescription && <details className="product-information" open>
             <summary>{t('وصف المنتج')}</summary>
             <p>{product.description}</p>
-          </details>
+          </details>}
           <details className="product-information">
             <summary>{t('التوصيل والاستلام')}</summary>
             <p>{t('نوصّل إلى:')} {zoneNames}{t('. رسوم التوصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة وتظهر قبل تأكيد الطلب، والدفع نقداً عند الاستلام.')} <Link className="text-link" to="/delivery-info">{t('تفاصيل التوصيل')}</Link></p>
@@ -286,4 +292,13 @@ function ProductContent({ slug }: { slug: string }) {
       )}
     </div>
   )
+}
+
+/** أول جملة (أو ≤ 160 حرفاً عند حد كلمة) — ملخص تحت العنوان، والنص الكامل في «وصف المنتج» */
+function summarize(text: string): string {
+  if (!text) return ''
+  const sentence = /^[\s\S]*?[.!؟?](\s|$)/.exec(text)?.[0]?.trim()
+  if (sentence && sentence.length <= 160) return sentence
+  if (text.length <= 160) return text
+  return `${text.slice(0, 157).replace(/\s+\S*$/, '')}…`
 }

@@ -2,7 +2,7 @@ import { t } from '../../i18n'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { gazabellaApi } from '../../api/gazabella'
-import { resolveWhatsapp, whatsappLink } from '../../content/storeInfo'
+import { displayEmail, displayPhone, resolveWhatsapp, whatsappLink } from '../../content/storeInfo'
 import { Icon } from '../ui/Icon'
 import { track } from '../../lib/analytics'
 
@@ -10,6 +10,8 @@ export function Footer() {
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories })
   const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: gazabellaApi.getSettings })
   const whatsapp = resolveWhatsapp(settings?.social_links)
+  const phone = displayPhone(settings?.phone)
+  const email = displayEmail(settings?.email)
   return (
     <footer className="site-footer">
       <div className="container-page footer-grid">
@@ -17,8 +19,8 @@ export function Footer() {
           <Link to="/" className="footer-brand">{settings?.store_name || 'Gazabella'}</Link>
           <p>{settings?.tagline}</p>
           {whatsapp && <a href={whatsappLink(whatsapp)} target="_blank" rel="noopener noreferrer" onClick={() => track('contact', { channel: 'whatsapp', page: 'footer' })}>{t('واتساب:')} <span dir="ltr" className="num">+{whatsapp}</span></a>}
-          {settings?.phone && <a dir="ltr" href={`tel:${settings.phone}`}>{settings.phone}</a>}
-          {settings?.email && <a href={`mailto:${settings.email}`}>{settings.email}</a>}
+          {phone && <a dir="ltr" href={`tel:${phone.replace(/[^\d+]/g, '')}`}>{phone}</a>}
+          {email && <a href={`mailto:${email}`}>{email}</a>}
         </div>
         <div>
           <h2>{t('اكتشفي الأقسام')}</h2>

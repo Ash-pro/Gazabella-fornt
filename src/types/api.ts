@@ -23,10 +23,16 @@ export interface Brand {
 
 export interface ProductImage {
   url: string
+  /** مقترح على الباك اند: نسخ مصغّرة WebP — ‎400px‎ للبطاقات و‎800px‎ للتفاصيل (تُستخدم في srcset إن وُجدت) */
+  thumb_url?: string | null
+  medium_url?: string | null
   alt_text: string | null
   is_primary: boolean
   sort_order: number
 }
+
+/** مقترح على الباك اند: المتجر البائع (المنصة تجميعية) */
+export interface ProductStore { id: number; name: string; slug?: string | null }
 
 export interface ProductBrief {
   variants?: ProductVariant[]
@@ -40,6 +46,7 @@ export interface ProductBrief {
   is_wishlisted?: boolean
   images: ProductImage[]
   category: { id: number; name: string }
+  store?: ProductStore | null
 }
 
 export interface ProductDetail {
@@ -55,6 +62,7 @@ export interface ProductDetail {
   is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
   images: ProductImage[]
+  store?: ProductStore | null
 }
 export interface CartItem {
   product_variant_id?: number

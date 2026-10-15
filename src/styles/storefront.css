@@ -300,3 +300,34 @@
 .filter-error { margin-top: var(--sp-3); color: var(--error, #B42318); font-size: var(--fs-sm); font-weight: 500; }
 .filter-dirty { font-size: var(--fs-xs); color: var(--c-ink-3); }
 @media (prefers-reduced-motion: reduce) { .catalog-grid.is-stale { transition: none; } }
+
+/* ── UX-15/10: أهداف لمس ≥ 44px وحقول بخط 16px (iOS لا يكبّر الصفحة عند التركيز) ── */
+.header-search { min-height: 48px; }
+.header-search input { min-height: 44px; font-size: 16px; }
+.header-search button { min-height: 40px; min-width: 56px; }
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: max(16px, 1em); }
+  .footer-links a, .footer-grid > div > a:not(.footer-brand) { display: flex; align-items: center; min-height: 44px; padding-block: 0; }
+}
+
+/* صورة بنسبة مختلفة كثيراً عن إطارها: تُعرض كاملة على خلفية ناعمة بدل قصّ المنتج (ProductVisual) */
+img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
+
+/* زر واتساب فوق شريط الإضافة للسلة الثابت في صفحة المنتج — لا يغطي زر الشراء */
+@media (max-width: 1023px) {
+  body:has(.product-sticky) .support-fab { bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 88px); }
+}
+
+/* الواجهة الرئيسية على الجوال: hero أقصر حتى تظهر المداخل والأقسام في أول شاشة */
+@media (max-width: 639px) {
+  .hm-hero { --hm-hero-min: calc(190px + 230px); margin-top: var(--sp-3); }
+  .hm-hero__slide { gap: var(--sp-4); }
+  .hm-hero__visual { min-height: 190px; }
+  .hm-hero__frame { width: min(64%, 240px); }
+  .hm-hero__title { font-size: clamp(28px, 8.2vw, 34px); -webkit-line-clamp: 3; }
+  .hm-hero__lead { -webkit-line-clamp: 2; }
+}
+
+/* اسم المتجر البائع تحت عنوان المنتج (عند توفر product.store من الـ API) */
+.detail-store { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--sp-2); padding: 4px 10px; border-radius: var(--rad-pill); background: var(--c-brand-tint); color: var(--c-ink-2); font-size: 13px; }
+.detail-store b { color: var(--c-brand); font-weight: 600; }

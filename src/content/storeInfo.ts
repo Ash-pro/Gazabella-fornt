@@ -65,10 +65,27 @@ export const INFO_NAV = [
 export const policiesApproved = () => import.meta.env.VITE_POLICIES_APPROVED === 'true'
 
 /** رقم واتساب الدعم بصيغة دولية بدون + (مثال 970599123456) */
+/** أرقام تجريبية من بيانات البذر (‎+970 59 000 0000‎) — لا تُعرض للعميلات */
+const PLACEHOLDER_DIGITS = /0{6,}|1234567|(\d)\1{6,}/
+
+/** رقم هاتف للعرض، أو null إن كان فارغاً أو رقماً تجريبياً */
+export function displayPhone(raw: string | null | undefined): string | null {
+  const value = raw?.trim()
+  if (!value) return null
+  return PLACEHOLDER_DIGITS.test(value.replace(/[^\d]/g, '')) ? null : value
+}
+
+/** بريد للعرض، أو null إن كان فارغاً أو من نطاقات الأمثلة */
+export function displayEmail(raw: string | null | undefined): string | null {
+  const value = raw?.trim()
+  if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return null
+  return /@(example\.(com|org|net)|test\.|localhost)/i.test(value) ? null : value
+}
+
 export function normalizeWhatsapp(raw: string | null | undefined): string | null {
   if (!raw) return null
   let digits = String(raw).replace(/[^\d]/g, '')
-  if (!digits) return null
+  if (!digits || PLACEHOLDER_DIGITS.test(digits)) return null
   if (digits.startsWith('00')) digits = digits.slice(2)
   if (digits.startsWith('0')) digits = `970${digits.slice(1)}`
   return digits.length >= 11 && digits.length <= 15 ? digits : null
