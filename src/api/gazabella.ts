@@ -555,10 +555,17 @@ const legacyGazabellaApi = {
       : apiClient.delete<ApiData<RawCart>>('/cart').then((r) => normalizeCart(r.data.data)),
 
   // ── الطلبات ──────────────────────────────────────────────────────────
-  async checkout(payload: CheckoutPayload): Promise<Order> {
+  /**
+   * BE-04: الخادم يرفض الطلب بدون Idempotency-Key (422). نفس المفتاح + نفس الحمولة يعيد الطلب الأول
+   * (201 + Idempotency-Replayed: true) — فإعادة المحاولة بعد انقطاع لا تنشئ طلباً ثانياً.
+   */
+  async checkout(payload: CheckoutPayload, idempotencyKey: string): Promise<Order> {
     if (isMockMode()) return mockServices.checkout(payload)
     // إنشاء الطلب أبطأ من القراءة (مخزون + حساب + إشعارات) — مهلة أطول حتى لا نقطع طلباً ناجحاً
-    const { data } = await apiClient.post<ApiData<RawOrder>>('/checkout', payload, { timeout: 45_000 })
+    const { data } = await apiClient.post<ApiData<RawOrder>>('/checkout', payload, {
+      timeout: 45_000,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    })
     return normalizeOrder(data.data)
   },
 

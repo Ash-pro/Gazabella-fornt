@@ -33,3 +33,9 @@ dist-ssr
 # Serena — نتجاهل الكاش والإعدادات المحلية ونشارك الـ memories فقط
 .serena/*
 !.serena/memories/
+
+# مخرجات وتقارير داخلية — لا تُرفع للمستودع
+Claude outputs/
+
+# إعداد mvp0 المحلي — القالب في .env.mvp0.example
+.env.mvp0

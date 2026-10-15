@@ -23,6 +23,7 @@ import { useStoreInfo } from '../hooks/useStoreInfo'
 import { saveLastOrder } from '../lib/lastOrder'
 import { formatEta } from '../content/storeInfo'
 import { savedAddressFrom } from '../lib/savedAddress'
+import { classifyCheckoutError, clearCheckoutAttempt, idempotencyKeyFor } from '../lib/checkoutAttempt'
 
 // ─── Schema (no email — phone is the primary identifier) ───────────────────
 const schema = z.object({
@@ -140,6 +141,8 @@ function LegacyCheckoutPage() {
   const navigate = useNavigate()
   const submitting = useRef(false)
   const [uncertain, setUncertain] = useState(false)
+  // آخر بيانات أُرسلت — لإعادة المحاولة بنفس الحمولة (وبالتالي نفس Idempotency-Key)
+  const lastValues = useRef<Values | null>(null)
   const store = useStoreInfo()
   const [chosenMethod, setPaymentMethod] = useState<PaymentMethodCode>('cod')
   const paymentOptions = isMockMode() ? MOCK_PAYMENT_METHODS : paymentOptionsFromCodes(store.paymentMethods)
@@ -218,7 +221,7 @@ function LegacyCheckoutPage() {
       const zoneId = store.deliveryZones.find((z) => z.name === city)?.id
       // الخادم يحفظ حقول الهدية ويعرضها للتاجر والمندوب — لم نعد ننسخها داخل الملاحظات
       const cleanNotes = notes?.trim()
-      return gazabellaApi.checkout({
+      const payload = {
         ...rest,
         ...(cleanNotes ? { notes: cleanNotes } : {}),
         ...(is_gift ? { is_gift: true, recipient_name, recipient_phone, ...(gift_message ? { gift_message } : {}) } : {}),
@@ -226,9 +229,14 @@ function LegacyCheckoutPage() {
         payment_method: paymentMethod,
         // B-02: المنطقة المختارة ليحسب الخادم رسوم التوصيل منها
         ...(zoneId ? { delivery_zone_id: zoneId } : {}),
-      })
+      }
+      // البصمة تشمل محتوى السلة (لا يُرسل في الجسم) حتى لا يُعاد طلب قديم لسلة جديدة بنفس العنوان
+      const cartSignature = (cartQuery.data?.items ?? []).map((i) => `${i.id}:${i.quantity}`).sort().join(',')
+      return gazabellaApi.checkout(payload, idempotencyKeyFor({ payload, cart: cartSignature }))
     },
     onSuccess: (order, v) => {
+      clearCheckoutAttempt()
+      setUncertain(false)
       trackPurchase(order)
       saveLastOrder(order, v.phone, `${v.city}، ${v.neighborhood}، ${v.street}`)
       queryClient.setQueryData(['cart'], { items: [], total_items: 0, subtotal: '0.00' })
@@ -242,9 +250,14 @@ function LegacyCheckoutPage() {
     onError: (error) => {
       const status = (error as { response?: { status?: number } }).response?.status
       track('checkout_error', { stage: 'submit', status: status ?? 0 })
-      if (!status || status >= 500 || status === 408) setUncertain(true)
+      const kind = classifyCheckoutError(error)
+      // انقطاع/مهلة/5xx/الطلب الأول قيد التنفيذ: نحتفظ بالمفتاح — إعادة المحاولة تعيد نفس الطلب ولا تكرره
+      if (kind === 'uncertain') { setUncertain(true); return }
+      if (kind === 'transient') return
+      // رفض نهائي أو مفتاح لبيانات مختلفة: المحاولة التالية تأخذ مفتاحاً جديداً
+      clearCheckoutAttempt()
       // 409/422: قد يكون السعر أو المخزون تغيّر — نحدّث السلة لتظهر القيم الحالية في المراجعة
-      else void queryClient.invalidateQueries({ queryKey: ['cart'] })
+      void queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
     onSettled: () => { submitting.current = false },
   })
@@ -252,7 +265,16 @@ function LegacyCheckoutPage() {
   function submit(v: Values) {
     if (submitting.current || uncertain) return
     submitting.current = true
+    lastValues.current = v
     checkout.mutate(v)
+  }
+
+  function retrySafely() {
+    if (submitting.current || !lastValues.current) return
+    setUncertain(false)
+    checkout.reset()
+    submitting.current = true
+    checkout.mutate(lastValues.current)
   }
 
   function goReview(v: Values) {
@@ -325,12 +347,13 @@ function LegacyCheckoutPage() {
           <span className="mt-0.5 text-base text-amber-500">⚠</span>
           <div className="text-sm leading-relaxed text-amber-800">
             <b className="mb-1 block">{t('لم نتأكد من إتمام الطلب')}</b>
-            {t('ربما وصل طلبكِ رغم انقطاع الاتصال. راجعي')}{' '}
-            <Link className="font-bold underline" to="/orders" target="_blank" rel="noopener">{t('طلباتي')}</Link>{' '}
-            {t('أولاً لتجنب تكرار الطلب.')}
-            <button type="button" className="mt-2 block font-bold underline" onClick={() => { setUncertain(false); checkout.reset() }}>
-              {t('تحققت ولم أجد الطلب — أعيدي المحاولة')}
-            </button>
+            {t('ربما وصل طلبكِ رغم انقطاع الاتصال. إعادة المحاولة آمنة ولن تُنشئ طلباً مكرراً.')}
+            <span className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <button type="button" className="font-bold underline" disabled={isSubmitting} onClick={retrySafely}>
+                {t('أعيدي المحاولة الآن')}
+              </button>
+              <Link className="underline" to="/orders" target="_blank" rel="noopener noreferrer">{t('طلباتي')}</Link>
+            </span>
           </div>
         </div>
       )}
