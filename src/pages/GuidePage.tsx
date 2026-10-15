@@ -8,7 +8,7 @@ import { ShareSheet } from '../components/share/ShareSheet'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { DemoBadge } from '../components/ui/DemoBadge'
 import { Icon } from '../components/ui/Icon'
-import { getApiErrorMessage } from '../lib/apiClient'
+import { getApiErrorMessage, getImageUrl } from '../lib/apiClient'
 import { formatDate } from '../lib/format'
 import { useSeo } from '../lib/seo'
 import type { GuideBlock } from '../types/api'
@@ -39,6 +39,7 @@ export function GuidePage() {
             <small><span className="num">{g!.reading_minutes}</span> {t('دقائق قراءة')} · {formatDate(g!.published_at)}</small>
             <button type="button" className="btn-ghost" onClick={() => setSharing(true)}><Icon name="share" className="size-4" /> {t('شاركي الدليل')}</button>
           </div>
+          {g!.cover_url && <img className="guide__cover" src={getImageUrl(g!.cover_url) ?? undefined} alt="" fetchPriority="high" />}
         </header>
         {g!.blocks.map((b, i) => <Block key={i} block={b} />)}
       </article>

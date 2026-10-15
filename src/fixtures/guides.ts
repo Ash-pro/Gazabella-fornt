@@ -1,9 +1,10 @@
 /** أدلة جمال للعرض التجريبي (R-1) — نصوص أصلية كتبناها كنموذج للمحتوى، تُستبدل بمحتوى الإدارة */
+import { demoGuideCover } from '../lib/demoImages'
 import type { Guide } from '../types/api'
 
 export const DEMO_GUIDES: Guide[] = [
   {
-    slug: 'oily-skin-routine', tag: 'العناية بالبشرة', reading_minutes: 4, cover_url: null, published_at: '2026-10-10T08:00:00Z',
+    slug: 'oily-skin-routine', tag: 'العناية بالبشرة', reading_minutes: 4, cover_url: demoGuideCover('oily-skin-routine'), published_at: '2026-10-10T08:00:00Z',
     title: 'روتين البشرة الدهنية في 4 خطوات',
     excerpt: 'لمعة أقل ومسام أنظف بدون ما تجففي بشرتكِ — روتين بسيط للصبح والمسا.',
     blocks: [
@@ -15,7 +16,7 @@ export const DEMO_GUIDES: Guide[] = [
     ],
   },
   {
-    slug: 'choose-your-perfume', tag: 'العطور', reading_minutes: 3, cover_url: null, published_at: '2026-10-05T08:00:00Z',
+    slug: 'choose-your-perfume', tag: 'العطور', reading_minutes: 3, cover_url: demoGuideCover('choose-your-perfume'), published_at: '2026-10-05T08:00:00Z',
     title: 'كيف تختارين عطركِ المناسب؟',
     excerpt: 'زهري، شرقي، أو منعش؟ دليل سريع يساعدكِ تختاري عطر يشبهكِ ويثبت معكِ.',
     blocks: [
@@ -27,7 +28,7 @@ export const DEMO_GUIDES: Guide[] = [
     ],
   },
   {
-    slug: 'bridal-prep-checklist', tag: 'العروس', reading_minutes: 5, cover_url: null, published_at: '2026-09-28T08:00:00Z',
+    slug: 'bridal-prep-checklist', tag: 'العروس', reading_minutes: 5, cover_url: demoGuideCover('bridal-prep-checklist'), published_at: '2026-09-28T08:00:00Z',
     title: 'قائمة تحضير العروس: من شهر لليوم الكبير',
     excerpt: 'جدول بسيط للعناية والمكياج حتى توصلي ليومكِ بإشراقة وبدون توتر.',
     blocks: [
@@ -35,7 +36,7 @@ export const DEMO_GUIDES: Guide[] = [
       { type: 'h2', text: 'الجدول' },
       { type: 'steps', items: ['قبل شهر: ثبّتي روتين عناية يومي ولا تجربي منتجات جديدة بعدها.', 'قبل أسبوعين: جربي المكياج كاملاً وصوّريه بإضاءة النهار.', 'قبل أسبوع: ماسك مرطب مرتين وترطيب مكثف للشفايف.', 'قبل يوم: نوم كافي، مياه كثير، وجهزي شنطة الطوارئ.'] },
       { type: 'tip', text: 'شنطة الطوارئ: مناديل، بودرة، أحمر الشفاه، دبابيس، وعطر صغير.' },
-      { type: 'products', title: 'من تشكيلة العروس', category_slug: 'bridal' },
+      { type: 'products', title: 'من تشكيلة العروس', category_slug: 'bride' },
     ],
   },
 ]

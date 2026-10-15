@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore'
 import type { ApiErrorBody } from '../types/api'
 import { isMvp0Api } from './apiContract'
 import { getGuestUuid } from './guest'
+import { applyDemoImages, DEMO_ASSET_PREFIX } from './demoImages'
 import { captureMessage } from './monitoring'
 import { isOutage, serviceStatus } from './serviceStatus'
 import { getLocale } from '../i18n'
@@ -65,6 +66,7 @@ apiClient.interceptors.response.use(
     const cartToken = response.headers['x-cart-token'] as string | undefined
     if (cartToken) setCartToken(cartToken)
     serviceStatus.set(false)
+    applyDemoImages(response.data)
     return response
   },
   (error: AxiosError<ApiErrorBody>) => {
@@ -114,6 +116,8 @@ const STORAGE_URL = (import.meta.env.VITE_STORAGE_URL as string | undefined)?.re
 
 export function getImageUrl(url: string | null | undefined): string | null {
   if (!url) return null
+  // صور العرض التجريبي محلية (public/demo) — لا تمر على STORAGE_URL
+  if (url.startsWith(DEMO_ASSET_PREFIX)) return url
   // لو الـ URL كامل ومصدره نفس الـ storage — استخدمه مباشرة
   if (STORAGE_URL && (url.startsWith('http://') || url.startsWith('https://'))) {
     // استبدل أي origin مختلف بـ STORAGE_URL (يعالج حالة localhost vs cloudflare)
