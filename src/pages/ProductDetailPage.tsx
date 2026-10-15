@@ -24,6 +24,14 @@ import { formatPrice } from '../lib/format'
 import { toMetaDescription } from '../content/seo'
 import { getImageUrl } from '../lib/apiClient'
 import { recordViewed } from '../lib/recentlyViewed'
+import { demoFixtures } from '../lib/demo'
+import { ProductReviews } from '../components/product/ProductReviews'
+import { Stars } from '../components/product/StarRating'
+import { REVIEW_FORMS } from '../lib/reviewForms'
+import { plural } from '../i18n'
+import { VariantSwatches } from '../components/product/VariantSwatches'
+import { BackInStock } from '../components/product/BackInStock'
+import { ShareButton } from '../components/product/ShareButton'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
@@ -90,6 +98,8 @@ function ProductContent({ slug }: { slug: string }) {
       ...(seoImage ? { image: [seoImage] } : {}),
       sku: String(product.id),
       category: product.category?.name,
+      // التقييم في بيانات البحث من مراجعات حقيقية فقط — أبداً من وضع العرض (R-3)
+      ...(!demoFixtures() && product.rating_count ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: product.rating_avg, reviewCount: product.rating_count } } : {}),
       offers: {
         '@type': 'Offer',
         priceCurrency: 'ILS',
@@ -155,12 +165,18 @@ function ProductContent({ slug }: { slug: string }) {
     )
 
   const image = (product.images ?? [])[imageIndex] ?? (product.images ?? [])[0]
-  const imageUrl = getImageUrl(image?.url ?? null)
+  const imageUrl = getImageUrl(variant?.image_url ?? image?.url ?? null)
   const zoomable = !!imageUrl && imageStatus[imageUrl] === 'ok'
   // مفتاح بالرابط: عند تبديل الصورة يُعاد إنشاء العنصر فلا تنتقل حالة فشل صورة سابقة إلى التالية
-  const mainVisual = <ProductVisual key={imageUrl ?? 'none'} src={image?.url ?? null} srcSet={imageSrcSet(image)} sizes="(min-width: 1024px) 45vw, 92vw" alt={image?.alt_text ?? product.name} priority onStatus={noteImage} />
+  // P1-2: صورة المتغير المختار (إن وُجدت) تتقدم على صورة المعرض
+  const mainSrc = variant?.image_url ?? image?.url ?? null
+  const mainVisual = <ProductVisual key={getImageUrl(mainSrc) ?? 'none'} src={mainSrc} srcSet={imageSrcSet(image)} sizes="(min-width: 1024px) 45vw, 92vw" alt={image?.alt_text ?? product.name} priority onStatus={noteImage} />
   const { current: displayPrice, original: originalPrice, percent } = productPricing(product, variant)
-  const disabled = add.isPending || !product.in_stock || quantity > limit
+  // P1-3: المخزون الحقيقي للمتغير المختار أو للمنتج — لا أرقام تقديرية
+  const remaining = variant ? variant.available_quantity : product.stock
+  const available = variant ? variant.available_quantity > 0 : product.in_stock
+  const lowStock = available && remaining > 0 && remaining <= 5
+  const disabled = add.isPending || !available || quantity > limit
 
   const button = (
     <button
@@ -170,7 +186,7 @@ function ProductContent({ slug }: { slug: string }) {
       className="btn-primary flex-1"
     >
       <Icon name="bag" className="size-4" />
-      {add.isPending ? t('جارٍ الإضافة…') : !product.in_stock ? t('غير متوفر حاليًا') : t('أضيفي إلى السلة')}
+      {add.isPending ? t('جارٍ الإضافة…') : !available ? t('غير متوفر حاليًا') : t('أضيفي إلى السلة')}
     </button>
   )
 
@@ -211,8 +227,16 @@ function ProductContent({ slug }: { slug: string }) {
         </div>
 
         <div className="detail-copy">
-          <span className="eyebrow">{product.category?.name}</span>
-          <h1>{product.name}</h1>
+          <div className="detail-title">
+            <div>
+              <span className="eyebrow">{product.category?.name}</span>
+              <h1>{product.name}</h1>
+            </div>
+            <ShareButton title={product.name} url={window.location.href.split('?')[0]} />
+          </div>
+          {!!product.rating_count && product.rating_avg != null && (
+            <a className="detail-rating" href="#reviews"><Stars value={product.rating_avg} /> <b className="num">{product.rating_avg.toFixed(1)}</b> <span>({plural(product.rating_count, REVIEW_FORMS)})</span></a>
+          )}
           {/* ملخص قصير هنا، والنص الكامل في «وصف المنتج» فقط إن كان أطول — لا نكرر الفقرة نفسها مرتين */}
           <p className="detail-description">
             {summary || t('اكتشفي تفاصيل هذا المنتج الرائع.')}
@@ -226,12 +250,13 @@ function ProductContent({ slug }: { slug: string }) {
             )}
             <b><span className="num">{money(displayPrice)}</span></b>
             {percent > 0 && <span className="text-[var(--primary)]">{t('خصم')} {percent}%</span>}
-            <span className={product.in_stock ? 'in-stock' : 'out-stock'}>
-              {product.in_stock ? t('متوفر') : t('غير متوفر')}
+            <span className={available ? 'in-stock' : 'out-stock'}>
+              {available ? t('متوفر') : t('غير متوفر')}
             </span>
           </div>
+          {lowStock && <p className="low-stock" role="status"><Icon name="clock" className="size-4" /> {remaining === 1 ? t('باقي قطعة واحدة فقط') : t('باقي {n} قطع فقط', { n: remaining })}</p>}
 
-          {!!product.variants?.length && <label className="field-label">{t('اختاري النوع')}<select className="form-field" value={variant?.id ?? ''} onChange={e => { setVariantId(Number(e.target.value)); setQuantity(1) }}>{product.variants.map(v => <option key={v.id} value={v.id} disabled={v.available_quantity < 1}>{v.name} — {money(v.price)}{v.available_quantity < 1 ? t(' — غير متوفر') : ''}</option>)}</select></label>}
+          {!!product.variants?.length && <VariantSwatches variants={product.variants} value={variant?.id} onChange={(id) => { setVariantId(id); setQuantity(1) }} />}
           <div className="detail-buy">
             <div className="quantity-control">
               <button
@@ -249,6 +274,8 @@ function ProductContent({ slug }: { slug: string }) {
             {button}
           </div>
 
+          {!available && (demoFixtures() || import.meta.env.VITE_STOCK_ALERTS === 'true') && <BackInStock key={variant?.id ?? product.id} slug={product.slug} variantId={variant?.id} />}
+
           {add.isError && (
             <p className="field-error" role="alert">{getApiErrorMessage(add.error)}</p>
           )}
@@ -262,12 +289,27 @@ function ProductContent({ slug }: { slug: string }) {
             <summary>{t('وصف المنتج')}</summary>
             <p>{product.description}</p>
           </details>}
+          {/* P1-5: تبويبات المعلومات — كل قسم يظهر فقط إن وصل حقله */}
+          {product.ingredients && <details className="product-information">
+            <summary>{t('المكونات')}</summary>
+            <p>{product.ingredients}</p>
+          </details>}
+          {product.how_to_use && <details className="product-information">
+            <summary>{t('طريقة الاستخدام')}</summary>
+            <p>{product.how_to_use}</p>
+          </details>}
+          {!!product.specs?.length && <details className="product-information">
+            <summary>{t('تفاصيل المنتج')}</summary>
+            <dl className="product-specs">{product.specs.map((s) => <div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>)}</dl>
+          </details>}
           <details className="product-information">
             <summary>{t('التوصيل والاستلام')}</summary>
             <p>{t('نوصّل إلى:')} {zoneNames}{t('. رسوم التوصيل من')} <span className="num">{formatPrice(store.minDeliveryFee)}</span> {t('حسب المنطقة وتظهر قبل تأكيد الطلب، والدفع نقداً عند الاستلام.')} <Link className="text-link" to="/delivery-info">{t('تفاصيل التوصيل')}</Link></p>
           </details>
         </div>
       </div>
+
+      <ProductReviews product={{ id: product.id, slug: product.slug, name: product.name, image: (product.images ?? [])[0]?.url ?? null }} variantId={variant?.id} />
 
       <RelatedProducts product={product} />
 
@@ -284,7 +326,7 @@ function ProductContent({ slug }: { slug: string }) {
         <Dialog title={product.name} onClose={() => setZoom(false)}>
           <div className="aspect-square">
             <ProductVisual
-              src={image?.url ?? null}
+              src={variant?.image_url ?? image?.url ?? null}
               alt={product.name}
               priority
               className="!object-contain"

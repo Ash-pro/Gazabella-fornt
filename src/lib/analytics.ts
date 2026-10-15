@@ -39,6 +39,10 @@ export interface AnalyticsEvents {
   contact: { channel: 'whatsapp' | 'phone' | 'email'; page: string }
   location_consent: { outcome: 'accepted' | 'dismissed' | 'failed' | 'skipped' }
   privacy_action: { action: 'deactivate' }
+  /** المرحلة 1 — صفحة المنتج */
+  review_submitted: { rating: number; photos: number }
+  stock_alert: { slug: string }
+  share: { method: 'native' | 'whatsapp' | 'copy' }
 }
 
 type Provider = 'none' | 'plausible' | 'ga4'

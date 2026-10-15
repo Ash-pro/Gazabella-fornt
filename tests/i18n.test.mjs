@@ -9,7 +9,7 @@ import { createServer } from 'vite'
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const AR = /[؀-ۿ]/
 // خارج نطاق اللغتين (لوحات التشغيل، العرض التجريبي، العقد القديم) + ملفات لا تحتوي نصوص واجهة
-const SKIP = /[\\/](mock|i18n|merchant|delivery)[\\/]|Mvp0|DemoRoleBar|LanguageSwitch|CategoryStoryPills|\.d\.ts$|content[\\/]seo\.ts$/
+const SKIP = /[\\/](mock|fixtures|i18n|merchant|delivery)[\\/]|Mvp0|DemoRoleBar|LanguageSwitch|CategoryStoryPills|\.d\.ts$|content[\\/]seo\.ts$/
 // نصوص عربية ليست للعرض: حروف تطبيع البحث والأرقام الهندية
 const NOT_UI = new Set(['ا', 'ي', 'ه', '٠١٢٣٤٥٦٧٨٩'])
 

@@ -9,6 +9,8 @@ export class TrackError extends Error {
   constructor(kind: 'not_found' | 'unavailable' | 'rate_limited') { super(kind); this.kind = kind }
 }
 import { useAuthStore } from '../stores/authStore'
+import { demoFixtures } from '../lib/demo'
+import { withDemoDetails, withDemoRating } from '../fixtures/productExtras'
 import { normalizeDeliveryFee } from '../lib/deliveryFee'
 import { apiClient, getCartToken, setCartToken, clearCartToken } from '../lib/apiClient'
 import { queryClient } from '../lib/queryClient'
@@ -466,9 +468,11 @@ const legacyGazabellaApi = {
   // ── المنتجات ─────────────────────────────────────────────────────────
   // في API mode: يُحذف category_slug/brand_slug ويُستخدم category_id/brand_id
   getProducts: (filters: ProductFilters) =>
-    isMockMode()
+    (isMockMode()
       ? mockServices.getProducts(filters)
-      : apiClient.get<ApiList<ProductBrief>>('/products', { params: toApiProductParams(filters) }).then((r) => r.data),
+      : apiClient.get<ApiList<ProductBrief>>('/products', { params: toApiProductParams(filters) }).then((r) => r.data))
+      // R-1: تقييم تجريبي على البطاقات في وضع العرض فقط (الحقول الحقيقية تغلب دائماً)
+      .then((list) => (demoFixtures() ? { ...list, data: list.data.map(withDemoRating) } : list)),
 
   // «قد يعجبكِ أيضاً»: مسار التوصيات في الخادم (اشتُري معه ← نفس التصنيف ← نفس الماركة ← مميّز).
   // احتياط إن تعذّر المسار: نفس التصنيف ثم المميّزة من قائمة المنتجات.
@@ -478,18 +482,19 @@ const legacyGazabellaApi = {
     if (!isMockMode()) {
       try {
         take((await apiClient.get<ApiData<ProductBrief[]>>(`/products/${encodeURIComponent(product.slug)}/related`, { params: { limit } })).data.data ?? [])
-        return [...picked.values()]
+        return demoFixtures() ? [...picked.values()].map(withDemoRating) : [...picked.values()]
       } catch { /* نكمل بالاحتياط */ }
     }
     if (product.category) take((await gazabellaApi.getProducts({ category_id: product.category.id, category_slug: product.category.slug, in_stock: true, per_page: limit + 1 })).data)
     if (picked.size < limit) take((await gazabellaApi.getProducts({ featured: true, in_stock: true, per_page: limit * 2 + 1 })).data)
-    return [...picked.values()]
+    return demoFixtures() ? [...picked.values()].map(withDemoRating) : [...picked.values()]
   },
 
   getProduct: (slug: string): Promise<ProductDetail> =>
-    isMockMode()
+    (isMockMode()
       ? mockServices.getProduct(slug)
-      : apiClient.get<ApiData<ProductDetail>>(`/products/${encodeURIComponent(slug)}`).then((r) => r.data.data),
+      : apiClient.get<ApiData<ProductDetail>>(`/products/${encodeURIComponent(slug)}`).then((r) => r.data.data))
+      .then((p) => (demoFixtures() ? withDemoDetails(p) : p)),
 
   // ── القائمة المفضلة ──────────────────────────────────────────────────
   getWishlist: (): Promise<ProductBrief[]> =>

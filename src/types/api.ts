@@ -43,6 +43,9 @@ export interface ProductBrief {
   is_wishlisted?: boolean
   images: ProductImage[]
   category: { id: number; name: string }
+  /** P1-1: متوسط التقييم وعدده (من المراجعات المعتمدة فقط) */
+  rating_avg?: number | null
+  rating_count?: number | null
 }
 
 export interface ProductDetail {
@@ -58,6 +61,12 @@ export interface ProductDetail {
   is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
   images: ProductImage[]
+  rating_avg?: number | null
+  rating_count?: number | null
+  /** P1-5: تبويبات المعلومات — كلها اختيارية */
+  ingredients?: string | null
+  how_to_use?: string | null
+  specs?: ProductSpec[] | null
 }
 export interface CartItem {
   product_variant_id?: number
@@ -87,7 +96,40 @@ export interface ProductVariant {
   price: number
   compare_at_price?: number | null
   available_quantity: number
+  /** P1-2: لون الدرجة (#RRGGBB) لعرضها كدائرة — اختياري */
+  swatch_hex?: string | null
+  /** P1-2: صورة المتغير — تُعرض في المعرض عند اختياره — اختياري */
+  image_url?: string | null
 }
+
+/** P1-1: مراجعة منتج — تظهر بعد موافقة الإدارة فقط */
+export interface ProductReview {
+  id: number
+  rating: number
+  title?: string | null
+  body: string
+  author_name: string
+  created_at: string
+  verified_purchase: boolean
+  photos: string[]
+  variant_name?: string | null
+}
+
+export interface ReviewSummary {
+  average: number
+  count: number
+  /** عدد المراجعات لكل نجمة: { "5": 12, "4": 3, ... } */
+  distribution: Record<'1' | '2' | '3' | '4' | '5', number>
+}
+
+export interface ReviewsPage {
+  data: ProductReview[]
+  meta: { current_page: number; last_page: number; total: number }
+  summary: ReviewSummary
+}
+
+/** P1-5: سطر في جدول تفاصيل المنتج (الحجم · بلد المنشأ · نوع البشرة …) */
+export interface ProductSpec { label: string; value: string }
 
 export interface Mvp0Address {
   full_name: string

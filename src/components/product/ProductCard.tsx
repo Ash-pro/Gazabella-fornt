@@ -11,6 +11,7 @@ import { getApiErrorMessage } from '../../lib/apiClient'
 import { useWishlist } from '../../hooks/useWishlist'
 import type { ProductBrief } from '../../types/api'
 import { prefetchProduct } from '../../lib/prefetch'
+import { Stars } from './StarRating'
 
 function getPrimaryImage(product: ProductBrief) {
   const imgs = product.images ?? []
@@ -65,6 +66,7 @@ export function ProductCard({ product }: { product: ProductBrief }) {
       <div className="pcard__body">
         {product.category?.name && <span className="pcard__cat">{product.category.name}</span>}
         <Link className="pcard__name" to={href}>{product.name}</Link>
+        {!!product.rating_count && product.rating_avg != null && <span className="pcard__rating"><Stars value={product.rating_avg} size="size-3.5" /> <span className="num">({product.rating_count})</span></span>}
         <div className="pcard__price">
           <b aria-label={t('السعر الحالي')}><span className="num">{formatPrice(current)}</span></b>
           {original !== null && <del aria-label={t('السعر السابق')}><span className="num">{formatPrice(original)}</span></del>}
