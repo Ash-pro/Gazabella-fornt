@@ -3,6 +3,13 @@ export interface PaginationMeta {
   last_page: number
   per_page: number
   total: number
+  /** P3-2: عدد المنتجات لكل قيمة فلتر ضمن نتائج البحث الحالية (اختياري) */
+  facets?: CatalogFacets | null
+}
+
+export interface CatalogFacets {
+  categories?: Array<{ slug: string; count: number }>
+  brands?: Array<{ slug: string; count: number }>
 }
 
 export interface Category {
@@ -19,6 +26,10 @@ export interface Brand {
   name: string
   slug: string
   logo_url: string | null
+  /** P3-1: صفحة الماركة — اختياري */
+  description?: string | null
+  cover_url?: string | null
+  products_count?: number | null
 }
 
 export interface ProductImage {
@@ -43,6 +54,8 @@ export interface ProductBrief {
   is_wishlisted?: boolean
   images: ProductImage[]
   category: { id: number; name: string }
+  /** P3-1: الماركة المصنّعة (لا علاقة لها بالمتجر — D-STORE) */
+  brand?: { id: number; name: string; slug: string } | null
   /** P1-1: متوسط التقييم وعدده (من المراجعات المعتمدة فقط) */
   rating_avg?: number | null
   rating_count?: number | null
@@ -61,6 +74,7 @@ export interface ProductDetail {
   is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
   images: ProductImage[]
+  brand?: { id: number; name: string; slug: string } | null
   rating_avg?: number | null
   rating_count?: number | null
   /** P1-5: تبويبات المعلومات — كلها اختيارية */
@@ -402,7 +416,7 @@ export interface DeliveryZoneInfo {
 }
 
 /** مفاتيح أقسام الرئيسية القابلة للترتيب والإخفاء من لوحة الإدارة (settings.home.sections) */
-export type HomeSectionKey = 'deals' | 'best_sellers' | 'picks' | 'promo' | 'new' | 'budget' | 'reorder' | 'recent' | 'services'
+export type HomeSectionKey = 'deals' | 'brands' | 'best_sellers' | 'picks' | 'promo' | 'new' | 'budget' | 'reorder' | 'recent' | 'services'
 
 /** بند في شريط الثقة تحت الـ Hero */
 export interface TrustItem { icon: 'truck' | 'shield' | 'refresh' | 'dollar' | 'clock' | 'whatsapp' | 'sparkle'; title: string; text?: string | null }

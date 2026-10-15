@@ -13,7 +13,8 @@ import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { formatPrice } from '../lib/format'
 import { activeFilterCount, clearFilters, clearSearch, readCatalog, removeFilter, sanitizeCatalogParams, setCatalogParam } from '../lib/catalogParams'
-import type { Category } from '../types/api'
+import type { Category, ProductBrief } from '../types/api'
+import { queryClient } from '../lib/queryClient'
 
 /** كلمة العدّ بعد الرقم: 1 منتج · 2 منتج · 5 منتجات · 15 منتجاً */
 const COUNT_FORMS = { one: 'منتج', two: 'منتج', few: 'منتجات', many: 'منتجاً' }
@@ -29,13 +30,16 @@ export function ProductsPage() {
   useEffect(() => { const clean = sanitizeCatalogParams(params); if (clean) setParams(clean, { replace: true, state: { preserveScroll: true } }) }, [params, setParams])
   // حالة الكتالوج من الرابط بعد التحقق: البحث بلا مسافات طرفية، وقيم السعر/الفرز/الصفحة غير الصالحة لا تُرسل للخادم
   const state = readCatalog(params)
-  const { category, sub, search, page } = state
+  const { category, sub, brand, search, page } = state
   const savedOnly = !isMvp0Api() && params.get('saved') === 'true'
   const validSort = state.sort
-  const active = Boolean(params.has('all') || params.has('collection') || category || sub || params.has('search') || validSort || state.minPrice !== undefined || state.maxPrice !== undefined || savedOnly || page > 1)
+  const active = Boolean(params.has('all') || params.has('collection') || category || sub || brand || params.has('search') || validSort || state.minPrice !== undefined || state.maxPrice !== undefined || savedOnly || page > 1)
   // الرئيسية (بلا فلتر) تعرض HomeShowcase بدل شبكة الكتالوج — لا نطلب صفحة منتجات لن تُعرض
   const home = !active && !isMockMode() && !isMvp0Api()
   const categoriesData = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: 300_000 })
+  // P3-1: الماركات للفلتر وتحويل slug إلى brand_id
+  const brandsData = useQuery({ queryKey: ['brands'], queryFn: gazabellaApi.getBrands, staleTime: 300_000, enabled: !home })
+  const resolvedBrandId = brand ? brandsData.data?.find((b) => b.slug === brand)?.id : undefined
   // Resolve slug → category_id for API mode
   const resolvedCategorySlug = sub || category || undefined
   const resolvedCategoryId = !isMockMode() && resolvedCategorySlug
@@ -51,10 +55,11 @@ export function ProductsPage() {
     min_price: state.minPrice,
     max_price: state.maxPrice,
     collection_id: state.collection,
+    ...(resolvedBrandId ? { brand_id: resolvedBrandId } : {}),
     page,
     per_page: 12,
   }
-  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), enabled: !home && !state.priceRangeInvalid && (!resolvedCategorySlug || isMockMode() || resolvedCategoryId !== undefined), placeholderData: keepPreviousData, staleTime: 60_000 })
+  const products = useQuery({ queryKey: ['products', filters], queryFn: () => gazabellaApi.getProducts(filters), enabled: !home && !state.priceRangeInvalid && (!brand || resolvedBrandId !== undefined || brandsData.isError) && (!resolvedCategorySlug || isMockMode() || resolvedCategoryId !== undefined), placeholderData: keepPreviousData, staleTime: 60_000 })
   const currentCategory = categoriesData.data?.find((c) => c.slug === category)
   const CatalogTitle = active ? 'h1' : 'h2'
   const lastPage = products.data?.meta?.last_page
@@ -68,14 +73,29 @@ export function ProductsPage() {
   function goToPage(n: number) { const next = new URLSearchParams(params); if (n > 1) next.set('page', String(n)); else next.delete('page'); navigate({ search: '?' + next.toString(), hash: '#products' }) }
   const filterCount = activeFilterCount(state)
   const priceLabel = t('السعر: {min} – {max}', { min: formatPrice(state.minPrice ?? 0), max: state.maxPrice === undefined ? t('بلا حد') : formatPrice(state.maxPrice) })
-  const chips: { key: 'category' | 'sub' | 'price' | 'collection'; label: string }[] = [
+  const chips: { key: 'category' | 'sub' | 'brand' | 'price' | 'collection'; label: string }[] = [
+    ...(brand ? [{key:'brand' as const,label:brandsData.data?.find((b) => b.slug === brand)?.name || brand}] : []),
     ...(category ? [{key:'category' as const,label:categoriesData.data?.find((c) => c.slug === category)?.name || category}] : []),
     ...(sub ? [{key:'sub' as const,label:currentCategory?.children?.find((c) => c.slug === sub)?.name || sub}] : []),
     ...(state.minPrice !== undefined || state.maxPrice !== undefined ? [{key:'price' as const,label:priceLabel}] : []),
   ]
   const unknownCategory = !isMockMode() && !!resolvedCategorySlug && categoriesData.isSuccess && resolvedCategoryId === undefined
   const shownCount = unknownCategory ? 0 : savedOnly ? (wishlist.query.data ?? []).length : products.data?.meta?.total ?? 0
-  const list = unknownCategory ? [] : savedOnly ? wishlist.query.data ?? [] : products.data?.data ?? []
+  // P3-2 «عرض المزيد»: صفحات إضافية تُلحق بالقائمة دون تغيير الرابط، وتُصفَّر عند تغيّر الفلاتر
+  const filterKey = JSON.stringify({ ...filters, page: undefined })
+  const [more, setMore] = useState<{ key: string; items: ProductBrief[]; loaded: number }>({ key: '', items: [], loaded: 0 })
+  const extra = more.key === filterKey + page ? more : { key: '', items: [], loaded: 0 }
+  const [loadingMore, setLoadingMore] = useState(false)
+  async function loadMore() {
+    const next = page + extra.loaded + 1
+    setLoadingMore(true)
+    try {
+      const res = await queryClient.fetchQuery({ queryKey: ['products', { ...filters, page: next }], queryFn: () => gazabellaApi.getProducts({ ...filters, page: next }), staleTime: 60_000 })
+      setMore({ key: filterKey + page, items: [...extra.items, ...res.data], loaded: extra.loaded + 1 })
+    } finally { setLoadingMore(false) }
+  }
+  const list = unknownCategory ? [] : savedOnly ? wishlist.query.data ?? [] : [...(products.data?.data ?? []), ...extra.items]
+  const lastLoadedPage = page + extra.loaded
   return <>
     {home && <HomeIntro />}
     {!active && (isMockMode() || isMvp0Api()) && <section className="container-page editorial-hero">
@@ -91,7 +111,7 @@ export function ProductsPage() {
     {!home && <section id="products" className="container-page catalog-section">
       <div className="section-heading"><div>{!home && <span className="eyebrow">{active ? t('اختياراتكِ، بطريقتكِ') : 'THE EVERYDAY EDIT'}</span>}<CatalogTitle>{savedOnly ? t('محفوظاتكِ') : search ? t('نتائج «{search}»', { search: search }) : currentCategory?.children?.find((c) => c.slug === sub)?.name || currentCategory?.name || ((home || active) ? t('كل المنتجات') : t('مختارات تستحق مكانًا لديكِ'))}</CatalogTitle><p>{state.priceRangeInvalid || (products.isError && !products.data) ? null : unknownCategory || products.data ? (shownCount ? <><span className="num">{shownCount}</span> {plural(shownCount, COUNT_FORMS)}</> : t('لا نتائج'))  : t('نجهّز مختاراتكِ…')}{products.isFetching && !products.isLoading ? t(' · جارٍ التحديث') : ''}</p></div><Link className="text-link" to="/?sort=-created_at#products">{t('وصل حديثًا')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div>
       <div className="catalog-toolbar"><button ref={filterButton} className={`filter-toggle ${filterCount ? 'has-count' : ''}`} disabled={savedOnly} aria-expanded={filtersOpen} aria-label={filterCount ? t('تصفية، {n} مطبّقة', { n: filterCount }) : undefined} onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="filter" className="size-4" /> {t('تصفية')}{!!filterCount && <span className="filter-count num" aria-hidden="true">{filterCount}</span>}</button>{!isMvp0Api() && <button className={`filter-toggle ${savedOnly ? 'active' : ''}`} aria-pressed={savedOnly} onClick={() => setFilter('saved', savedOnly ? '' : 'true')}><Icon name="heart" className="size-4" /> {t('المحفوظات')}</button>}<label className="sort-label">{t('ترتيب حسب')} <select disabled={savedOnly} aria-label={t('ترتيب المنتجات')} value={validSort || ''} onChange={(e) => setFilter('sort', e.target.value)}><option value="">{t('المختارات')}</option><option value="-created_at">{t('الأحدث')}</option><option value="price">{t('السعر: الأقل أولًا')}</option><option value="-price">{t('السعر: الأعلى أولًا')}</option></select></label></div>
-      {filtersOpen && <CatalogFilters key={params.toString()} categories={categoriesData.data || []} onClose={() => { setFiltersOpen(false); requestAnimationFrame(() => filterButton.current?.focus({ preventScroll: true })) }} />}
+      {filtersOpen && <CatalogFilters key={params.toString()} categories={categoriesData.data || []} brands={brandsData.data || []} facets={products.data?.meta?.facets ?? null} onClose={() => { setFiltersOpen(false); requestAnimationFrame(() => filterButton.current?.focus({ preventScroll: true })) }} />}
       {(!!search || !!chips.length || savedOnly) && <div className="active-filters" aria-label={t('القيود الحالية')}>
         {!!search && <button type="button" className="chip-search" onClick={() => setParams(clearSearch(params), {state:{preserveScroll:true}})} aria-label={t('مسح البحث «{search}»', { search })}><Icon name="search" className="size-3.5" /> <bdi>{search}</bdi> ×</button>}
         {chips.map((chip) => <button type="button" key={chip.key} onClick={() => setParams(removeFilter(params, chip.key), {state:{preserveScroll:true}})} aria-label={t('إزالة فلتر {label}', { label: chip.label })}><bdi>{chip.label}</bdi> ×</button>)}
@@ -100,7 +120,12 @@ export function ProductsPage() {
       </div>}
       {state.priceRangeInvalid && <div className="catalog-notice" role="alert"><p>{t('الحد الأدنى للسعر أكبر من الحد الأعلى، فلم نعرض نتائج.')}</p><button type="button" className="text-link" onClick={() => setParams(removeFilter(params, 'price'), {state:{preserveScroll:true}})}>{t('إزالة فلتر السعر')}</button><button type="button" className="text-link" onClick={() => setFiltersOpen(true)}>{t('تعديل السعر')}</button></div>}
       {(savedOnly ? wishlist.authenticated && wishlist.query.isPending : !products.data && !state.priceRangeInvalid && (products.isLoading || (!!resolvedCategorySlug && categoriesData.isPending))) ? <div className="catalog-grid" aria-label={t('جارٍ تحميل المنتجات')}>{Array.from({length: 8}, (_, i) => <ProductCardSkeleton key={i} />)}</div> : !savedOnly && !products.data && products.isError ? <ErrorState message={getApiErrorMessage(products.error)} onRetry={() => void products.refetch()} /> : state.priceRangeInvalid ? null : !list.length ? (savedOnly ? <EmptyState title={t('لم نجد منتجات مطابقة')} message={t('جرّبي قسمًا آخر أو وسّعي نطاق السعر. يمكنكِ أيضًا مسح التصفية.')} /> : <CatalogEmpty search={search} filterCount={filterCount} categories={categoriesData.data ?? []} onClearSearch={() => setParams(clearSearch(params), {state:{preserveScroll:true}})} onClearFilters={() => setParams(clearFilters(params), {state:{preserveScroll:true}})} />) : <div className={`catalog-grid${products.isPlaceholderData ? ' is-stale' : ''}`} aria-busy={products.isFetching}>{list.map((product) => <ProductCard key={product.id} product={product} />)}</div>}
-      {!savedOnly && !unknownCategory && products.data && products.data.meta.last_page > 1 && <nav className="pagination" aria-label={t('صفحات المنتجات')}><button disabled={page === 1 || products.isPlaceholderData} onClick={() => goToPage(page - 1)}>{t('السابق')}</button><span><span className="num">{page}</span> / <span className="num">{products.data.meta.last_page}</span></span><button disabled={page >= products.data.meta.last_page || products.isPlaceholderData} onClick={() => goToPage(page + 1)}>{t('التالي')}</button></nav>}
+      {!savedOnly && !unknownCategory && products.data && products.data.meta.last_page > 1 && <div className="load-more">
+        <p className="load-more__count"><span className="num">{list.length}</span> {t('من')} <span className="num">{products.data.meta.total}</span></p>
+        <span className="load-more__track" aria-hidden="true"><span style={{ width: `${Math.min(100, Math.round((list.length / Math.max(1, products.data.meta.total)) * 100))}%` }} /></span>
+        {lastLoadedPage < products.data.meta.last_page && <button type="button" className="btn-ghost" disabled={loadingMore || products.isPlaceholderData} onClick={() => void loadMore()}>{loadingMore ? t('جارٍ التحميل…') : t('عرض المزيد')}</button>}
+        {page > 1 && <button type="button" className="text-link" onClick={() => goToPage(1)}>{t('العودة لأول النتائج')}</button>}
+      </div>}
     </section>}
     {!active && isMockMode() && <section className="container-page collection-editorial"><img src="/images/products/bridal-robe.webp" alt={t('تشكيلة العروس')} loading="lazy" /><div><span className="eyebrow">{t('للحظات التي تبقى')}</span><h2>{t('ليومكِ الأجمل،')}<br />{t('تفاصيل على ذوقكِ.')}</h2><p>{t('اكتشفي تشكيلة العروس والعطور والهدايا، واجمعي اختياراتكِ المفضلة في طلب واحد.')}</p><Link to="/?category=bridal#products" className="btn-primary">{t('اكتشفي تشكيلة العروس')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div></section>}
     {!home && <section className="container-page closing-note"><Icon name="sparkle" className="size-6" /><h2>{t('الجمال أقرب مما تتخيّلين.')}</h2><p>{t('Gazabella · الجمال، أقرب إليكِ.')}</p></section>}

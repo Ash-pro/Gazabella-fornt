@@ -2,7 +2,7 @@ import { t } from '../../i18n'
 import { useEffect, useId, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Dialog } from '../ui/Dialog'
-import type { Category } from '../../types/api'
+import type { Brand, CatalogFacets, Category } from '../../types/api'
 import { keepCatalog, priceParams } from '../../lib/catalogParams'
 
 const PRICE_ERRORS = {
@@ -15,7 +15,9 @@ const PRICE_ERRORS = {
  * لوحة التصفية: كل التعديلات مسودة حتى «تطبيق الفلاتر» — الإغلاق أو الإلغاء لا يطبّق شيئًا.
  * السعر يُدخل كنص ويُتحقق منه عند التطبيق (لا تصحيح تلقائي أثناء الكتابة)، ولا يُرسل للخادم إلا قيم صالحة.
  */
-export function CatalogFilters({ categories, onClose }: { categories: Category[]; onClose: () => void }) {
+export function CatalogFilters({ categories, brands = [], facets = null, onClose }: { categories: Category[]; brands?: Brand[]; facets?: CatalogFacets | null; onClose: () => void }) {
+  // P3-2: العدد بجانب كل قيمة إن أرسله الخادم (meta.facets) — بدونه لا نعرض أرقاماً
+  const count = (list: Array<{ slug: string; count: number }> | undefined, slug: string) => { const n = list?.find((f) => f.slug === slug)?.count; return n == null ? null : <span className="filter-count-n num">{n}</span> }
   const [params, setParams] = useSearchParams()
   const [draft, setDraft] = useState(() => new URLSearchParams(params))
   const [minText, setMinText] = useState(() => params.get('min_price') ?? '')
@@ -31,7 +33,7 @@ export function CatalogFilters({ categories, onClose }: { categories: Category[]
   function editMin(value: string) { setMinText(value); setPriceError(null) }
   function editMax(value: string) { setMaxText(value); setPriceError(null) }
   function toggle(name: string, value: string) { const next = new URLSearchParams(draft); const selected = next.getAll(name); next.delete(name); (selected.includes(value) ? [] : [value]).forEach((v) => next.append(name, v)); next.delete('page'); if (name === 'category') next.delete('sub'); setDraft(next) }
-  function reset() { const next = new URLSearchParams(draft); ['category', 'sub', 'store', 'page'].forEach((key) => next.delete(key)); setDraft(next); setMinText(''); setMaxText(''); setPriceError(null) }
+  function reset() { const next = new URLSearchParams(draft); ['category', 'sub', 'brand', 'store', 'page'].forEach((key) => next.delete(key)); setDraft(next); setMinText(''); setMaxText(''); setPriceError(null) }
 
   const price = priceParams(minText, maxText)
   const next = new URLSearchParams(draft)
@@ -62,7 +64,8 @@ export function CatalogFilters({ categories, onClose }: { categories: Category[]
       </div>
       {priceError && <p id={errorId} className="filter-error" role="alert">{t(PRICE_ERRORS[priceError])}</p>}
     </fieldset>
-    <fieldset><legend>{t('الأقسام')}</legend>{categories.map((c) => <label className="filter-check" key={c.slug}><input type="radio" name="category-filter" checked={draft.getAll('category').includes(c.slug)} onChange={() => toggle('category', c.slug)} />{c.name}</label>)}{!!selectedCategory?.children.length && <label className="field-label mt-4">{t('الفئة الفرعية')}<select className="form-field" value={draft.get('sub') || ''} onChange={(e) => { const n = new URLSearchParams(draft); if (e.target.value) n.set('sub', e.target.value); else n.delete('sub'); n.delete('page'); setDraft(n) }}><option value="">{t('كل الفئات الفرعية')}</option>{selectedCategory.children.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>}</fieldset>
+    <fieldset><legend>{t('الأقسام')}</legend>{categories.map((c) => <label className="filter-check" key={c.slug}><input type="radio" name="category-filter" checked={draft.getAll('category').includes(c.slug)} onChange={() => toggle('category', c.slug)} />{c.name}{count(facets?.categories, c.slug)}</label>)}{!!selectedCategory?.children.length && <label className="field-label mt-4">{t('الفئة الفرعية')}<select className="form-field" value={draft.get('sub') || ''} onChange={(e) => { const n = new URLSearchParams(draft); if (e.target.value) n.set('sub', e.target.value); else n.delete('sub'); n.delete('page'); setDraft(n) }}><option value="">{t('كل الفئات الفرعية')}</option>{selectedCategory.children.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>}</fieldset>
+    {brands.length > 1 && <fieldset><legend>{t('الماركة')}</legend>{brands.map((b) => <label className="filter-check" key={b.slug}><input type="radio" name="brand-filter" checked={draft.get('brand') === b.slug} onChange={() => toggle('brand', b.slug)} />{b.name}{count(facets?.brands, b.slug)}</label>)}</fieldset>}
     <div className="filter-footer">
       <button type="button" className="btn-primary" onClick={apply}>{t('تطبيق الفلاتر')}</button>
       <button type="button" className="text-link" onClick={reset}>{t('إعادة تعيين')}</button>

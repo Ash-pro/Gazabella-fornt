@@ -234,6 +234,7 @@ function ProductContent({ slug }: { slug: string }) {
             </div>
             <ShareButton title={product.name} url={window.location.href.split('?')[0]} />
           </div>
+          {product.brand && <Link className="detail-brand" to={`/brands/${encodeURIComponent(product.brand.slug)}`}>{t('من')} <b>{product.brand.name}</b></Link>}
           {!!product.rating_count && product.rating_avg != null && (
             <a className="detail-rating" href="#reviews"><Stars value={product.rating_avg} /> <b className="num">{product.rating_avg.toFixed(1)}</b> <span>({plural(product.rating_count, REVIEW_FORMS)})</span></a>
           )}

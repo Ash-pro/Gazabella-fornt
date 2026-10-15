@@ -517,3 +517,39 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .addr-form__labels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .addr-form__labels .swatch[aria-pressed="true"] { border-color: var(--c-brand); box-shadow: 0 0 0 3px var(--c-brand-tint); font-weight: 600; }
 .addr-form__default { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px; }
+
+/* ══════════ المرحلة 3 — الاكتشاف ══════════ */
+.hm-brands { display: flex; gap: var(--sp-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px; }
+.hm-brands::-webkit-scrollbar { display: none; }
+.hm-brand { flex: 0 0 120px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--sp-4) var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--rad-lg); background: #fff; text-align: center; scroll-snap-align: start; transition: border-color var(--dur-1), transform var(--dur-1); }
+@media (hover: hover) { .hm-brand:hover { border-color: var(--c-brand); transform: translateY(-2px); } }
+.hm-brand__logo { display: grid; place-items: center; width: 72px; height: 72px; overflow: hidden; border-radius: 50%; background: var(--c-soft); color: var(--c-brand); font: italic 600 30px/1 var(--font-brand, serif); }
+.hm-brand__logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+.hm-brand b { font-size: 14px; font-weight: 600; color: var(--c-ink); }
+.detail-brand { display: inline-flex; gap: 4px; margin-top: 4px; font-size: 13px; color: var(--c-ink-3); }
+.detail-brand b { color: var(--c-brand); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.brand-page { padding-block: var(--sp-6) var(--sp-12); }
+.brand-page__crumbs { margin-bottom: var(--sp-4); font-size: 13px; color: var(--c-ink-3); }
+.brand-page__crumbs a { color: var(--c-ink-2); }
+.brand-hero { display: flex; align-items: center; gap: var(--sp-5); padding: var(--sp-6); border-radius: var(--rad-lg); background: linear-gradient(135deg, var(--c-brand-tint), #FFF8EC); }
+.brand-hero__logo { display: grid; place-items: center; width: 96px; height: 96px; flex-shrink: 0; overflow: hidden; border-radius: 50%; background: #fff; color: var(--c-brand); font: italic 600 40px/1 var(--font-brand, serif); box-shadow: 0 6px 20px rgba(68, 33, 54, .1); }
+.brand-hero__logo img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.brand-hero h1 { font-size: var(--fs-xl); font-weight: 650; color: var(--c-ink); }
+.brand-hero p { max-width: 60ch; margin-top: 6px; font-size: 14px; line-height: 1.8; color: var(--c-ink-2); }
+.brand-page__products { margin-top: var(--sp-8); }
+.brand-page__products h2 { margin-bottom: var(--sp-5); font-size: var(--fs-lg); font-weight: 600; }
+@media (max-width: 639px) { .brand-hero { flex-direction: column; text-align: center; } }
+
+.filter-count-n { margin-inline-start: auto; padding: 0 8px; border-radius: var(--rad-pill); background: var(--c-soft); font-size: 12px; color: var(--c-ink-3); }
+
+.load-more { display: grid; justify-items: center; gap: 10px; margin-top: var(--sp-8); }
+.load-more__count { font-size: 13px; color: var(--c-ink-3); }
+.load-more__track { width: min(240px, 70%); height: 4px; overflow: hidden; border-radius: 99px; background: var(--c-line); }
+.load-more__track > span { display: block; height: 100%; background: var(--c-brand); }
+.load-more .btn-ghost { min-width: 200px; }
+
+.search-popular { margin-top: 14px; }
+.search-popular > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.search-popular button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding-inline: 12px; border: 1px solid var(--c-line); border-radius: var(--rad-pill); font-size: 13px; color: var(--c-ink-2); }
+@media (hover: hover) { .search-popular button:hover { border-color: var(--c-brand); color: var(--c-brand); } }

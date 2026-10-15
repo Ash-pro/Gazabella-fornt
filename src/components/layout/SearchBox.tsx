@@ -7,6 +7,7 @@ import { money } from '../../lib/format'
 import { getImageUrl, getApiErrorMessage } from '../../lib/apiClient'
 import { searchHref } from '../../lib/catalogParams'
 import { Icon } from '../ui/Icon'
+import { getPopularSearches } from '../../api/discovery'
 
 const key = 'gazabella_recent_searches'
 const SUGGESTIONS = 6
@@ -27,6 +28,10 @@ export function SearchBox() {
   const listId = useId()
   const statusId = useId()
   const [draft, setDraft] = useState({key: location.key, value: params.get('search') || ''})
+  // P3-3: «الأكثر بحثاً» — تُجلب أول ما تُفتح القائمة فقط
+  const [opened, setOpened] = useState(false)
+  const categories = useQuery({ queryKey: ['categories'], queryFn: gazabellaApi.getCategories, staleTime: 300_000, enabled: opened })
+  const popular = useQuery({ queryKey: ['search-popular', categories.data?.length ?? 0], queryFn: () => getPopularSearches(categories.data ?? []), enabled: opened && !categories.isPending, staleTime: 30 * 60_000, retry: false })
   const value = draft.key === location.key ? draft.value : params.get('search') || ''
   const trimmed = value.trim()
   const [term, setTerm] = useState('')
@@ -83,7 +88,7 @@ export function SearchBox() {
         role="combobox" aria-autocomplete="list" aria-expanded={listOpen} aria-controls={listOpen ? listId : undefined}
         aria-activedescendant={active >= 0 ? optionId(active) : undefined} aria-describedby={statusId}
         aria-label={t('ابحثي في Gazabella')} placeholder={t('عن ماذا تبحثين اليوم؟')} value={value}
-        onFocus={() => {setRecent(readHistory());setOpen(true)}}
+        onFocus={() => {setRecent(readHistory());setOpen(true);setOpened(true)}}
         onChange={(e) => {setDraft({key:location.key,value:e.target.value});setOpen(true);setActiveIndex(-1)}}
         onKeyDown={onKeyDown}
       />
@@ -91,7 +96,7 @@ export function SearchBox() {
     </form>
     <span id={statusId} className="sr-only" role="status" aria-live="polite">{open ? statusText : ''}</span>
     {open && <div className="search-dropdown">
-      {!trimmed ? <><h3>{t('عمليات البحث الأخيرة')}</h3>{recent.length ? recent.map((text) => <div className="recent-search" key={text}><button type="button" onClick={() => search(text)}>{text}</button><button type="button" aria-label={t('حذف البحث {text}', { text: text })} onClick={() => save(recent.filter((v) => v !== text))}>×</button></div>) : <p>{t('ستظهر هنا عمليات بحثكِ الأخيرة')}</p>}{!!recent.length && <button type="button" className="text-link" onClick={() => save([])}>{t('مسح السجل')}</button>}</>
+      {!trimmed ? <><h3>{t('عمليات البحث الأخيرة')}</h3>{recent.length ? recent.map((text) => <div className="recent-search" key={text}><button type="button" onClick={() => search(text)}>{text}</button><button type="button" aria-label={t('حذف البحث {text}', { text: text })} onClick={() => save(recent.filter((v) => v !== text))}>×</button></div>) : <p>{t('ستظهر هنا عمليات بحثكِ الأخيرة')}</p>}{!!recent.length && <button type="button" className="text-link" onClick={() => save([])}>{t('مسح السجل')}</button>}{!!popular.data?.length && <div className="search-popular"><h3>{t('الأكثر بحثاً')}</h3><div>{popular.data.map((term) => <button type="button" key={term} onClick={() => search(term)}><Icon name="search" className="size-3.5" />{term}</button>)}</div></div>}</>
         : term !== trimmed || results.isLoading ? <p aria-hidden="true">{t('نبحث عن اختياراتكِ…')}</p>
         : results.isError ? <div className="search-error" aria-hidden="true"><p>{t('تعذّر البحث. حاولي مجددًا.')}</p><button type="button" className="text-link" onMouseDown={(e) => e.preventDefault()} onClick={() => void results.refetch()} title={getApiErrorMessage(results.error)}>{t('إعادة المحاولة')}</button></div>
         : items.length ? <ul id={listId} role="listbox" aria-label={t('اقتراحات البحث')}>

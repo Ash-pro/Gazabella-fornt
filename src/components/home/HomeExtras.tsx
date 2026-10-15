@@ -13,6 +13,8 @@ import { useAuthStore } from '../../stores/authStore'
 import type { TrustItem } from '../../types/api'
 import { ReorderButton } from '../account/ReorderButton'
 import { Icon } from '../ui/Icon'
+import { DemoBadge } from '../ui/DemoBadge'
+import { getBrandsList } from '../../api/discovery'
 
 // ─────────────────────────────── N-01 شريط الثقة ───────────────────────────────
 
@@ -74,6 +76,31 @@ function ReorderInner() {
           )
         })}
       </ul>
+    </section>
+  )
+}
+
+// ─────────────────────────────── P3-1 الماركات ───────────────────────────────
+
+export function BrandsRail() {
+  const reveal = useReveal<HTMLElement>()
+  const brands = useQuery({ queryKey: ['brands-list'], queryFn: getBrandsList, staleTime: 10 * 60_000, retry: false })
+  const list = brands.data?.data ?? []
+  if (list.length < 2) return null
+  return (
+    <section ref={reveal} id="brands" className="container-page hm-section" aria-labelledby="hm-brands-title">
+      <header className="hm-head"><div><p className="hm-kicker">{t('ماركات تثقين بها')}</p><h2 id="hm-brands-title">{t('تسوّقي حسب الماركة')} <DemoBadge show={!!brands.data?.demo} /></h2></div></header>
+      <nav className="hm-brands" aria-label={t('الماركات')}>
+        {list.map((b) => {
+          const logo = getImageUrl(b.logo_url)
+          return (
+            <Link key={b.id} to={`/brands/${encodeURIComponent(b.slug)}`} className="hm-brand">
+              <span className="hm-brand__logo">{logo ? <img src={logo} alt="" loading="lazy" decoding="async" /> : <span aria-hidden="true">{b.name.trim().charAt(0)}</span>}</span>
+              <b>{b.name}</b>
+            </Link>
+          )
+        })}
+      </nav>
     </section>
   )
 }

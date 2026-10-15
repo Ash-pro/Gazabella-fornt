@@ -8,7 +8,7 @@ const BASE = `gz_pub_v1:${import.meta.env.VITE_DATA_SOURCE === 'mock' ? 'mock' :
 const prefix = () => `${BASE}${getLocale()}:`
 const TTL_MS = 7 * 24 * 60 * 60 * 1000
 
-export const PUBLIC_QUERY_KEYS = ['banners', 'settings', 'categories', 'collections', 'delivery-zones'] as const
+export const PUBLIC_QUERY_KEYS = ['banners', 'settings', 'categories', 'collections', 'delivery-zones', 'brands'] as const
 
 export function readPublicCache(key: string, now = Date.now()): unknown {
   try {

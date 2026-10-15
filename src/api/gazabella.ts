@@ -298,7 +298,7 @@ interface RawSettings extends Partial<Omit<SiteSettings, 'support' | 'home'>> {
   home?: { sections?: unknown; trust?: unknown } | null
 }
 
-const HOME_KEYS: readonly HomeSectionKey[] = ['deals', 'best_sellers', 'picks', 'promo', 'new', 'budget', 'reorder', 'recent', 'services']
+const HOME_KEYS: readonly HomeSectionKey[] = ['deals', 'brands', 'best_sellers', 'picks', 'promo', 'new', 'budget', 'reorder', 'recent', 'services']
 const TRUST_ICONS: readonly TrustItem['icon'][] = ['truck', 'shield', 'refresh', 'dollar', 'clock', 'whatsapp', 'sparkle']
 
 /** إعدادات الرئيسية من لوحة الإدارة — نقبل فقط المفاتيح والأيقونات المعروفة، وأي قيمة غير صالحة تُتجاهل */

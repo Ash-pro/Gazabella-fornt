@@ -12,7 +12,7 @@ import { ProductCard, ProductCardSkeleton } from '../product/ProductCard'
 import { ErrorState } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
 import type { Banner, Category, Collection, HomeSectionKey, ProductBrief } from '../../types/api'
-import { ReorderRow, TrustStrip } from './HomeExtras'
+import { BrandsRail, ReorderRow, TrustStrip } from './HomeExtras'
 import { resolveHomeOrder } from '../../lib/homeConfig'
 import { readViewed } from '../../lib/recentlyViewed'
 
@@ -295,6 +295,7 @@ export function HomeShowcase() {
   // N-07: الترتيب والإظهار من لوحة الإدارة (settings.home.sections) أو الترتيب الافتراضي
   const sections: Record<HomeSectionKey, () => ReactNode> = {
     deals: () => <DealsRow />,
+    brands: () => <BrandsRail />,
     best_sellers: () => <BestSellersRow />,
     picks: () => <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} empty={hash === '#' + PICKS_ANCHOR ? t('لا توجد مختارات معروضة الآن.') : undefined} />,
     promo: () => <PromoBand banner={promo} collection={collection} />,

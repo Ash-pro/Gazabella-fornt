@@ -11,7 +11,7 @@ export const CATALOG_SORTS = ['-created_at', 'created_at', 'price', '-price'] as
 export type CatalogSort = (typeof CATALOG_SORTS)[number]
 
 /** مفاتيح التصفية (ما يزيله «مسح الفلاتر») — البحث والفرز ليسا منها */
-export const FILTER_KEYS = ['category', 'sub', 'min_price', 'max_price', 'collection'] as const
+export const FILTER_KEYS = ['category', 'sub', 'brand', 'min_price', 'max_price', 'collection'] as const
 
 /** أي من هذه المفاتيح يعني أن الصفحة صفحة كتالوج/نتائج لا الرئيسية */
 const CATALOG_KEYS = ['all', 'search', 'sort', 'page', 'saved', ...FILTER_KEYS]
@@ -20,6 +20,8 @@ export interface CatalogState {
   search: string
   category: string
   sub: string
+  /** P3-1: slug الماركة */
+  brand: string
   sort?: CatalogSort
   minPrice?: number
   maxPrice?: number
@@ -45,6 +47,7 @@ export function readCatalog(params: URLSearchParams): CatalogState {
     search: (params.get('search') || '').trim(),
     category: params.get('category') || '',
     sub: params.get('sub') || '',
+    brand: params.get('brand') || '',
     sort: (CATALOG_SORTS as readonly string[]).includes(sortRaw) ? (sortRaw as CatalogSort) : undefined,
     minPrice,
     maxPrice,
@@ -74,7 +77,7 @@ export function sanitizeCatalogParams(params: URLSearchParams): URLSearchParams 
 
 /** عدد الفلاتر المطبّقة (لشارة زر التصفية) — السعر فلتر واحد */
 export function activeFilterCount(state: CatalogState): number {
-  return (state.category ? 1 : 0) + (state.sub ? 1 : 0) + (state.minPrice !== undefined || state.maxPrice !== undefined ? 1 : 0) + (state.collection !== undefined ? 1 : 0)
+  return (state.category ? 1 : 0) + (state.sub ? 1 : 0) + (state.brand ? 1 : 0) + (state.minPrice !== undefined || state.maxPrice !== undefined ? 1 : 0) + (state.collection !== undefined ? 1 : 0)
 }
 
 /** إن لم يبقَ ما يميّز صفحة الكتالوج نُبقي all=1 حتى لا يقفز المستخدم إلى الرئيسية بعد إزالة آخر قيد */
@@ -100,7 +103,7 @@ export function clearSearch(params: URLSearchParams): URLSearchParams {
 }
 
 /** إزالة فلتر واحد (السعر يُزال بحدّيه معًا، وإزالة القسم تزيل الفئة الفرعية) */
-export function removeFilter(params: URLSearchParams, key: 'category' | 'sub' | 'price' | 'collection'): URLSearchParams {
+export function removeFilter(params: URLSearchParams, key: 'category' | 'sub' | 'brand' | 'price' | 'collection'): URLSearchParams {
   const next = new URLSearchParams(params)
   if (key === 'price') { next.delete('min_price'); next.delete('max_price') } else next.delete(key)
   if (key === 'category') next.delete('sub')
