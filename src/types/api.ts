@@ -31,9 +31,6 @@ export interface ProductImage {
   sort_order: number
 }
 
-/** مقترح على الباك اند: المتجر البائع (المنصة تجميعية) */
-export interface ProductStore { id: number; name: string; slug?: string | null }
-
 export interface ProductBrief {
   variants?: ProductVariant[]
   id: number
@@ -46,7 +43,6 @@ export interface ProductBrief {
   is_wishlisted?: boolean
   images: ProductImage[]
   category: { id: number; name: string }
-  store?: ProductStore | null
 }
 
 export interface ProductDetail {
@@ -62,7 +58,6 @@ export interface ProductDetail {
   is_wishlisted?: boolean
   category: { id: number; name: string; slug: string }
   images: ProductImage[]
-  store?: ProductStore | null
 }
 export interface CartItem {
   product_variant_id?: number
@@ -344,7 +339,20 @@ export interface DeliveryZoneInfo {
   currency: string
 }
 
+/** مفاتيح أقسام الرئيسية القابلة للترتيب والإخفاء من لوحة الإدارة (settings.home.sections) */
+export type HomeSectionKey = 'deals' | 'best_sellers' | 'picks' | 'promo' | 'new' | 'budget' | 'reorder' | 'recent' | 'services'
+
+/** بند في شريط الثقة تحت الـ Hero */
+export interface TrustItem { icon: 'truck' | 'shield' | 'refresh' | 'dollar' | 'clock' | 'whatsapp' | 'sparkle'; title: string; text?: string | null }
+
+/** GET /settings → home (اختياري): ترتيب الأقسام وإظهارها + نصوص شريط الثقة */
+export interface HomeSettings {
+  sections: Array<{ key: HomeSectionKey; enabled: boolean }> | null
+  trust: TrustItem[] | null
+}
+
 export interface SiteSettings {
+  home?: HomeSettings | null
   support?: StoreSupport | null
   policies?: StorePolicies | null
   store_name: string

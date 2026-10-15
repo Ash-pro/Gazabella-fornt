@@ -79,7 +79,7 @@ export function ProductsPage() {
   return <>
     {home && <HomeIntro />}
     {!active && (isMockMode() || isMvp0Api()) && <section className="container-page editorial-hero">
-      <div className="editorial-hero__copy"><span className="eyebrow">{t('اختيارات تشبهكِ')}</span><h1>{t('تفاصيل صغيرة.')}<br /><em>{t('جمال كل يوم.')}</em></h1><p>{t('عناية، عطور وهدايا من متاجر مختارة.')}<br /><span className="hero-description-more">{t('اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.')}</span></p><Link to="/#products" className="btn-primary">{t('تسوّقي المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> {t('من خانيونس، بكل حب')}</div></div>
+      <div className="editorial-hero__copy"><span className="eyebrow">{t('اختيارات تشبهكِ')}</span><h1>{t('تفاصيل صغيرة.')}<br /><em>{t('جمال كل يوم.')}</em></h1><p>{t('عناية، عطور وهدايا مختارة بعناية.')}<br /><span className="hero-description-more">{t('اكتشفي ما تحبينه في تجربة واحدة، أقرب إليكِ.')}</span></p><Link to="/#products" className="btn-primary">{t('تسوّقي المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link><div className="hero-note"><span className="tiny-dot" /> {t('من خانيونس، بكل حب')}</div></div>
       <div className="editorial-hero__image"><img src="/images/hero-beauty.webp" alt={t('تشكيلة Gazabella للعناية والعطور')} fetchPriority="high" /><span className="hero-edition">THE GAZABELLA EDIT <span>01 / BEAUTY</span></span></div>
     </section>}
     {!active && isMockMode() && <div className="container-page service-strip"><span><Icon name="truck" className="size-4" /> {t('سلة واحدة، توصيل موحّد')}</span><span><Icon name="sparkle" className="size-4" /> {t('اختيارات بعناية')}</span><span><Icon name="shield" className="size-4" /> {t('تجربة واضحة من البداية')}</span></div>}
@@ -103,7 +103,7 @@ export function ProductsPage() {
       {!savedOnly && !unknownCategory && products.data && products.data.meta.last_page > 1 && <nav className="pagination" aria-label={t('صفحات المنتجات')}><button disabled={page === 1 || products.isPlaceholderData} onClick={() => goToPage(page - 1)}>{t('السابق')}</button><span><span className="num">{page}</span> / <span className="num">{products.data.meta.last_page}</span></span><button disabled={page >= products.data.meta.last_page || products.isPlaceholderData} onClick={() => goToPage(page + 1)}>{t('التالي')}</button></nav>}
     </section>}
     {!active && isMockMode() && <section className="container-page collection-editorial"><img src="/images/products/bridal-robe.webp" alt={t('تشكيلة العروس')} loading="lazy" /><div><span className="eyebrow">{t('للحظات التي تبقى')}</span><h2>{t('ليومكِ الأجمل،')}<br />{t('تفاصيل على ذوقكِ.')}</h2><p>{t('اكتشفي تشكيلة العروس والعطور والهدايا، واجمعي اختياراتكِ المفضلة في طلب واحد.')}</p><Link to="/?category=bridal#products" className="btn-primary">{t('اكتشفي تشكيلة العروس')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link></div></section>}
-    {!home && <section className="container-page closing-note"><Icon name="sparkle" className="size-6" /><h2>{t('الجمال أقرب مما تتخيّلين.')}</h2><p>{t('متاجر متعددة. تجربة واحدة. Gazabella.')}</p></section>}
+    {!home && <section className="container-page closing-note"><Icon name="sparkle" className="size-6" /><h2>{t('الجمال أقرب مما تتخيّلين.')}</h2><p>{t('Gazabella · الجمال، أقرب إليكِ.')}</p></section>}
   </>
 }
 

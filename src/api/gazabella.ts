@@ -21,6 +21,9 @@ const mockServices = new Proxy({} as MockServices, {
 import { isMvp0Api } from '../lib/apiContract'
 import { mvp0Api } from './mvp0'
 import type {
+  HomeSectionKey,
+  HomeSettings,
+  TrustItem,
   ApiData,
   ApiList,
   AuthResponse,
@@ -63,11 +66,13 @@ export interface ProductFilters {
   collection_id?: number
   featured?: boolean
   in_stock?: boolean
+  /** N-02: المنتجات المخفّضة فقط (الخادم قد يتجاهله — الواجهة تفلتر أيضاً) */
+  on_sale?: boolean
   // مشتركة
   search?: string
   min_price?: number
   max_price?: number
-  sort?: 'price' | '-price' | 'created_at' | '-created_at' | 'sort_order' | '-sort_order'
+  sort?: 'price' | '-price' | 'created_at' | '-created_at' | 'sort_order' | '-sort_order' | '-sales_count'
   page?: number
   per_page?: number
 }
@@ -276,9 +281,32 @@ async function allPages<T>(path: string): Promise<T[]> {
 export function normalizeCategory(category: Category): Category {
   return { ...category, children: (category.children ?? []).map(normalizeCategory) }
 }
-interface RawSettings extends Partial<Omit<SiteSettings, 'support'>> {
+interface RawSettings extends Partial<Omit<SiteSettings, 'support' | 'home'>> {
   site_name?: string; support_phone?: string; support_email?: string; social?: Record<string, string | null>
   support?: Partial<StoreSupport> | null
+  home?: { sections?: unknown; trust?: unknown } | null
+}
+
+const HOME_KEYS: readonly HomeSectionKey[] = ['deals', 'best_sellers', 'picks', 'promo', 'new', 'budget', 'reorder', 'recent', 'services']
+const TRUST_ICONS: readonly TrustItem['icon'][] = ['truck', 'shield', 'refresh', 'dollar', 'clock', 'whatsapp', 'sparkle']
+
+/** إعدادات الرئيسية من لوحة الإدارة — نقبل فقط المفاتيح والأيقونات المعروفة، وأي قيمة غير صالحة تُتجاهل */
+export function normalizeHome(raw: RawSettings['home']): HomeSettings | null {
+  if (!raw || typeof raw !== 'object') return null
+  const sections = Array.isArray(raw.sections)
+    ? raw.sections
+        .map((s) => (typeof s === 'string' ? { key: s, enabled: true } : s as { key?: unknown; enabled?: unknown }))
+        .filter((s): s is { key: HomeSectionKey; enabled?: unknown } => HOME_KEYS.includes(s?.key as HomeSectionKey))
+        .map((s) => ({ key: s.key, enabled: s.enabled !== false }))
+    : null
+  const trust = Array.isArray(raw.trust)
+    ? raw.trust
+        .map((i) => i as { icon?: unknown; title?: unknown; text?: unknown })
+        .filter((i) => TRUST_ICONS.includes(i?.icon as TrustItem['icon']) && typeof i.title === 'string' && i.title.trim())
+        .slice(0, 4)
+        .map((i) => ({ icon: i.icon as TrustItem['icon'], title: String(i.title).trim(), text: typeof i.text === 'string' ? i.text.trim() || null : null }))
+    : null
+  return { sections: sections?.length ? sections : null, trust: trust?.length ? trust : null }
 }
 const clean = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null)
 const num = (v: unknown): number | null => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v))
@@ -308,7 +336,7 @@ export function normalizeSettings(raw: RawSettings): SiteSettings {
   }
   return { store_name: raw.site_name ?? raw.store_name ?? 'Gazabella', tagline: raw.tagline ?? null,
     logo_url: raw.logo_url ?? null, favicon_url: raw.favicon_url ?? null, address: raw.address ?? null,
-    phone: support.phone, email: support.email, social_links: social, support, policies }
+    phone: support.phone, email: support.email, social_links: social, support, policies, home: normalizeHome(raw.home) }
 }
 
 interface RawDeliveryZone { id?: number; name?: string; fee?: number | string; eta_minutes?: number | string | null; currency?: string; is_active?: boolean }

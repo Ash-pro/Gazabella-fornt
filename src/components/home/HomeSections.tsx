@@ -1,5 +1,5 @@
 import { t } from '../../i18n'
-import { useRef, useState, type ReactNode } from 'react'
+import { Fragment, useRef, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation } from 'react-router-dom'
 import { gazabellaApi } from '../../api/gazabella'
@@ -11,7 +11,10 @@ import { ALL_PRODUCTS, PICKS_ANCHOR, PICKS_LINK, productsPathToRoute } from '../
 import { ProductCard, ProductCardSkeleton } from '../product/ProductCard'
 import { ErrorState } from '../ui/AsyncState'
 import { Icon } from '../ui/Icon'
-import type { Banner, Category, Collection, ProductBrief } from '../../types/api'
+import type { Banner, Category, Collection, HomeSectionKey, ProductBrief } from '../../types/api'
+import { ReorderRow, TrustStrip } from './HomeExtras'
+import { resolveHomeOrder } from '../../lib/homeConfig'
+import { readViewed } from '../../lib/recentlyViewed'
 
 type IconName = Parameters<typeof Icon>[0]['name']
 
@@ -90,6 +93,7 @@ export function HomeIntro() {
   // أثناء التحميل: هيكل بارتفاع البانر نفسه، والمداخل السريعة ظاهرة من البداية — فلا ينزاح ما تحتها عند وصول البانرات
   if (banners.isPending) return <>
     <div className="container-page hm-hero hm-hero--skeleton" role="status" aria-label={t('نحمّل المختارات')}><div /></div>
+    <TrustStrip />
     <Shortcuts collections={collections.data ?? []} />
   </>
   const all = banners.data ?? []
@@ -99,6 +103,7 @@ export function HomeIntro() {
   return <>
     {banners.isError && <div className="container-page hm-hero hm-hero--error"><ErrorState message={getApiErrorMessage(banners.error)} onRetry={() => void banners.refetch()} /></div>}
     {!!slides.length && <Hero key={slides.map((s) => s.id).join('-')} slides={slides} tagline={settings.data?.tagline} />}
+    <TrustStrip />
     <Shortcuts collections={collections.data ?? []} />
   </>
 }
@@ -241,15 +246,27 @@ function ServiceInfo() {
   )
 }
 
-/** نهاية الرئيسية: الكتالوج الكامل في صفحته بدل عرضه أسفل الرئيسية */
-function AllProductsCta() {
-  const reveal = useReveal<HTMLElement>()
-  return (
-    <section ref={reveal} className="container-page hm-section hm-all" aria-labelledby="hm-all-title">
-      <h2 id="hm-all-title">{t('كل ما في Gazabella، في مكان واحد')}</h2>
-      <Link className="btn-primary hm-cta" to={ALL_PRODUCTS}>{t('تصفّحي كل المنتجات')} <Icon name="arrow" className="size-4 rtl:rotate-180" /></Link>
-    </section>
-  )
+/** N-02 عروض اليوم: نطلب on_sale ونفلتر محلياً أيضاً — إن تجاهل الخادم الفلتر لا نعرض منتجاً بلا خصم */
+function DealsRow() {
+  const deals = useQuery({ queryKey: ['products', { on_sale: true, per_page: 12 }], queryFn: () => gazabellaApi.getProducts({ on_sale: true, in_stock: true, per_page: 12 }), staleTime: 120_000 })
+  const list = (deals.data?.data ?? []).filter((p) => p.discount_price != null && Number(p.discount_price) < Number(p.price))
+  if (deals.isError || (!deals.isPending && list.length < 2)) return null
+  return <ProductRow id="hm-deals-title" kicker={t('لفترة محدودة')} title={t('عروض اليوم')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={list} layout="rail" loading={deals.isPending} />
+}
+
+/** N-04 الأكثر طلباً: يُفعَّل من الإدارة فقط بعد دعم sort=-sales_count في الخادم */
+function BestSellersRow() {
+  const best = useQuery({ queryKey: ['products', { sort: '-sales_count', per_page: 8 }], queryFn: () => gazabellaApi.getProducts({ sort: '-sales_count', in_stock: true, per_page: 8 }), staleTime: 300_000, retry: false })
+  const list = best.data?.data ?? []
+  if (best.isError || (!best.isPending && list.length < 2)) return null
+  return <ProductRow id="hm-best-title" kicker={t('ما تحبه زبوناتنا')} title={t('الأكثر طلباً')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={list} layout="rail" loading={best.isPending} />
+}
+
+/** N-05 شاهدتِ مؤخراً — من الجهاز فقط */
+function RecentRow() {
+  const [list] = useState(() => readViewed())
+  if (list.length < 2) return null
+  return <ProductRow id="hm-recent-title" kicker={t('تابعي من حيث توقفتِ')} title={t('شاهدتِ مؤخراً')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={list.slice(0, 8)} layout="rail" loading={false} />
 }
 
 const ROW = 4
@@ -274,12 +291,18 @@ export function HomeShowcase() {
   const promo = (hasHero ? promos[0] : promos[1]) ?? null
   const collection = promo ? null : (collections.data ?? []).find((c) => c.description || c.image_url) ?? null
 
-  return <>
-    <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} empty={hash === '#' + PICKS_ANCHOR ? t('لا توجد مختارات معروضة الآن.') : undefined} />
-    <PromoBand banner={promo} collection={collection} />
-    <ProductRow id="hm-new-title" kicker={t('جديدنا')} title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} layout="rail" loading={latest.isPending || (featured.isPending && !featured.isError)} failed={latest.isError} onRetry={() => void latest.refetch()} />
-    <BudgetTiles />
-    <AllProductsCta />
-    <ServiceInfo />
-  </>
+  const settings = useQuery({ queryKey: ['settings'], queryFn: gazabellaApi.getSettings })
+  // N-07: الترتيب والإظهار من لوحة الإدارة (settings.home.sections) أو الترتيب الافتراضي
+  const sections: Record<HomeSectionKey, () => ReactNode> = {
+    deals: () => <DealsRow />,
+    best_sellers: () => <BestSellersRow />,
+    picks: () => <ProductRow id="hm-picks-title" anchor={PICKS_ANCHOR} kicker={t('اختيارات')} title={t('مختارات Gazabella')} to={ALL_PRODUCTS} linkLabel={t('كل المنتجات')} products={picks} layout="grid" loading={featured.isPending} failed={featured.isError} onRetry={() => void featured.refetch()} empty={hash === '#' + PICKS_ANCHOR ? t('لا توجد مختارات معروضة الآن.') : undefined} />,
+    promo: () => <PromoBand banner={promo} collection={collection} />,
+    new: () => <ProductRow id="hm-new-title" kicker={t('جديدنا')} title={t('وصل حديثًا')} to="/?sort=-created_at#products" linkLabel={t('كل الجديد')} products={fresh.length >= 2 ? fresh : []} layout="rail" loading={latest.isPending || (featured.isPending && !featured.isError)} failed={latest.isError} onRetry={() => void latest.refetch()} />,
+    budget: () => <BudgetTiles />,
+    reorder: () => <ReorderRow />,
+    recent: () => <RecentRow />,
+    services: () => <ServiceInfo />,
+  }
+  return <>{resolveHomeOrder(settings.data?.home).map((key) => <Fragment key={key}>{sections[key]()}</Fragment>)}</>
 }

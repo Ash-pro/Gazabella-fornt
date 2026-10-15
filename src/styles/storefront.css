@@ -328,6 +328,24 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
   .hm-hero__lead { -webkit-line-clamp: 2; }
 }
 
-/* اسم المتجر البائع تحت عنوان المنتج (عند توفر product.store من الـ API) */
-.detail-store { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--sp-2); padding: 4px 10px; border-radius: var(--rad-pill); background: var(--c-brand-tint); color: var(--c-ink-2); font-size: 13px; }
-.detail-store b { color: var(--c-brand); font-weight: 600; }
+/* ── N-01 شريط الثقة تحت الـ Hero ── */
+.hm-trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-2); margin-top: var(--sp-4); list-style: none; }
+.hm-trust li { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 12px; border: 1px solid var(--c-line); border-radius: var(--rad-md); background: #fff; }
+.hm-trust li > svg { flex-shrink: 0; color: var(--c-brand); }
+.hm-trust b { display: block; font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--c-ink); }
+.hm-trust small { display: block; font-size: 12px; line-height: 1.5; color: var(--c-ink-3); }
+@media (max-width: 639px) {
+  .hm-trust { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .hm-trust::-webkit-scrollbar { display: none; }
+  .hm-trust li { flex: 0 0 auto; scroll-snap-align: start; }
+}
+
+/* ── N-06 اطلبيها مرة أخرى ── */
+.hm-reorder { display: grid; gap: var(--sp-3); list-style: none; }
+@media (min-width: 768px) { .hm-reorder { grid-template-columns: repeat(3, 1fr); } }
+.hm-reorder li { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3); border: 1px solid var(--c-line); border-radius: var(--rad-lg); background: #fff; }
+.hm-reorder__thumb { display: grid; place-items: center; width: 56px; height: 64px; flex-shrink: 0; overflow: hidden; border-radius: var(--rad-md); background: var(--c-soft); color: var(--c-ink-3); }
+.hm-reorder__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.hm-reorder__text { flex: 1; min-width: 0; }
+.hm-reorder__text a { display: block; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; color: var(--c-ink); }
+.hm-reorder__text small { font-size: 12px; color: var(--c-ink-3); }

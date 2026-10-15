@@ -23,6 +23,7 @@ import { useStoreInfo } from '../hooks/useStoreInfo'
 import { formatPrice } from '../lib/format'
 import { toMetaDescription } from '../content/seo'
 import { getImageUrl } from '../lib/apiClient'
+import { recordViewed } from '../lib/recentlyViewed'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
@@ -48,6 +49,8 @@ function ProductContent({ slug }: { slug: string }) {
   const description = product?.description?.trim() ?? ''
   const summary = summarize(description)
   const hasFullDescription = description.length > summary.length
+  // N-05: «شاهدتِ مؤخراً» على الجهاز فقط
+  useEffect(() => { if (product) recordViewed(product) }, [product])
   const store = useStoreInfo()
   const zoneNames = store.deliveryZones.map((z) => z.name).join(t('، '))
 
@@ -210,7 +213,6 @@ function ProductContent({ slug }: { slug: string }) {
         <div className="detail-copy">
           <span className="eyebrow">{product.category?.name}</span>
           <h1>{product.name}</h1>
-          {product.store?.name && <p className="detail-store"><Icon name="store" className="size-4" /> {t('يُباع من')} <b>{product.store.name}</b></p>}
           {/* ملخص قصير هنا، والنص الكامل في «وصف المنتج» فقط إن كان أطول — لا نكرر الفقرة نفسها مرتين */}
           <p className="detail-description">
             {summary || t('اكتشفي تفاصيل هذا المنتج الرائع.')}

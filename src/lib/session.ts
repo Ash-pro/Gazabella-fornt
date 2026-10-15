@@ -2,6 +2,7 @@ import { useAuthStore } from '../stores/authStore'
 import { clearCartToken } from './apiClient'
 import { clearGuestUuid } from './guest'
 import { clearCheckoutAttempt } from './checkoutAttempt'
+import { clearViewed } from './recentlyViewed'
 import { queryClient } from './queryClient'
 
 /** مفاتيح sessionStorage تحمل بيانات شخصية (جوال · عنوان · طلب) — تُمسح عند الخروج على الأجهزة المشتركة */
@@ -18,5 +19,6 @@ export function clearLocalSession(): void {
   clearCartToken()
   try { clearGuestUuid() } catch { /* تخزين غير متاح */ }
   clearCheckoutAttempt()
+  clearViewed()
   try { PERSONAL_SESSION_KEYS.forEach((k) => sessionStorage.removeItem(k)) } catch { /* ignore */ }
 }
