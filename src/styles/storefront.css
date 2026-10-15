@@ -662,3 +662,44 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .review-req__name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; color: var(--c-ink); }
 .review-req__done { display: flex; align-items: center; gap: 6px; color: #1f7a4d; font-weight: 600; }
 .review-req--compact { margin-bottom: var(--sp-5); }
+
+/* ── صورة المنتج: تكبير بالهوفر + زر العرض ─────────────────────── */
+.detail-main-image--zoomable { cursor: zoom-in; isolation: isolate; }
+.detail-main-image--zoomable img { transition: transform 450ms var(--ease, cubic-bezier(.2, .7, .2, 1)); transform-origin: var(--zx, 50%) var(--zy, 50%); }
+.detail-main-image--zoomable::after { content: ""; position: absolute; inset: auto 0 0; height: 38%; background: linear-gradient(to top, rgba(29, 18, 32, .28), transparent); opacity: 0; transition: opacity 300ms ease; pointer-events: none; z-index: 1; }
+.detail-main-image > .detail-zoom-cta { z-index: 2; bottom: 14px; inset-inline-end: 14px; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .7); border-radius: var(--rad-pill, 999px); background: rgba(255, 255, 255, .86); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 6px 18px -8px rgba(29, 18, 32, .45); font-size: 13px; font-weight: 600; color: var(--c-ink); transition: background 220ms ease, color 220ms ease, transform 220ms ease, box-shadow 220ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .detail-main-image--zoomable:hover img { transform: scale(1.75); }
+  .detail-main-image--zoomable:hover::after { opacity: 1; }
+  .detail-main-image--zoomable:hover > .detail-zoom-cta { background: var(--c-brand); border-color: var(--c-brand); color: #fff; transform: translateY(-2px); box-shadow: 0 10px 24px -10px var(--c-brand); }
+}
+.detail-main-image--zoomable:focus-visible { outline: 3px solid var(--c-brand); outline-offset: 3px; }
+.detail-main-image--zoomable:focus-visible > .detail-zoom-cta { background: var(--c-brand); color: #fff; }
+/* تقليل الحركة: التكبير يبقى (تفاعل تبدؤه العميلة) لكن بدون انتقالات */
+@media (prefers-reduced-motion: reduce) { .detail-main-image--zoomable img, .detail-main-image > .detail-zoom-cta { transition: none; } }
+
+/* ── معرض الصور بملء الشاشة ───────────────────────────────────── */
+.app-dialog.lightbox { width: min(96vw, 980px); max-height: 96dvh; overflow: hidden; }
+.lightbox .dialog-inner { max-height: 96dvh; }
+.lightbox .dialog-heading h2 { overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+.lightbox__body { position: relative; display: grid; place-items: center; min-height: 0; background: #faf6f4; }
+.lightbox__stage { position: relative; width: 100%; height: min(72dvh, 760px); overflow: hidden; cursor: zoom-in; touch-action: pan-y; user-select: none; }
+.lightbox__stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: transform 350ms var(--ease, ease); animation: lb-in 260ms ease; }
+.lightbox__stage.is-zoomed { cursor: zoom-out; touch-action: none; }
+.lightbox__stage.is-zoomed img { transform: scale(2.2); }
+@keyframes lb-in { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: none; } }
+.lightbox__nav { position: absolute; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; background: rgba(255, 255, 255, .92); color: var(--c-ink); box-shadow: 0 6px 18px -8px rgba(29, 18, 32, .45); transition: background 200ms ease, color 200ms ease, transform 200ms ease; }
+.lightbox__nav--prev { inset-inline-start: 14px; }
+.lightbox__nav--next { inset-inline-end: 14px; }
+[dir="rtl"] .lightbox__nav--next svg, [dir="ltr"] .lightbox__nav--prev svg { transform: scaleX(-1); }
+@media (hover: hover) { .lightbox__nav:hover { background: var(--c-brand); color: #fff; transform: scale(1.06); } }
+.lightbox__nav:focus-visible { outline: 3px solid var(--c-brand); outline-offset: 2px; }
+.lightbox__count { position: absolute; top: 12px; inset-inline-start: 12px; padding: 4px 10px; border-radius: var(--rad-pill, 999px); background: rgba(29, 18, 32, .62); color: #fff; font-size: 12px; font-weight: 600; }
+.lightbox__thumbs { display: flex; justify-content: center; gap: 8px; padding: 12px 16px 4px; overflow-x: auto; }
+.lightbox__thumbs button { flex-shrink: 0; width: 60px; height: 60px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 10px; opacity: .6; transition: opacity 200ms ease, border-color 200ms ease; }
+.lightbox__thumbs button[aria-pressed="true"] { border-color: var(--c-brand); opacity: 1; }
+@media (hover: hover) { .lightbox__thumbs button:hover { opacity: 1; } }
+.lightbox__thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.lightbox__hint { padding: 8px 16px 14px; font-size: 12px; text-align: center; color: var(--c-ink-3); }
+@media (max-width: 640px) { .lightbox__stage { height: 62dvh; } .lightbox__nav { width: 38px; height: 38px; margin-top: -19px; } }
+@media (prefers-reduced-motion: reduce) { .lightbox__stage img { transition: none; animation: none; } }

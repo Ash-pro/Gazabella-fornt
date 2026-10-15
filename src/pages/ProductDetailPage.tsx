@@ -10,9 +10,9 @@ import { queryClient } from '../lib/queryClient'
 import { RelatedProducts } from '../components/product/RelatedProducts'
 import { SupportLink } from '../components/support/SupportLink'
 import { ProductVisual } from '../components/product/ProductVisual'
+import { ProductLightbox } from '../components/product/ProductLightbox'
 import { imageSrcSet } from '../lib/images'
 import { ErrorState } from '../components/ui/AsyncState'
-import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
 import { getApiErrorMessage } from '../lib/apiClient'
 import { money } from '../lib/format'
@@ -203,9 +203,20 @@ function ProductContent({ slug }: { slug: string }) {
       <div className="detail-layout">
         <div className="detail-gallery">
           {zoomable ? (
-            <button className="detail-main-image" onClick={() => setZoom(true)} aria-label={t('تكبير صورة المنتج')}>
+            <button
+              type="button"
+              className="detail-main-image detail-main-image--zoomable"
+              onClick={() => setZoom(true)}
+              onPointerMove={(e) => {
+                if (e.pointerType !== 'mouse') return
+                const r = e.currentTarget.getBoundingClientRect()
+                e.currentTarget.style.setProperty('--zx', `${((e.clientX - r.left) / r.width) * 100}%`)
+                e.currentTarget.style.setProperty('--zy', `${((e.clientY - r.top) / r.height) * 100}%`)
+              }}
+              aria-label={t('تكبير صورة المنتج')}
+            >
               {mainVisual}
-              <span><Icon name="eye" className="size-4" /> {t('عرض الصورة')}</span>
+              <span className="detail-zoom-cta"><Icon name="search" className="size-4" /> {t('عرض الصورة')}</span>
             </button>
           ) : (
             <div className="detail-main-image">{mainVisual}</div>
@@ -324,16 +335,12 @@ function ProductContent({ slug }: { slug: string }) {
       </div>
 
       {zoom && zoomable && (
-        <Dialog title={product.name} onClose={() => setZoom(false)}>
-          <div className="aspect-square">
-            <ProductVisual
-              src={variant?.image_url ?? image?.url ?? null}
-              alt={product.name}
-              priority
-              className="!object-contain"
-            />
-          </div>
-        </Dialog>
+        <ProductLightbox
+          title={product.name}
+          images={[...new Set([...(variant?.image_url ? [variant.image_url] : []), ...(product.images ?? []).map((img) => img.url)])]}
+          start={variant?.image_url ? 0 : imageIndex}
+          onClose={() => setZoom(false)}
+        />
       )}
     </div>
   )
