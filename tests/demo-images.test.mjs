@@ -39,8 +39,9 @@ test('banners by type, collections, cart/order line items', () => {
   const d = m.applyDemoImages({
     banners: [{ id: 1, type: 'hero', title: 'x', image_url: 'p.jpg' }, { id: 3, type: 'badge', title: 'y', image_url: null }],
     collections: [{ id: 1, name: 'Edit', slug: 'the-everyday-edit' }],
-    items: [{ product_slug: 'silk-setting-powder', image_url: null }],
+    items: [{ product_slug: 'silk-setting-powder', image_url: null }, { id: 7, product: { id: 2, name: 'x', slug: 'rosewater-facial-toner' }, image_url: 'https://api/placeholders/x.jpg', unit_price: 9 }],
   }, true)
+  assert.equal(d.items[1].image_url, '/demo/products/rosewater-facial-toner-1.webp')
   assert.equal(d.banners[0].image_url, '/demo/banners/hero.webp')
   assert.equal(d.banners[1].image_url, null)
   assert.equal(d.collections[0].image_url, '/demo/collections/everyday-edit.webp')

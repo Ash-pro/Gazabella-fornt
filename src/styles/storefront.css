@@ -766,3 +766,65 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
 .lightbox__hint { padding: 8px 16px 14px; font-size: 12px; text-align: center; color: var(--c-ink-3); }
 @media (max-width: 640px) { .lightbox__stage { height: 62dvh; } .lightbox__nav { width: 38px; height: 38px; margin-top: -19px; } }
 @media (prefers-reduced-motion: reduce) { .lightbox__stage img { transition: none; animation: none; } }
+
+/* ── بطاقة الطلب (صفحة طلباتي) ─────────────────────────────────── */
+.acct-order.ocard { gap: 0; padding: 0; overflow: hidden; border-radius: 18px; }
+.acct-order.ocard:hover { border-color: #E2D3DC; box-shadow: 0 14px 34px -22px rgba(29, 18, 32, .45); }
+.ocard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 0; }
+.ocard__label { font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--c-ink-3); }
+.ocard .acct-order__number { margin-top: 2px; font-size: 16px; }
+.ocard .status-badge { margin-top: 2px; padding: 6px 12px; font-size: 12px; }
+.ocard__meta { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px 16px; list-style: none; }
+.ocard__meta li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: var(--rad-pill, 999px); background: var(--c-soft); font-size: 12px; font-weight: 500; color: var(--c-ink-2); white-space: nowrap; }
+.ocard__meta svg { color: var(--c-ink-3); }
+
+.ocard-track { display: grid; gap: 10px; margin: 0 20px; padding: 14px; border-radius: 14px; background: var(--ocard-tint); }
+.ocard-track--waiting { --ocard-tint: #FFF8EC; --ocard-accent: #C7891A; }
+.ocard-track--moving { --ocard-tint: #F7EEF3; --ocard-accent: var(--c-brand); }
+.ocard-track--done { --ocard-tint: #EAF6EF; --ocard-accent: #1f7a4d; }
+.ocard-track--cancelled { --ocard-tint: #F6F2F3; --ocard-accent: #8E7F86; }
+.ocard-track__row { display: flex; align-items: center; gap: 10px; }
+.ocard-track__icon { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--ocard-accent); color: #fff; box-shadow: 0 6px 14px -8px var(--ocard-accent); }
+.ocard-track__text { display: grid; min-width: 0; }
+.ocard-track__text b { font-size: 14px; font-weight: 700; color: var(--c-ink); }
+.ocard-track__text small { font-size: 12px; color: var(--c-ink-2); }
+.ocard-track__bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; list-style: none; }
+.ocard-track__bar li { height: 6px; border-radius: 999px; background: rgba(29, 18, 32, .08); }
+.ocard-track__bar li.is-done { background: var(--ocard-accent); }
+.ocard-track__bar li.is-current { background: linear-gradient(90deg, var(--ocard-accent), color-mix(in srgb, var(--ocard-accent) 45%, #fff)); animation: soft-pulse 1.8s ease-in-out infinite; }
+.ocard-track__note { display: flex; align-items: flex-start; gap: 8px; padding-top: 10px; border-top: 1px solid rgba(29, 18, 32, .07); font-size: 12.5px; line-height: 1.7; color: var(--c-ink-2); }
+.ocard-track__note svg { margin-top: 3px; color: var(--ocard-accent); }
+.ocard-track__note b { color: var(--c-ink); letter-spacing: .08em; }
+
+.ocard__items { display: grid; gap: 4px; padding: 14px 20px 6px; list-style: none; }
+.ocard__items > li:not(.ocard__more) { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 6px 0; }
+.ocard__items > li + li:not(.ocard__more) { border-top: 1px solid var(--c-line); padding-top: 10px; }
+.ocard__thumb { display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden; border-radius: 12px; background: var(--c-soft); border: 1px solid var(--c-line); color: var(--c-ink-3); }
+.ocard__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ocard__name { display: grid; min-width: 0; }
+.ocard__name b { overflow: hidden; font-size: 14px; font-weight: 600; line-height: 1.6; color: var(--c-ink); text-overflow: ellipsis; white-space: nowrap; }
+.ocard__name small { font-size: 12px; color: var(--c-ink-3); }
+.ocard__qty { padding: 3px 9px; border-radius: 8px; background: var(--c-soft); font-size: 12px; font-weight: 700; color: var(--c-ink-2); }
+.ocard__empty { display: flex !important; gap: 8px; color: var(--c-ink-3); font-size: 13px; }
+.ocard__more a { display: inline-flex; padding: 4px 0; font-size: 12.5px; font-weight: 600; color: var(--c-brand); }
+.ocard__more a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.ocard__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 14px 20px 16px; border-top: 1px solid var(--c-line); background: #FCFAFA; }
+.ocard__total span { display: block; font-size: 11px; color: var(--c-ink-3); }
+.ocard__total strong { font-size: 20px; font-weight: 800; color: var(--c-ink); }
+.ocard__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ocard__actions .btn-cancel { min-height: 42px; padding-inline: 14px; border-radius: 999px; }
+.ocard__actions .btn-primary, .ocard__actions .btn-ghost { min-height: 42px; padding: 8px 18px; border-radius: 999px; font-size: 13px; }
+.ocard__details { gap: 6px; }
+[dir="rtl"] .ocard__chev { transform: scaleX(-1); }
+@media (hover: hover) { .ocard__details:hover .ocard__chev { translate: -3px 0; } [dir="ltr"] .ocard__details:hover .ocard__chev { translate: 3px 0; } }
+.ocard__chev { transition: translate 200ms ease; }
+.ocard__help { display: inline-flex; flex-basis: 100%; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #128C4A; }
+.ocard__help:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 479px) {
+  .ocard__head, .ocard__meta, .ocard__items, .ocard__foot { padding-inline: 14px; }
+  .ocard-track { margin-inline: 14px; }
+  .ocard__actions { width: 100%; }
+  .ocard__actions > a, .ocard__actions > button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .ocard-track__bar li.is-current { animation: none; } .ocard__chev { transition: none; } }

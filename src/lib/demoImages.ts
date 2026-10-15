@@ -66,8 +66,10 @@ function walk(node: unknown, depth: number): void {
     node.image_url = demoAsset(BANNER_IMAGES[node.type])
   }
   // عناصر السلة/الطلب: { product_slug, image_url } أو { product: {...} }
-  if (typeof node.product_slug === 'string' && has(node, 'image_url')) {
-    const urls = demoProductImages(node.product_slug)
+  const lineSlug = typeof node.product_slug === 'string' ? node.product_slug
+    : isObj(node.product) && typeof node.product.slug === 'string' ? node.product.slug : null
+  if (lineSlug && !slug && has(node, 'image_url')) {
+    const urls = demoProductImages(lineSlug)
     if (urls) node.image_url = urls[0]
   }
   for (const key in node) {
