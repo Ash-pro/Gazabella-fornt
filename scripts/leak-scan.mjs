@@ -5,7 +5,7 @@
  *   node scripts/leak-scan.mjs --base http://127.0.0.1:8000/api/v1 [--token <sanctum>] [--stores "متجر أ,متجر ب"]
  *   (أو المتغيرات LEAK_SCAN_BASE_URL · LEAK_SCAN_TOKEN · LEAK_SCAN_STORE_NAMES)
  *
- * يفحص: /products · /products/{slug} · /cart (ضيف) · /orders · /orders/{order_number} (بتوكن)
+ * يفحص: /products · /products/{slug} · /cart (ضيف) · /orders · /orders/{order_number} · /invoices · /invoices/{number} · /invoices/verify/{token} (بتوكن)
  * يخرج بالرمز 1 عند أي مخالفة — مناسب لـ CI الليلي.
  */
 import { randomUUID } from 'node:crypto'
@@ -44,6 +44,14 @@ if (token) {
   const num = orders.body?.data?.[0]?.order_number
   if (num) { const o = await get('/orders/' + encodeURIComponent(num), true); check(`GET /orders/${num} (${o.status})`, o.body) }
   const me = await get('/auth/me', true); check(`GET /auth/me (${me.status})`, me.body)
+  // INV: الفواتير — البائع Gazabella فقط، بلا متجر/مورد/عمولة
+  const invoices = await get('/invoices', true); check(`GET /invoices (${invoices.status})`, invoices.body)
+  const inv = invoices.body?.data?.[0]?.invoice_number
+  if (inv) {
+    const d = await get('/invoices/' + encodeURIComponent(inv), true); check(`GET /invoices/${inv} (${d.status})`, d.body)
+    const token = d.body?.data?.verify_token
+    if (token) { const v = await get('/invoices/verify/' + encodeURIComponent(token)); check(`GET /invoices/verify (${v.status})`, v.body) }
+  }
 } else console.log('ℹ️  بدون --token: تم تخطي /orders و/auth/me')
 
 console.log(`\n${failed ? '❌' : '✅'} ${checked - failed}/${checked} ردود نظيفة`)

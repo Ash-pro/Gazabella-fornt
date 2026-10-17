@@ -204,7 +204,19 @@ interface RawOrder {
   wallet_amount?: number | string | null
   /** المتبقي للدفع عند الاستلام */
   amount_due?: number | string | null
+  paid_at?: string | null
+  invoice?: { invoice_number?: string; status?: string; issued_at?: string } | null
   created_at: string
+}
+
+const INVOICE_STATUSES = ['issued', 'partially_credited', 'credited'] as const
+
+/** undefined = الخادم لا يرسل الحقل (لا ندّعي شيئاً) · null = لم تصدر بعد · كائن صالح = صدرت */
+export function normalizeInvoiceRef(raw: RawOrder['invoice']): Order['invoice'] {
+  if (raw === undefined) return undefined
+  if (!raw || typeof raw.invoice_number !== 'string' || !raw.invoice_number || typeof raw.issued_at !== 'string') return null
+  const status = (INVOICE_STATUSES as readonly string[]).includes(raw.status ?? '') ? (raw.status as (typeof INVOICE_STATUSES)[number]) : 'issued'
+  return { invoice_number: raw.invoice_number, status, issued_at: raw.issued_at }
 }
 
 /** قيمة مالية اختيارية: null إن غابت أو كانت غير صالحة، وإلا نص */
@@ -269,6 +281,8 @@ export function normalizeOrder(raw: RawOrder): Order {
     // null = لم تُستخدم المحفظة؛ لا نحوّلها لصفر حتى لا نعرض سطراً فارغاً
     wallet_applied: optionalAmount(raw.wallet_applied ?? raw.wallet_amount),
     amount_due: optionalAmount(raw.amount_due),
+    paid_at: raw.paid_at ?? null,
+    invoice: normalizeInvoiceRef(raw.invoice),
     created_at: raw.created_at,
   }
 }
@@ -615,6 +629,9 @@ const legacyGazabellaApi = {
 
   async confirmJawwalPayment(orderNumber: string, reference: string): Promise<Order> {
     if (isMockMode()) {
+      // INV-3: الطلب المحفوظ يُؤكَّد دفعه وتصدر فاتورته؛ وإلا نرجع لنسخة الكاش كما كان
+      const saved = await mockServices.markOrderPaid(orderNumber, reference)
+      if (saved) return saved
       const cached = queryClient.getQueryData<Order>(['order', orderNumber])
       if (cached) return { ...cached, payment_status: 'paid', payment_reference: reference }
       throw new Error('Order not found in mock')

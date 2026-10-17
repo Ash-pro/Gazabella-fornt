@@ -9,6 +9,8 @@ import { ORDER_STEPS, orderStepIndex } from '../../lib/orderSearch'
 import { orderPath } from '../../hooks/useAccountOrders'
 import { whatsappLink } from '../../content/storeInfo'
 import { Icon } from '../ui/Icon'
+import { invoicesEnabled } from '../../api/invoices'
+import { invoicePath } from '../../hooks/useInvoices'
 import { ReorderButton } from './ReorderButton'
 import { CancelOrderButton } from './CancelOrderButton'
 import { orderGroup } from '../../lib/orderSearch'
@@ -107,6 +109,7 @@ export function OrderCard({ order, query, whatsapp, acceptanceMinutes }: { order
         {validDate && <li><Icon name="clock" className="size-3.5" /><span className="num">{formatDate(created, { day: 'numeric', month: 'short' })}</span> · <span className="num">{formatDate(created, { hour: 'numeric', minute: '2-digit' })}</span></li>}
         <li><Icon name="bag" className="size-3.5" /><span className="num">{count}</span> {count === 1 ? t('منتج') : t('منتجات')}</li>
         {order.payment_method && <li><Icon name="wallet" className="size-3.5" />{paymentMethodLabel(order.payment_method)}</li>}
+        {order.invoice && invoicesEnabled() && <li><Link className="ocard__invoice" to={invoicePath(order.invoice.invoice_number)} aria-label={t('فاتورة الطلب {order_number}', { order_number: order.order_number })}><Icon name="receipt" className="size-3.5" />{t('الفاتورة')}</Link></li>}
       </ul>
 
       <OrderStatusTrack status={order.status} note={note} />

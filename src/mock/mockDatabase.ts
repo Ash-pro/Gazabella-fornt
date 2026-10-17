@@ -5,6 +5,7 @@ import type {
   MerchantStore,
   DeliveryMission,
 } from '../types/api'
+import { DEMO_INVOICE_ORDERS, demoUnpaidOrders } from '../fixtures/invoices'
 
 interface DeliveryOption {
   id: number
@@ -523,10 +524,23 @@ const legacyPaymentStatusMap: Record<string, Order['payment_status']> = {
   unpaid: 'pending', pending: 'pending', paid: 'paid', failed: 'failed', refunded: 'refunded', unknown: 'pending',
 }
 
+/**
+ * INV: طلبات مكتملة مدفوعة بجوال باي ولها فواتير + طلب بانتظار الدفع + طلب أُلغي قبل الدفع.
+ * تُضاف مرة واحدة (حتى لمن لديه بيانات Mock محفوظة من قبل) ولا تُكرر.
+ */
+function withDemoInvoiceOrders(orders: Order[]): Order[] {
+  const have = new Set(orders.map((o) => o.order_number))
+  const missing = [...DEMO_INVOICE_ORDERS, ...demoUnpaidOrders()].filter((o) => !have.has(o.order_number))
+  if (!missing.length) return orders
+  const next = [...orders, ...missing]
+  saveStoredOrders(next)
+  return next
+}
+
 export function getStoredOrders(): Order[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.ORDERS)
-    if (raw) return (JSON.parse(raw) as Order[]).map((order) => ({ ...order, payment_status: legacyPaymentStatusMap[order.payment_status] ?? 'pending' }))
+    if (raw) return withDemoInvoiceOrders((JSON.parse(raw) as Order[]).map((order) => ({ ...order, payment_status: legacyPaymentStatusMap[order.payment_status] ?? 'pending' })))
   } catch (e) {
     console.error('Error reading mock orders', e)
   }
@@ -567,7 +581,7 @@ export function getStoredOrders(): Order[] {
       tracking: [
         { status: 'pending', note: 'تم استلام طلبك بنجاح', created_at: '2026-09-20 08:00' },
         { status: 'confirmed', note: 'تم تأكيد الدفع عبر Jawwal Pay', created_at: '2026-09-20 08:05' },
-        { status: 'processing', note: 'قام التجار بتجهيز وتغليف المنتجات', created_at: '2026-09-20 08:25' },
+        { status: 'processing', note: 'جهّزنا طلبكِ وغلّفناه', created_at: '2026-09-20 08:25' },
         { status: 'shipped', note: 'الشحنة مع مندوب التوصيل (محمود أبو العوف)', created_at: '2026-09-20 08:35' },
       ],
       notes: 'الرجاء الاتصال قبل الوصول بـ 15 دقيقة',
@@ -593,7 +607,7 @@ export function getStoredOrders(): Order[] {
       escrow_expires_at:delivered ? new Date(Date.now()+47*3600_000).toISOString() : undefined,created_at:created})
   }
   saveStoredOrders(samples)
-  return samples
+  return withDemoInvoiceOrders(samples)
 }
 
 export function saveStoredOrders(orders: Order[]): void {

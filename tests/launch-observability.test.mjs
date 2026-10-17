@@ -130,10 +130,14 @@ test('service status: outage detection + status URL + payment methods from setti
   s.serviceStatus.set(true); s.serviceStatus.set(true); s.serviceStatus.set(false); off()
   assert.equal(calls, 2)
   const p = await server.ssrLoadModule('/src/lib/paymentMethods.ts')
-  assert.deepEqual(p.paymentOptionsFromCodes(['cod']).map((o) => o.code), ['cod'])
-  assert.deepEqual(p.paymentOptionsFromCodes(['jawwal_pay', 'cod', 'cod', 'visa']).map((o) => o.code), ['jawwal_pay', 'cod'])
-  assert.deepEqual(p.paymentOptionsFromCodes(null).map((o) => o.code), ['cod'])
-  assert.deepEqual(p.paymentOptionsFromCodes([]).map((o) => o.code), ['cod'])
+  assert.deepEqual(p.paymentOptionsFromCodes(['cod'], true).map((o) => o.code), ['cod'])
+  assert.deepEqual(p.paymentOptionsFromCodes(['jawwal_pay', 'cod', 'cod', 'visa'], true).map((o) => o.code), ['jawwal_pay', 'cod'])
+  assert.deepEqual(p.paymentOptionsFromCodes(null, true).map((o) => o.code), ['cod'])
+  assert.deepEqual(p.paymentOptionsFromCodes([], true).map((o) => o.code), ['cod'])
+  // INV-2: خارج وضع العرض — جوال باي فقط
+  assert.deepEqual(p.paymentOptionsFromCodes(['cod'], false).map((o) => o.code), ['jawwal_pay'])
+  assert.deepEqual(p.paymentOptionsFromCodes(['jawwal_pay', 'cod'], false).map((o) => o.code), ['jawwal_pay'])
+  assert.deepEqual(p.paymentOptionsFromCodes(null, false).map((o) => o.code), ['jawwal_pay'])
 })
 
 test('middleware: robots.txt + sitemap.xml (static pages, API products/categories, canonical host only, API failure)', async () => {

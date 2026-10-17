@@ -12,6 +12,7 @@ import { OrderProgress } from '../components/account/OrderCard'
 import { ReviewRequests } from '../components/account/ReviewRequests'
 import { pendingReviews } from '../lib/reviewed'
 import { CancelOrderButton } from '../components/account/CancelOrderButton'
+import { OrderInvoiceCard } from '../components/invoice/OrderInvoiceCard'
 import { ErrorState, PageLoader } from '../components/ui/AsyncState'
 import { Dialog } from '../components/ui/Dialog'
 import { Icon } from '../components/ui/Icon'
@@ -130,6 +131,7 @@ export function OrderDetailPage() {
       if (isMockMode()) {
         void client.invalidateQueries({ queryKey: ['order', orderId] })
         void client.invalidateQueries({ queryKey: ['orders'] })
+        void client.invalidateQueries({ queryKey: ['invoices'] })
       } else window.location.assign(url.href)
     },
   })
@@ -324,6 +326,7 @@ export function OrderDetailPage() {
               <p className="mt-4 text-xs leading-6 text-[var(--text-3)]">{t('هذا طلب تجريبي للعرض. لا توجد مدفوعات أو شحنات حقيقية.')}</p>
             )}
           </section>
+          <OrderInvoiceCard order={order} />
           {order.status === 'shipped' && order.delivery_pin && (
             <section className="checkout-card text-center">
               <h2 className="text-base font-bold">{t('رمز استلام الطلب')}</h2>

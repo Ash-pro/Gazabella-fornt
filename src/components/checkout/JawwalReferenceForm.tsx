@@ -20,6 +20,8 @@ export function JawwalReferenceForm({
     onSuccess: (updated) => {
       client.setQueryData(['order', updated.order_number], updated)
       void client.invalidateQueries({ queryKey: ['orders'] })
+      // INV-3: تأكيد الدفع يُصدر الفاتورة
+      void client.invalidateQueries({ queryKey: ['invoices'] })
       onConfirmed?.(updated)
     },
   })

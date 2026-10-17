@@ -14,6 +14,7 @@ import { getApiErrorMessage } from './lib/apiClient'
 import { gazabellaApi, isMockMode } from './api/gazabella'
 import { useAuthStore } from './stores/authStore'
 import { isMvp0Api } from './lib/apiContract'
+import { invoicesEnabled } from './api/invoices'
 
 import { ProductsPage } from './pages/ProductsPage'
 const OrderLookupPage = lazy(() => import('./pages/OrderLookupPage').then((module) => ({ default: module.OrderLookupPage })))
@@ -41,6 +42,9 @@ const ContactPage = lazy(() => import('./pages/info/SupportPages').then((m) => (
 const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage').then((module) => ({ default: module.TrackOrderPage })))
 const AccountPage = lazy(() => import('./pages/AccountPage').then((module) => ({ default: module.AccountPage })))
 const WalletPage = lazy(() => import('./pages/WalletPage').then((module) => ({ default: module.WalletPage })))
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then((module) => ({ default: module.InvoicesPage })))
+const InvoiceDetailPage = lazy(() => import('./pages/InvoiceDetailPage').then((module) => ({ default: module.InvoiceDetailPage })))
+const InvoiceVerifyPage = lazy(() => import('./pages/InvoiceVerifyPage').then((module) => ({ default: module.InvoiceVerifyPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -82,6 +86,12 @@ export default function App() {
               <Route path="brands/:slug" element={<Suspense fallback={<PageLoader />}><BrandPage /></Suspense>} />
               <Route path="addresses" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><AddressesPage /></ProtectedRoute></Suspense>} />
               <Route path="wallet" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><WalletPage /></ProtectedRoute></Suspense>} />
+              {invoicesEnabled() && <>
+                {/* INV: فواتير الحساب (محمية) + صفحة التحقق العامة من رمز QR */}
+                <Route path="invoices" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><InvoicesPage /></ProtectedRoute></Suspense>} />
+                <Route path="invoices/verify/:token" element={<Suspense fallback={<PageLoader />}><InvoiceVerifyPage /></Suspense>} />
+                <Route path="invoices/:invoiceNumber" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><InvoiceDetailPage /></ProtectedRoute></Suspense>} />
+              </>}
               <Route path="profile" element={<Suspense fallback={<PageLoader />}><ProtectedRoute><ProfilePage /></ProtectedRoute></Suspense>} />
               <Route path="track" element={<Suspense fallback={<PageLoader />}><TrackOrderPage /></Suspense>} />
               <Route path="orders/lookup" element={<Suspense fallback={<PageLoader />}><OrderLookupPage /></Suspense>} />

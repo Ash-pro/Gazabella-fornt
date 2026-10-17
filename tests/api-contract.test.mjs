@@ -80,12 +80,17 @@ test('delivery fee: unknown waiver reason is ignored and original is dropped (D-
   const o=module.normalizeOrder({id:1,items:[],subtotal:10,total:10,delivery_fee:0,delivery_fee_original:'5.00',delivery_waiver:{reason:'hack',label:'x'},status:'confirmed',payment_status:'pending'})
   assert.equal(o.delivery_waiver,null);assert.equal(o.delivery_fee_original,null)
 })
-test('payment methods: missing server list falls back to COD only (D-01, P1-FE-02)',async()=>{
+test('payment methods: demo mode keeps COD fallback; launch is Jawwal Pay only (INV-2)',async()=>{
   const pm=await server.ssrLoadModule('/src/lib/paymentMethods.ts')
-  assert.deepEqual(pm.resolvePaymentMethods(undefined).map(m=>m.code),['cod'])
-  assert.deepEqual(pm.resolvePaymentMethods([]).map(m=>m.code),['cod'])
-  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y',is_sandbox:true}]).map(m=>m.code),['cod','jawwal_pay'])
-  assert.deepEqual(pm.resolvePaymentMethods([{code:'bitcoin',label:'z'}]).map(m=>m.code),['cod'])
+  // وضع العرض (allowCod=true): السلوك السابق كما هو
+  assert.deepEqual(pm.resolvePaymentMethods(undefined,true).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([],true).map(m=>m.code),['cod'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y',is_sandbox:true}],true).map(m=>m.code),['cod','jawwal_pay'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'bitcoin',label:'z'}],true).map(m=>m.code),['cod'])
+  // المتجر الحي (allowCod=false): لا دفع عند الاستلام أبداً، حتى لو أرسله الخادم
+  assert.deepEqual(pm.resolvePaymentMethods(undefined,false).map(m=>m.code),['jawwal_pay'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'}],false).map(m=>m.code),['jawwal_pay'])
+  assert.deepEqual(pm.resolvePaymentMethods([{code:'cod',label:'x'},{code:'jawwal_pay',label:'y'}],false).map(m=>m.code),['jawwal_pay'])
 })
 test('order status + payment method labels are unified (D-21, P1-FE-03)',async()=>{
   const os=await server.ssrLoadModule('/src/lib/orderStatus.ts')

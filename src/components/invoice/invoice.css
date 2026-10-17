@@ -1,0 +1,211 @@
+/* INV — مستند الفاتورة (شاشة + طباعة A4). ألوان العلامة من tokens/index.css */
+
+.inv-doc {
+  --inv-ink: #1D1220;
+  --inv-ink-2: #4F4354;
+  --inv-ink-3: #75687A;
+  --inv-line: #EAE2E8;
+  --inv-cream: #FDF6EC;
+  --inv-brand: #A0144F;
+  position: relative;
+  width: 100%;
+  max-width: 794px; /* 210mm @96dpi */
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--inv-line);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--inv-ink);
+  font-size: 13px;
+  line-height: 1.6;
+  box-shadow: 0 18px 50px rgba(42, 26, 31, .08);
+}
+.inv-doc h3 { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--inv-ink-3); }
+.inv-doc p { margin: 0; }
+
+.inv-doc__demo { padding: 6px 16px; background: #FFF8EC; border-bottom: 1px dashed #BF9545; color: #8A6420; font-size: 11.5px; font-weight: 600; text-align: center; }
+
+.inv-doc__head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 32px; background: var(--inv-cream); border-bottom: 3px solid var(--inv-brand); }
+.inv-doc__logo { display: block; width: 132px; height: auto; }
+.inv-doc__title { display: grid; justify-items: end; gap: 4px; text-align: end; }
+.inv-doc__kind { font-size: 21px; font-weight: 700; color: var(--inv-brand); line-height: 1.2; }
+.inv-doc__number { font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+
+.inv-status { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.inv-status--issued { background: #DCFCE7; color: #0E7A4B; }
+.inv-status--partially_credited { background: #FEF3C7; color: #B45309; }
+.inv-status--credited { background: #F6F2F5; color: #4F4354; }
+
+.inv-doc__meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-bottom: 1px solid var(--inv-line); }
+.inv-doc__meta > div { padding: 12px 12px 12px 16px; padding-inline: 16px 12px; }
+.inv-doc__meta > div:first-child { padding-inline-start: 32px; }
+.inv-doc__meta > div + div { border-inline-start: 1px solid var(--inv-line); }
+.inv-doc__meta dt { font-size: 11px; color: var(--inv-ink-3); }
+.inv-doc__meta dd { margin: 2px 0 0; font-weight: 600; }
+
+.inv-doc__parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 18px 32px; }
+.inv-party b { display: block; font-size: 14px; margin-bottom: 2px; }
+.inv-party p { color: var(--inv-ink-2); font-size: 12.5px; }
+
+.inv-table { width: calc(100% - 64px); margin: 0 32px; border-collapse: collapse; }
+.inv-table th { padding: 9px 10px; background: #F6F2F5; color: var(--inv-ink-2); font-size: 11.5px; font-weight: 700; text-align: start; }
+.inv-table th:first-child { border-start-start-radius: 10px; border-end-start-radius: 10px; }
+.inv-table th:last-child { border-start-end-radius: 10px; border-end-end-radius: 10px; }
+.inv-table td { padding: 10px; border-bottom: 1px solid var(--inv-line); vertical-align: top; }
+.inv-table tbody tr { break-inside: avoid; }
+.inv-col-n { width: 32px; color: var(--inv-ink-3); }
+.inv-col-qty { width: 64px; text-align: center !important; }
+.inv-col-unit, .inv-col-sum { width: 96px; text-align: end !important; white-space: nowrap; }
+.inv-col-sum { font-weight: 700; }
+.inv-item__name { display: block; font-weight: 600; }
+.inv-item__variant, .inv-item__unit, .inv-item__credit { display: block; font-size: 11.5px; color: var(--inv-ink-3); }
+.inv-item__unit { display: none; }
+.inv-item__credit { color: #B45309; font-weight: 600; }
+
+.inv-doc__bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 280px); gap: 24px; align-items: start; padding: 18px 32px; }
+.inv-pay ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.inv-pay li { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; padding: 10px 12px; border: 1px solid var(--inv-line); border-radius: 10px; }
+.inv-pay__method { font-weight: 700; }
+.inv-pay__meta { grid-column: 1; font-size: 11.5px; color: var(--inv-ink-3); }
+.inv-pay li > b { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+
+.inv-totals { margin: 0; padding: 14px 16px; border-radius: 12px; background: #FBF7F9; display: grid; gap: 6px; }
+.inv-totals > div { display: flex; justify-content: space-between; gap: 12px; }
+.inv-totals dt { color: var(--inv-ink-2); }
+.inv-totals dd { margin: 0; font-weight: 600; }
+.inv-totals__was { margin-inline-end: 6px; color: var(--inv-ink-3); font-weight: 400; }
+.inv-totals__grand { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--inv-line); font-size: 15px; }
+.inv-totals__grand dt, .inv-totals__grand dd { color: var(--inv-brand); font-weight: 700; }
+.inv-totals__credit dd { color: #B45309; }
+.inv-totals__net dt, .inv-totals__net dd { font-weight: 700; color: var(--inv-ink); }
+
+.inv-credits { margin: 0 32px 6px; padding: 14px 16px; border: 1px dashed #E7C873; border-radius: 12px; background: #FFFBEF; }
+.inv-credit + .inv-credit { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #E7C873; }
+.inv-credit__head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.inv-credit__head b:last-child { margin-inline-start: auto; color: #B45309; }
+.inv-credit p { margin-top: 4px; color: var(--inv-ink-2); font-size: 12.5px; }
+.inv-credit ul { margin: 4px 0 0; padding-inline-start: 18px; color: var(--inv-ink-2); font-size: 12px; }
+
+.inv-doc__foot { margin-top: 10px; padding: 18px 32px 22px; border-top: 1px solid var(--inv-line); background: #FCFAF9; }
+.inv-codes { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.inv-codes__bar { display: grid; justify-items: center; gap: 4px; }
+.inv-barcode { display: block; width: 236px; height: 46px; }
+.inv-codes__bar span { font-size: 11px; letter-spacing: .12em; color: var(--inv-ink-2); }
+.inv-codes__qr { display: flex; align-items: center; gap: 10px; max-width: 220px; }
+.inv-qr { display: block; width: 84px; height: 84px; flex-shrink: 0; }
+.inv-codes__qr span { font-size: 11.5px; color: var(--inv-ink-3); }
+.inv-doc__thanks { margin-top: 14px !important; font-weight: 700; color: var(--inv-brand); text-align: center; }
+.inv-doc__fine { margin-top: 4px !important; font-size: 11px; color: var(--inv-ink-3); text-align: center; }
+
+/* ── الموبايل: الجدول يبقى مقروءاً بلا تمرير أفقي ── */
+@media (max-width: 640px) {
+  .inv-doc { border-radius: 14px; font-size: 12.5px; }
+  .inv-doc__head { padding: 16px; }
+  .inv-doc__logo { width: 96px; }
+  .inv-doc__kind { font-size: 17px; }
+  .inv-doc__number { font-size: 12px; }
+  .inv-doc__meta { grid-template-columns: 1fr 1fr; }
+  .inv-doc__meta > div, .inv-doc__meta > div:first-child, .inv-doc__meta > div + div { padding: 10px 16px; border-inline-start: 0; }
+  .inv-doc__meta > div:nth-child(even) { border-inline-start: 1px solid var(--inv-line); }
+  .inv-doc__meta > div:nth-child(-n+2) { border-bottom: 1px solid var(--inv-line); }
+  .inv-doc__parties { grid-template-columns: 1fr; gap: 14px; padding: 16px; }
+  .inv-table { width: calc(100% - 32px); margin: 0 16px; }
+  .inv-col-unit, .inv-col-n { display: none; }
+  .inv-item__unit { display: block; }
+  .inv-col-qty { width: 40px; }
+  .inv-col-sum { width: 76px; }
+  .inv-doc__bottom { grid-template-columns: 1fr; padding: 16px; }
+  .inv-totals { order: -1; }
+  .inv-credits { margin: 0 16px 6px; }
+  .inv-doc__foot { padding: 16px; }
+  .inv-codes { flex-direction: column; gap: 14px; }
+  .inv-barcode { width: 220px; }
+}
+
+/* ── نسخة الطباعة: تُرسم داخل .inv-print-root (Portal في body) وتختفي على الشاشة ── */
+.inv-print-root { display: none; }
+
+@media print {
+  @page { size: A4; margin: 10mm; }
+  html, body { background: #fff !important; }
+  body > *:not(.inv-print-root) { display: none !important; }
+  .inv-print-root { display: block; }
+  .inv-print-root .inv-doc { max-width: none; border: 0; border-radius: 0; box-shadow: none; font-size: 12px; }
+  .inv-print-root .inv-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .inv-print-root .inv-doc__head { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ── صفحة «فواتيري» ── */
+.inv-page { margin-top: 18px; }
+.inv-page__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; margin-bottom: 16px; }
+.inv-page__title { display: flex; align-items: center; font-size: 20px; font-weight: 700; }
+.inv-page__sub { margin-top: 4px; font-size: 13px; color: var(--text-2); max-width: 520px; }
+.inv-page__stats { display: flex; gap: 8px; margin: 0; }
+.inv-page__stats > div { min-width: 120px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+.inv-page__stats dt { font-size: 11.5px; color: var(--text-3); }
+.inv-page__stats dd { margin: 2px 0 0; font-size: 16px; font-weight: 700; color: var(--primary); }
+
+.inv-years { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.inv-year { min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.inv-year[aria-pressed="true"] { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+.inv-group + .inv-group { margin-top: 22px; }
+.inv-group__title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 13.5px; font-weight: 700; color: var(--text-2); }
+.inv-group__title small { font-size: 12px; font-weight: 600; color: var(--text-3); }
+.inv-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.inv-skel { height: 96px; }
+
+.inv-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.inv-row:hover { border-color: #D9CDD5; box-shadow: 0 8px 24px rgba(42, 26, 31, .06); }
+.inv-row__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--primary-dim); color: var(--primary); }
+.inv-row__main { min-width: 0; }
+.inv-row__top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.inv-row__number { font-size: 14px; font-weight: 700; color: var(--text); }
+.inv-row__number:hover { color: var(--primary); }
+.inv-row__what { margin-top: 2px; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.inv-row__what span { color: var(--text-3); }
+.inv-row__meta { display: flex; flex-wrap: wrap; gap: 2px 8px; margin-top: 2px; font-size: 12px; color: var(--text-3); }
+.inv-row__meta a { color: var(--text-2); text-decoration: underline; text-underline-offset: 3px; }
+.inv-row__side { display: grid; justify-items: end; gap: 6px; text-align: end; }
+.inv-row__side strong { font-size: 16px; }
+.inv-row__side small { font-size: 11.5px; color: #B45309; }
+.inv-row__actions { display: flex; gap: 6px; }
+.inv-row__actions .btn-primary, .inv-row__actions .btn-ghost { min-height: 38px; padding: 6px 14px; border-radius: 999px; font-size: 12.5px; }
+.inv-row__error { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+  .inv-row { grid-template-columns: auto minmax(0, 1fr); padding: 14px; }
+  .inv-row__icon { width: 38px; height: 38px; }
+  .inv-row__side { grid-column: 1 / -1; grid-template-columns: 1fr auto; align-items: center; justify-items: start; padding-top: 10px; border-top: 1px dashed var(--border); text-align: start; }
+  .inv-row__side small { grid-row: 2; }
+  .inv-row__actions { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+/* ── صفحة تفاصيل الفاتورة ── */
+.inv-detail { padding-block: 20px 64px; }
+.inv-detail__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; max-width: 794px; margin: 0 auto 14px; }
+.inv-detail__back { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 13.5px; font-weight: 700; color: var(--text-2); }
+.inv-detail__back:hover { color: var(--primary); }
+.inv-detail__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+.inv-detail__actions .btn-primary, .inv-detail__actions .btn-ghost { min-height: 42px; padding: 8px 16px; border-radius: 999px; font-size: 13px; }
+.inv-detail__msg { max-width: 794px; margin: 0 auto 14px !important; }
+@media (max-width: 640px) {
+  .inv-detail { padding-top: 12px; }
+  .inv-detail__actions { width: 100%; margin-inline-start: 0; }
+  .inv-detail__actions > * { flex: 1 1 0; }
+  .inv-detail__actions .btn-ghost:first-child { flex-basis: 100%; }
+}
+
+/* ── صفحة التحقق العامة ── */
+.inv-verify { display: grid; place-items: center; padding-block: 48px 72px; }
+.inv-verify__card { display: grid; justify-items: center; gap: 12px; width: 100%; max-width: 460px; padding: 28px 24px; border: 1px solid var(--border); border-radius: 20px; background: #fff; text-align: center; box-shadow: 0 18px 50px rgba(42, 26, 31, .08); }
+.inv-verify__badge { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; }
+.is-valid .inv-verify__badge { background: var(--success-bg); color: var(--success); }
+.is-invalid .inv-verify__badge { background: var(--warning-bg); color: var(--warning); }
+.inv-verify__card h1 { font-size: 18px; font-weight: 700; }
+.inv-verify__card p { font-size: 13px; color: var(--text-2); }
+.inv-verify__card dl { display: grid; width: 100%; margin: 4px 0 0; border: 1px solid var(--border); border-radius: 12px; }
+.inv-verify__card dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; font-size: 13.5px; }
+.inv-verify__card dl > div + div { border-top: 1px solid var(--border); }
+.inv-verify__card dt { color: var(--text-3); }
+.inv-verify__card dd { margin: 0; font-weight: 700; }
+.inv-verify__note { font-size: 11.5px !important; color: var(--text-3) !important; }

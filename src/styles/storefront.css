@@ -828,3 +828,12 @@ img.is-contain { object-fit: contain; background: var(--c-soft, #F3EEF2); }
   .ocard__actions > a, .ocard__actions > button { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .ocard-track__bar li.is-current { animation: none; } .ocard__chev { transition: none; } }
+
+/* INV — رابط الفاتورة في بطاقة الطلب + بطاقة الفاتورة في تفاصيل الطلب */
+.ocard__invoice { display: inline-flex; align-items: center; gap: 4px; color: var(--c-brand); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.inv-order-card__title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 1.05rem; font-weight: 700; }
+.inv-order-card__title svg { color: var(--c-brand); }
+.inv-order-card__number { font-size: 15px; font-weight: 700; letter-spacing: .02em; }
+.inv-order-card__sub { margin: 2px 0 14px; font-size: 13px; line-height: 1.7; color: var(--c-ink-2); }
+.inv-order-card__sub:last-child { margin-bottom: 0; }
+.inv-order-card .btn-primary { gap: 8px; }

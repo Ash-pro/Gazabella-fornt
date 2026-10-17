@@ -349,6 +349,13 @@ export interface Order {
   wallet_applied?: string | null
   /** المتبقي للدفع عند الاستلام — null إن لم تُستخدم المحفظة */
   amount_due?: string | null
+  /** INV-3: وقت تأكيد الدفع (null قبل الدفع) */
+  paid_at?: string | null
+  /**
+   * INV: مرجع فاتورة الطلب.
+   * undefined = الخادم لا يدعم الفواتير بعد (لا نعرض شيئاً) · null = لم تصدر بعد (قبل الدفع) · كائن = صدرت
+   */
+  invoice?: InvoiceRef | null
   created_at: string
 }
 
@@ -549,4 +556,123 @@ export interface DeliveryStats {
   in_transit_count: number
   delivered_today_count: number
   cash_to_collect_total: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// الفواتير (INV) — فاتورة مبيعات تصدر لحظة تأكيد الدفع، صورة ثابتة من الطلب لا تتغير بعدها.
+// بدون ضريبة (INV-1). ممنوع أي حقل متجر/مورّد/عمولة (D-12) — البائع دائماً Gazabella.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** نص محفوظ باللغتين وقت الإصدار — يُعرض حسب لغة الواجهة (INV-5) */
+export interface Bilingual { ar: string; en: string }
+
+export type InvoiceStatus = 'issued' | 'partially_credited' | 'credited'
+
+/** جوال باي أو المحفظة فقط (INV-2) — لا دفع عند الاستلام على الفواتير */
+export type InvoicePaymentMethod = 'jawwal_pay' | 'wallet'
+
+export interface InvoiceRef {
+  invoice_number: string
+  status: InvoiceStatus
+  issued_at: string
+}
+
+export interface InvoicePayment {
+  method: InvoicePaymentMethod
+  amount: string
+  /** مرجع عملية جوال باي — null للمحفظة */
+  reference: string | null
+  paid_at: string
+}
+
+export interface InvoiceLine {
+  id: number
+  name: Bilingual
+  variant: Bilingual | null
+  quantity: number
+  unit_price: string
+  line_total: string
+  /** الكمية المستردة بإشعارات دائنة (0 إن لم يُسترد شيء) */
+  credited_quantity: number
+}
+
+export interface CreditNoteLine { name: Bilingual; quantity: number; amount: string }
+
+export interface CreditNote {
+  credit_note_number: string
+  issued_at: string
+  amount: string
+  reason: Bilingual
+  /** الاسترداد دائماً إلى محفظة Gazabella */
+  refunded_to: 'wallet'
+  lines: CreditNoteLine[]
+}
+
+/** البائع: Gazabella فقط — المفتاح seller وليس store عمداً */
+export interface InvoiceSeller {
+  name: string
+  address: Bilingual | null
+  phone: string | null
+  email: string | null
+  website: string | null
+}
+
+export interface InvoiceCustomer {
+  name: string
+  /** جزء من الرقم مخفي من الخادم: 059•••4521 */
+  phone_masked: string | null
+  address: string | null
+}
+
+export interface InvoiceSummary {
+  invoice_number: string
+  order_number: string
+  status: InvoiceStatus
+  issued_at: string
+  currency: 'ILS'
+  total: string
+  /** مجموع ما استُرد بإشعارات دائنة */
+  credited_total: string
+  payment_methods: InvoicePaymentMethod[]
+  /** عدد المنتجات (البنود) في الفاتورة — وليس مجموع الكميات */
+  items_count: number
+  /** أول منتج — للعرض المختصر في القائمة والبحث */
+  first_item: Bilingual | null
+}
+
+export interface Invoice extends InvoiceSummary {
+  paid_at: string
+  /** رمز عشوائي لصفحة التحقق العامة (ليس رقم الفاتورة) */
+  verify_token: string
+  seller: InvoiceSeller
+  customer: InvoiceCustomer
+  items: InvoiceLine[]
+  subtotal: string
+  discount_amount: string | null
+  coupon_code: string | null
+  delivery_fee: string
+  /** رسوم التوصيل قبل الإعفاء — null إن لم يوجد إعفاء */
+  delivery_fee_original: string | null
+  payments: InvoicePayment[]
+  credit_notes: CreditNote[]
+}
+
+export interface InvoiceListMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  /** السنوات التي فيها فواتير (تنازلياً) */
+  years: number[]
+}
+
+export interface InvoiceList { data: InvoiceSummary[]; meta: InvoiceListMeta }
+
+/** رد صفحة التحقق العامة — 5 حقول عامة فقط، بلا أي بيانات شخصية */
+export interface InvoiceVerification {
+  invoice_number: string
+  issued_at: string
+  currency: 'ILS'
+  total: string
+  status: InvoiceStatus
 }

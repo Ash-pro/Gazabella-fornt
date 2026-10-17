@@ -23,8 +23,13 @@ import type {
   Collection,
   SiteSettings,
   DeliveryZoneInfo,
+  Invoice,
+  InvoiceList,
+  InvoiceVerification,
 } from '../types/api'
 import type { ProductFilters } from '../api/gazabella'
+import { allMockInvoices, findMockInvoiceRef, invoiceList, issueMockInvoice, toVerification } from './mockInvoices'
+import { DEMO_ORDER_NUMBERS } from '../fixtures/invoices'
 import {
   INITIAL_CATEGORIES,
   INITIAL_PRODUCTS,
@@ -51,6 +56,30 @@ function validateStock(cart: Cart) {
 }
 
 const MOCK_DELAY = Number(import.meta.env.VITE_MOCK_DELAY_MS || 250)
+
+const notFound = (message: string) => Object.assign(new Error(message), { response: { status: 404, data: { message } } })
+
+/** INV: يرفق مرجع الفاتورة بالطلب (null = لم تصدر بعد) */
+const withInvoiceRef = (order: Order): Order => ({ ...order, invoice: findMockInvoiceRef(order) })
+
+/** INV-3: تأكيد دفع جوال باي في المحاكاة — يحفظ الدفع ويُصدر الفاتورة مرة واحدة */
+function markPaid(orderNumber: string, reference: string): Order | null {
+  const orders = getStoredOrders()
+  const order = orders.find((o) => o.order_number === orderNumber)
+  if (!order) return null
+  if (order.payment_status !== 'paid') {
+    const now = new Date().toISOString()
+    order.payment_status = 'paid'
+    order.payment_reference = reference
+    order.paid_at = now
+    if (order.status === 'pending') {
+      order.status = 'confirmed'
+      order.tracking = [...(order.tracking ?? []), { status: 'confirmed', note: 'تم تأكيد الدفع عبر جوال باي', created_at: now }]
+    }
+    saveStoredOrders(orders)
+  }
+  return { ...order, invoice: issueMockInvoice(order) }
+}
 
 function delay<T>(value: T, ms = MOCK_DELAY): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms))
@@ -354,7 +383,7 @@ export const mockServices = {
 
     const orders = getStoredOrders()
     const defaultDelivery = INITIAL_DELIVERY_OPTIONS.find((d) => d.is_available) || INITIAL_DELIVERY_OPTIONS[0]
-    const orderNum = 'GAZ-' + new Date().getFullYear() + '-' + String(Math.max(17, ...orders.map((o) => Number(o.order_number.split('-').at(-1) || '0'))) + 1).padStart(4, '0')
+    const orderNum = 'GAZ-' + new Date().getFullYear() + '-' + String(Math.max(17, ...[...orders.map((o) => o.order_number), ...DEMO_ORDER_NUMBERS].map((n) => Number(n.split('-').at(-1) || '0'))) + 1).padStart(4, '0')
     const subtotalNum = Number(cart.subtotal || 0)
     const deliveryFeeNum = Number(defaultDelivery?.fee || '5.00')
     const totalNum = subtotalNum + deliveryFeeNum
@@ -391,6 +420,8 @@ export const mockServices = {
           : { status: 'pending', note: 'طلب تجريبي — بانتظار تأكيد دفع جوال باي', created_at: new Date().toISOString() },
       ],
       delivery_pin: generatedPin,
+      // INV: الفاتورة لا تصدر قبل الدفع
+      invoice: null,
       created_at: new Date().toISOString(),
     }
 
@@ -434,7 +465,7 @@ export const mockServices = {
     let orders = getStoredOrders()
     if (status) orders = orders.filter((o) => o.status === status)
     return delay({
-      data: orders,
+      data: orders.map(withInvoiceRef),
       meta: { current_page: 1, last_page: 1, per_page: 20, total: orders.length },
     })
   },
@@ -445,7 +476,25 @@ export const mockServices = {
     if (!found) {
       throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404, data: { message: 'الطلب غير موجود' } } })
     }
+    return delay(withInvoiceRef(found))
+  },
+
+  /** Mock لتأكيد دفع جوال باي (مرجع العملية) — null إن لم يكن الطلب محفوظاً */
+  markOrderPaid: async (orderNumber: string, reference: string): Promise<Order | null> => delay(markPaid(orderNumber, reference)),
+
+  // ── الفواتير (INV) ──
+  getInvoices: async (year?: number): Promise<InvoiceList> => delay(invoiceList(allMockInvoices(getStoredOrders()), year)),
+
+  getInvoice: async (invoiceNumber: string): Promise<Invoice> => {
+    const found = allMockInvoices(getStoredOrders()).find((i) => i.invoice_number === invoiceNumber)
+    if (!found) throw notFound('الفاتورة غير موجودة')
     return delay(found)
+  },
+
+  verifyInvoice: async (token: string): Promise<InvoiceVerification> => {
+    const found = allMockInvoices(getStoredOrders()).find((i) => i.verify_token === token)
+    if (!found) throw notFound('الفاتورة غير موجودة')
+    return delay(toVerification(found))
   },
 
 
@@ -454,9 +503,8 @@ export const mockServices = {
     const order = orders.find((o) => o.order_number === orderNumber)
     if (!order) throw Object.assign(new Error('الطلب غير موجود'), { response: { status: 404 } })
     if (order.payment_method !== 'jawwal_pay') throw new Error('هذا الطلب يُدفع عند الاستلام.')
-    // Mock: simulate payment URL
-    order.payment_status = 'paid'
-    saveStoredOrders(orders)
+    // Mock: محاكاة دفع ناجح — يؤكد الطلب ويُصدر الفاتورة (INV-3)
+    markPaid(orderNumber, 'JP-DEMO-' + Date.now().toString(36).toUpperCase())
     return delay({ payment_url: `/orders/${orderNumber}?paid=1` })
   },
 
@@ -528,7 +576,7 @@ export const mockServices = {
     demoSetPrep(orderItemId, status)
     if (order.status === 'confirmed') {
       order.status = 'processing'
-      order.tracking?.push({ status: 'processing', note: 'بدأ تجهيز الطلب لدى المتاجر', created_at: new Date().toISOString() })
+      order.tracking?.push({ status: 'processing', note: 'بدأنا تجهيز طلبكِ', created_at: new Date().toISOString() })
       saveStoredOrders(orders)
     }
     return delay({ success: true, order_item_id: orderItemId, status })
